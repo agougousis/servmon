@@ -1,0 +1,151 @@
+body {
+    background-image: url("/images/bg.jpg");
+    padding-top: 50px;
+}
+
+.table tr td {
+    vertical-align: middle !important;
+}
+
+.table thead th {
+    background-color: #f3f3f3;
+    color: #9d9d9d;
+    color: #333;
+    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+    font-size: 14px;
+}
+
+.serviceImg , .databaseImg , .webappImg {
+   height: 25px;
+   margin-right: 5px;
+}
+
+.serviceImg:hover , .databaseImg:hover , .webappImg:hover {
+    cursor: pointer;
+}
+
+.server-info-img, .webapp-lang-img, .database-type-img, .service-type-img {
+   height: 25px;
+}
+
+.webapp-lang-img:hover, .database-type-img:hover, .service-type-img:hover {
+    cursor: pointer;
+}
+
+.panel-no-padding {
+    padding: 0px !important;
+}
+
+.panel-no-padding .table {
+    margin-bottom: 0px;
+}
+
+#services-list-table td:first-child, #webapps-list-table td:first-child, #databases-list-table td:first-child {
+    width: 50px;
+    text-align: center;
+}
+
+#services-list-table td:last-child, #webapps-list-table td:last-child {
+    width: 50px;
+}
+
+#services-list-table td:nth-child(4), #webapps-list-table td:nth-child(3) {
+    width: 150px;
+}
+
+.add-item-icon {
+    float: right;
+    color: green;
+    font-size: 14px;
+}
+
+.add-item-icon:hover {
+    cursor: pointer;
+}
+
+.cell-logo {
+    height: 25px;
+}
+
+.conf-img {
+    height: 20px;
+    margin-right: 5px;
+}
+
+#monitor-items-table tr td:nth-child(2) {
+    text-align: right;
+}
+
+.server-list-row:hover {
+    cursor: pointer;
+}
+
+.imgLink {
+    height: 25px;
+}
+
+.imgLink:hover {
+    cursor: pointer;
+}
+
+.imgLink20 {
+    height: 20px;
+}
+
+.imgLink20:hover {
+    cursor: pointer;
+}
+
+.speedLink {
+    padding: 10px !important;
+}
+
+.speedLink img {
+    height: 30px;
+}
+
+.navbar-nav li:hover {
+    background-color: #e7e7e7;
+}
+
+#delegate-items-table tr td:nth-child(2) {
+    text-align: right;
+}
+
+#delegate-items-table tr td:nth-child(3) {
+    text-align: right;
+    width: 40px;
+}
+
+ul.b-list-box {
+    border: 1px solid #ccc; 
+    border-radius: 4px;
+    padding: 5px; 
+    max-height: 182px; 
+    overflow-x: auto; 
+    overflow-y: scroll;
+    font-size: 14px;
+}
+
+ul.b-list-box li {
+    list-style: none;
+    padding: 2px 4px;
+    
+}
+
+ul.b-list-box li:hover {
+    background-color: #e7e7e7;
+    cursor: pointer;
+}
+
+.linkStyle {
+    color: #428bca;
+    display: inline;
+    font-size: 14px;
+    font-weight: normal;
+    text-decoration: none;
+}
+
+.linkStyle:hover {
+    cursor: pointer;
+}
