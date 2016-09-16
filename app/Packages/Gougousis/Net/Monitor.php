@@ -1,11 +1,11 @@
 <?php
 
-namespace Gougousis\Net;
+namespace App\Packages\Gougousis\Net;
 
 class Monitor {
 	
-	public static function ping($ip,$timeout){
-        
+    public static function ping($ip,$timeout){
+
         // Ping only once with 3 sec time limit
         exec("ping -c 1 -W $timeout $ip",$out,$status);
         

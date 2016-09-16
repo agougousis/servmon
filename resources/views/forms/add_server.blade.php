@@ -9,28 +9,28 @@
                 {{ Form::open(array('class'=>'form-horizontal','id'=>'add_server_form')) }}
                      
                     <div class="form-group">
-                        <label for="domain" class="col-sm-5 control-label">Domain</label>
+                        <label for="domain" class="col-sm-5 control-label">Domain <mq>*</mq></label>
                         <div class="col-sm-4">
                           {{ Form::text('domain','',array('class'=>'form-control','disabled'=>true)) }}                            
                         </div>                                    
                     </div>   
                 
                     <div class="form-group">
-                        <label for="hostname" class="col-sm-5 control-label">Host name</label>
+                        <label for="hostname" class="col-sm-5 control-label">Host name <mq>*</mq></label>
                         <div class="col-sm-3">
                           {{ Form::text('hostname','',array('class'=>'form-control')) }}              
                         </div>            
                     </div>                     
                 
                     <div class="form-group">
-                        <label for="ip" class="col-sm-5 control-label">IP</label>
+                        <label for="ip" class="col-sm-5 control-label">IP <mq>*</mq></label>
                         <div class="col-sm-3">
                           {{ Form::text('ip','',array('class'=>'form-control')) }}              
                         </div>            
                     </div> 
                 
                     <div class="form-group">
-                        <label for="os" class="col-sm-5 control-label">Operating System</label>
+                        <label for="os" class="col-sm-5 control-label">Operating System <mq>*</mq></label>
                         <div class="col-sm-3">
                           {{ Form::text('os','',array('class'=>'form-control')) }}              
                         </div>            

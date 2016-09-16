@@ -10,19 +10,19 @@
                 <table class="table">
                     <tbody>
                         <tr>
-                            <td>Server</td>
+                            <td>Server <mq>*</mq></td>
                             <td>{{ Form::select('server',array(),'',array('class'=>'form-control','disabled'=>'disabled')) }}</td>
                         </tr>
                         <tr>
-                            <td>Type</td>
+                            <td>Service Type <mq>*</mq></td>
                             <td>{{ Form::select('stype',array(),'',array('class'=>'form-control')) }} </td>
                         </tr>
                         <tr>
-                            <td>Port</td>
+                            <td>Port <mq>*</mq></td>
                             <td>{{ Form::text('port','',array('class'=>'form-control')) }} </td>
                         </tr>
                         <tr>
-                            <td>Version</td>
+                            <td>Version <mq>*</mq></td>
                             <td>{{ Form::text('version','',array('class'=>'form-control')) }} </td>
                         </tr>
                     </tbody>

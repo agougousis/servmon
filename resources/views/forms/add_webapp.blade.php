@@ -9,25 +9,25 @@
                 <table class="table">
                     <tbody>
                         <tr>
-                            <td>Server</td>
+                            <td>Server <mq>*</mq></td>
                             <td>{{ Form::text('server','',array('class'=>'form-control','disabled'=>'disabled')) }}</td>
                         </tr>
                         <tr>
-                            <td>URL</td>
+                            <td>URL <mq>*</mq></td>
                             <td>{{ Form::text('url','',array('class'=>'form-control')) }} </td>
                         </tr>
                         <tr>
-                            <td>Choose the web app language</td>
+                            <td>Code language <mq>*</mq></td>
                             <td>
                                 {{ Form::select('language',array(),'',array('class'=>'form-control')) }} 
                             </td>
                         </tr>                        
                         <tr>
-                            <td>Developer</td>
+                            <td>Developer <mq>*</mq></td>
                             <td>{{ Form::text('developer','',array('class'=>'form-control')) }} </td>
                         </tr>
                         <tr>
-                            <td>Contact</td>
+                            <td>Contact <mq>*</mq></td>
                             <td>{{ Form::text('contact','',array('class'=>'form-control')) }} </td>
                         </tr>
                     </tbody>

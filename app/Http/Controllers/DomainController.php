@@ -215,7 +215,8 @@ class DomainController extends RootController {
             $server['domain_name'] = $server['full_name'];
             $server_list[] = $server;
         }
-        return response()->json($server_list); 
+        
+        return response()->json($server_list)->setStatusCode(200,'');
 
     }
     

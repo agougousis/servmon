@@ -11,15 +11,15 @@
                 <table class="table">
                     <tbody>
                         <tr>
-                            <td>dbname</td>
+                            <td>Database name <mq>*</mq></td>
                             <td>{{ Form::text('dbname','',array('class'=>'form-control')) }} </td>
                         </tr>
                         <tr>
-                            <td>Server</td>
+                            <td>Server <mq>*</mq></td>
                             <td>{{ Form::select('server',array(),'',array('class'=>'form-control')) }}</td>
                         </tr>
                         <tr>
-                            <td>Type</td>
+                            <td>Type <mq>*</mq></td>
                             <td>{{ Form::select('type',array(),'',array('class'=>'form-control')) }} </td>
                         </tr>                        
                         <tr>

@@ -24,21 +24,21 @@
                 {{ Form::open(array('class'=>'form-horizontal','id'=>'new_delegation_form')) }}
                      
                     <div class="form-group">
-                        <label for="dtype" class="col-sm-5 control-label">Delegation Type</label>
+                        <label for="dtype" class="col-sm-5 control-label">Delegation Type <mq>*</mq></label>
                         <div class="col-sm-4">
                           {{ Form::text('dtype','',array('class'=>'form-control','disabled'=>true)) }}                            
                         </div>                                    
                     </div>   
                 
                     <div class="form-group">
-                        <label for="ditem" class="col-sm-5 control-label">Item</label>
+                        <label for="ditem" class="col-sm-5 control-label">Item <mq>*</mq></label>
                         <div class="col-sm-3">
                           {{ Form::text('ditem','',array('class'=>'form-control','disabled'=>true)) }}              
                         </div>            
                     </div>                     
                 
                     <div class="form-group">
-                        <label for="duser" class="col-sm-5 control-label">User</label>
+                        <label for="duser" class="col-sm-5 control-label">User <mq>*</mq></label>
                         <div class="col-sm-5">
                           {{ Form::select('duser',array(),null,array('class'=>'form-control')) }}              
                         </div>            

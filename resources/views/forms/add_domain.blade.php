@@ -9,14 +9,14 @@
                 {{ Form::open(array('class'=>'form-horizontal','id'=>'add_domain_form')) }}
                      
                     <div class="form-group">
-                        <label for="id" class="col-sm-5 control-label">Short domain name</label>
+                        <label for="id" class="col-sm-5 control-label">Short domain name <mq>*</mq></label>
                         <div class="col-sm-3">
                           {{ Form::text('node_name','',array('class'=>'form-control')) }}              
                         </div>            
                     </div> 
 
                     <div class="form-group">
-                        <label for="parent_domain" class="col-sm-5 control-label">Parent domain</label>
+                        <label for="parent_domain" class="col-sm-5 control-label">Parent domain <mq>*</mq></label>
                         <div class="col-sm-4">
                           {{ Form::text('parent_domain','',array('class'=>'form-control','disabled'=>true)) }}                            
                         </div>                                    

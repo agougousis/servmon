@@ -149,3 +149,7 @@ ul.b-list-box li:hover {
 .linkStyle:hover {
     cursor: pointer;
 }
+
+mq {
+    color: red;
+}

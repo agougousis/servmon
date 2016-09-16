@@ -13,7 +13,20 @@ class ExampleTest extends TestCase
      */
     public function testBasicExample()
     {
-        $this->visit('/')
-             ->see('Laravel 5');
+        $prophet = $this->prophesize(Spiderman::class);
+        $prophet->jump()->shouldBeCalled();
+        
+        $spiderman = $prophet->reveal();
+        $spiderman->jump();
+
     }
+}
+
+class Spiderman {
+    
+    public function jump(){
+        
+    }
+        
+    
 }

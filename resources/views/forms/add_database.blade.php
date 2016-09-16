@@ -9,15 +9,15 @@
                 <table class="table">
                     <tbody>
                         <tr>
-                            <td>Server</td>
+                            <td>Server <mq>*</mq></td>
                             <td>{{ Form::text('server','',array('class'=>'form-control','disabled'=>'disabled')) }}</td>
                         </tr>
                         <tr>
-                            <td>Database name</td>
+                            <td>Database name <mq>*</mq></td>
                             <td>{{ Form::text('dbname','',array('class'=>'form-control')) }} </td>
                         </tr>
                         <tr>
-                            <td>Choose a database type from the list</td>
+                            <td>Choose a database type from the list <mq>*</mq></td>
                             <td>
                                 {{ Form::select('type',array(),'',array('class'=>'form-control')) }} 
                             </td>

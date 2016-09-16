@@ -156,11 +156,11 @@ function GuiManagerClass(){
 
         var serviceListTable = $('#services-list-table tbody');
         if(serviceInfo.status === 'on')
-            statusImg = '/images/green.png';
+            statusImg = "<img src='/images/green.png' title='on'>";
         else if(serviceInfo.status === 'off')
-            statusImg = '/images/red.png';
+            statusImg = "<img src='/images/red.png' title='off'>";
         else 
-            statusImg = '/images/gray.png';
+            statusImg = "<img src='/images/gray.png' title='Undefined. Click on server!'>"; 
         if(serviceInfo.time != null){
             respTimeNumber = new Number(serviceInfo.time);
             respTime = respTimeNumber.toFixed(5);
@@ -170,7 +170,7 @@ function GuiManagerClass(){
         serviceIcon = this.getServiceIcon(serviceInfo);
 
         var rowId = "service-row-"+serviceInfo.id;
-        serviceListTable.append("<tr id='"+rowId+"'><td>"+serviceIcon+"</td><td>"+ajaxManager.supported_service_types[serviceInfo.stype].title+"</td><td>"+serviceInfo.version+"</td><td>"+respTime+"</td><td><img src='"+statusImg+"'></td></tr>");    
+        serviceListTable.append("<tr id='"+rowId+"'><td>"+serviceIcon+"</td><td>"+ajaxManager.supported_service_types[serviceInfo.stype].title+"</td><td>"+serviceInfo.version+"</td><td>"+respTime+"</td><td>"+statusImg+"</td></tr>");    
 
     };
 
@@ -200,11 +200,12 @@ function GuiManagerClass(){
 
         // Update status info
         if(serviceInfo.status === 'on')
-            statusImg = '/images/green.png';
-        else if(serviceInfo.status == 'off')
-            statusImg = '/images/red.png';
-        else
-            statusImg = '/images/gray.png';
+            statusImg = "<img src='/images/green.png' title='on'>";
+        else if(serviceInfo.status === 'off')
+            statusImg = "<img src='/images/red.png' title='off'>";
+        else 
+            statusImg = "<img src='/images/gray.png' title='Undefined. Click on server!'>"; 
+        
         if(serviceInfo.time != null){
             respTimeNumber = new Number(serviceInfo.time);
             respTime = respTimeNumber.toFixed(5);
@@ -212,7 +213,7 @@ function GuiManagerClass(){
             respTime = '';
         }
 
-        col5.empty().append("<img src='"+statusImg+"'>");
+        col5.empty().append(statusImg);
         col4.empty().append(respTime);
 
         // Update text info    
@@ -305,11 +306,11 @@ function GuiManagerClass(){
         typeImg = this.getWebappIcon(webappInfo);
 
         if(webappInfo.status === 'on')
-            statusImg = '/images/green.png';
+            statusImg = "<img src='/images/green.png' title='on'>";
         else if(webappInfo.status === 'off')
-            statusImg = '/images/red.png';
-        else
-            statusImg = '/images/gray.png';
+            statusImg = "<img src='/images/red.png' title='off'>";
+        else 
+            statusImg = "<img src='/images/gray.png' title='Undefined. Click on server!'>";         
         if(webappInfo.time != null){
             respTimeNumber = new Number(webappInfo.time);
             respTime = respTimeNumber.toFixed(5);
@@ -319,7 +320,7 @@ function GuiManagerClass(){
         
         var rowId = "webapp-row-"+webappInfo.id;
                 
-        webappsListTable.append("<tr id='"+rowId+"'><td>"+typeImg+"</td><td><a href='"+webappInfo.url+"'>"+webappInfo.url+"</a></td><td>"+webappInfo.developer+"</td><td>"+respTime+"</td><td><img src='"+statusImg+"'></td></tr>");    
+        webappsListTable.append("<tr id='"+rowId+"'><td>"+typeImg+"</td><td><a href='"+webappInfo.url+"'>"+webappInfo.url+"</a></td><td>"+webappInfo.developer+"</td><td>"+respTime+"</td><td>"+statusImg+"</td></tr>");    
 
     };
 
@@ -343,11 +344,11 @@ function GuiManagerClass(){
 
         // Update status info
         if(webappInfo.status === 'on')
-            statusImg = '/images/green.png';
-        else if (webappInfo.status === 'off')
-            statusImg = '/images/red.png';
-        else
-            statusImg = '/images/gray.png';
+            statusImg = "<img src='/images/green.png' title='on'>";
+        else if(webappInfo.status === 'off')
+            statusImg = "<img src='/images/red.png' title='off'>";
+        else 
+            statusImg = "<img src='/images/gray.png' title='Undefined. Click on server!'>";         
         if(webappInfo.time != null){
             respTimeNumber = new Number(webappInfo.time);
             respTime = respTimeNumber.toFixed(5);
@@ -355,7 +356,7 @@ function GuiManagerClass(){
             respTime = '';
         }
         col4.empty().append(respTime);
-        col5.empty().append("<img src='"+statusImg+"'>");
+        col5.empty().append(statusImg);
 
         // Update text info    
         col2.empty().append("<a href='"+webappInfo.url+"'>"+webappInfo.url+"</a>");
@@ -1534,11 +1535,11 @@ function AjaxManagerClass(){
             data: JSON.stringify(postData),
             contentType:"application/json; charset=utf-8",
             headers:{'X-CSRF-Token': $('#page_token').val()},
-            success: function( data,textStatus,jqXHR ) {
-                toastr.success(jqXHR.statusText,{timeOut: 5000});                                             
-                eManager.loadServerInfo();
+            success: function( data,textStatus,jqXHR ) {                                                            
+                guiManager.addWebapp(data[0]);
                 $('#loading-image').hide();
                 $('#addWebappDialog').modal('hide');
+                toastr.success(jqXHR.statusText,{timeOut: 5000}); 
             },
             error: ajaxFailure
         });
@@ -1566,10 +1567,10 @@ function AjaxManagerClass(){
             contentType:"application/json; charset=utf-8",
             headers:{'X-CSRF-Token': $('#page_token').val()},
             success: function( data,textStatus,jqXHR ) {
+                guiManager.addService(data[0]);
                 $('#loading-image').hide();
                 $('#addServiceDialog').modal('hide');
-                toastr.success(jqXHR.statusText,{timeOut: 5000}); 
-                guiManager.addService(data[0]);  
+                toastr.success(jqXHR.statusText,{timeOut: 5000});                   
             },
             error: ajaxFailure
         });

@@ -46,7 +46,7 @@
         <table class="table borderless_td">
             <tr>
                 <td style="width: 50%">
-                    {{ Form::label('email','E-mail') }}
+                    {{ Form::label('email','E-mail') }} <mq>*</mq>
                     {{ Form::text('email','',array('class'=>'form-control')) }}                    
                 </td>
                 <td>                        
@@ -55,21 +55,21 @@
             </tr>
             <tr>
                 <td>
-                    {{ Form::label('password','Password') }}
+                    {{ Form::label('password','Password') }} <mq>*</mq>
                     {{ Form::password('password',array('class'=>'form-control','autocomplete'=>'off')) }}       
                 </td>
                 <td>
-                    {{ Form::label('verify_password','Verify Password') }}
+                    {{ Form::label('verify_password','Verify Password') }} <mq>*</mq>
                     {{ Form::password('verify_password',array('class'=>'form-control','autocomplete'=>'off')) }}                       
                 </td>
             </tr>
             <tr>
                 <td>
-                    {{ Form::label('lastname','Last name') }}
+                    {{ Form::label('lastname','Last name') }} <mq>*</mq>
                     {{ Form::text('lastname','',array('class'=>'form-control')) }}                    
                 </td>
                 <td>
-                    {{ Form::label('firstname','First name') }}
+                    {{ Form::label('firstname','First name') }} <mq>*</mq>
                     {{ Form::text('firstname','',array('class'=>'form-control')) }} 
                 </td>
             </tr>
