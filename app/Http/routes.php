@@ -11,19 +11,19 @@ Route::group(['prefix' => 'api','middleware' => ['myweb']], function () {
 Route::group(['prefix' => 'api','middleware' => ['logged']], function () {
     
     // Domain-related endpoints
-    Route::get('/domains', array('uses'=>'DomainController@search'));
-    Route::post('/domains', array('uses'=>'DomainController@create'));
-    Route::delete('/domains/{domname}', array('uses'=>'DomainController@delete'));         
+    Route::get('/domains', array('uses'=>'DomainController@search')); //-
+    Route::post('/domains', array('uses'=>'DomainController@create')); //-
+    Route::delete('/domains/{domname}', array('uses'=>'DomainController@delete')); //-         
     Route::get('/domains/{domName}/servers', array('uses'=>'DomainController@server_list'));
-    Route::get('/domains/{domName}/all_servers', array('uses'=>'DomainController@servers_under_domain'));
+    Route::get('/domains/{domName}/all_servers', array('uses'=>'DomainController@servers_under_domain')); //-
     Route::get('/domains/{domName}/webapps', array('uses'=>'DomainController@webapp_list'));   
     
     // Server-related endpoints
-    Route::get('servers', array('uses'=>'ServerController@search'));
-    Route::get('/servers/{serverId}', array('uses'=>'ServerController@read'));
-    Route::post('servers', array('uses'=>'ServerController@create'));
-    Route::put('servers', array('uses'=>'ServerController@update'));
-    Route::delete('servers/{serverId}', array('uses'=>'ServerController@delete'));  
+    Route::get('servers', array('uses'=>'ServerController@search')); //-
+    Route::get('/servers/{serverId}', array('uses'=>'ServerController@read')); //- 
+    Route::post('servers', array('uses'=>'ServerController@create')); //-
+    Route::put('servers', array('uses'=>'ServerController@update')); //-
+    Route::delete('servers/{serverId}', array('uses'=>'ServerController@delete'));  //-
     
     // Service-related endpoints
     Route::get('/services/{serviceId}', array('uses'=>'ServiceController@read'));

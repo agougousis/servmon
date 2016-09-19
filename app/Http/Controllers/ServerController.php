@@ -35,15 +35,12 @@ class ServerController extends RootController {
     public function search(){
         
         if(!Input::has('mode')){
-            $mode = "all";
+            $mode = "mine";
         } else {
             $mode = Input::get('mode');
         }
                    
         switch($mode){
-            case 'all':
-                $servers = Server::all();                
-                break;
             case 'mine':
                 $servers = Server::allUserServers(Auth::user()->id);
                 break;
@@ -256,11 +253,18 @@ class ServerController extends RootController {
      */
     public function read($serverId){
         
+        $server = Server::find($serverId); 
+        
+        // Access control
+        if(!$this->hasPermission('server',$server->domain,'read',$server->id)){
+            DB::rollBack();
+            return response()->json(['errors' => []])->setStatusCode(403, 'You are not allowed to access information about this server!');
+        }
+        
         $curl_timeout = Config::get('network.curl_timeout');
         $portscan_timeout = Config::get('network.portscan_timeout');
         $ping_timeout = Config::get('network.ping_timeout');
-        
-        $server = Server::find($serverId);        
+                       
         $services = Service::getAllOnServer($serverId);
         $webapps = Webapp::getAllOnServer($serverId);        
         $databases = Database::getAllOnServer($serverId);

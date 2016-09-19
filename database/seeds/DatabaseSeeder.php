@@ -20,7 +20,9 @@ class DatabaseSeeder extends Seeder
         Model::unguard();
 
         // Empty all the tables before seeding
-        $tables = ['users','service_types','webapp_types','database_types','settings'];
+        // Some tables that are not seeded are truncated because they are used 
+        // in testing and we need to clear them out before each test
+        $tables = ['users','service_types','webapp_types','database_types','settings','domains','servers'];
         foreach($tables as $table){
             DB::table($table)->truncate();
         }

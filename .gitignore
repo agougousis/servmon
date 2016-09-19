@@ -4,4 +4,4 @@
 Homestead.yaml
 Homestead.json
 phpunit.xml
-.envs
+.env

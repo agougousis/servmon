@@ -144,7 +144,7 @@ class RootController extends Controller {
      * @param string $context       If the $itemType is service, webapp or database, then $context should be the server ID.
      *                              If $itemType is server, $context should be the domain ID this server belongs, and if $itemType
      *                              is domain, the $context should be the parent domain ID or (in case of a new top domain) null
-     * @param string $actionType    Should take one the following values: create, edit, delete
+     * @param string $actionType    Should take one the following values: create, edit, delete, read
      * @param int $itemId           If the $actionType is 'create', the $itemId shound be null, otherwise is should be the ID of the
      *                              editing/deleting item.
      * @return boolean
@@ -165,9 +165,24 @@ class RootController extends Controller {
                 }
                 
                 break;
-            case 'server':
-                
+            case 'server':                
                 switch($actionType){
+                    case 'read':
+                        if(empty($itemId)){ // we want to read all servers in a domain
+                            if(($this->canManageDomain($userId, $context))||(Auth::user()->superuser == 1)){
+                                return true;
+                            } else {
+                                return false;
+                            }
+ 
+                        } else { // we want to read info about a specific server
+                            if(($this->canManageServer($userId, $itemId))||(Auth::user()->superuser == 1)){
+                                return true;
+                            } else {
+                                return false;
+                            }
+                        }                        
+                        break;
                     case 'create':
                         if($this->canManageDomain($userId, $context)){
                             return true;

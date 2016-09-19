@@ -203,6 +203,15 @@ class DomainController extends RootController {
      * @return Response
      */
     public function servers_under_domain($domain_name){
+        
+        $domain = Domain::findByFullname($domain_name);
+        
+        // Access control
+        if(!$this->hasPermission('server',$domain->id,'read',null)){
+            DB::rollBack();
+            return response()->json(['errors' => []])->setStatusCode(403, 'You are not allowed to access information about this server!');
+        }
+        
         $servers = Server::getAllUnderDomain($domain_name);
         
         $server_list = array();

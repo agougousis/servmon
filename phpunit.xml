@@ -22,7 +22,9 @@
         </whitelist>
     </filter>
     <php>
+        <env name="APP_DEBUG" value="true"/>
         <env name="APP_ENV" value="testing"/>
+        <env name="DB_DATABASE" value="servmon_testing"/>
         <env name="CACHE_DRIVER" value="array"/>
         <env name="SESSION_DRIVER" value="array"/>
         <env name="QUEUE_DRIVER" value="sync"/>
