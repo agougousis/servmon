@@ -103,13 +103,19 @@ class DatabaseController extends RootController {
         }
         
         // Check if a database with such an ID exists
-        $database = Database::find($databaseId);
+        $database = Database::where('id',$databaseId)->select('id','dbname','server','type','related_webapp')->first();
         if(empty($database)){
             return response()->json(['errors' => array()])->setStatusCode(400, 'Invalid database ID');
         }
         if(!empty($database->related_webapp)){
             $wp = Webapp::find($database->related_webapp);
             $database->related_webapp_name = $wp->url;
+        }
+                
+        // Access control
+        if(!$this->hasPermission('database',$database->server,'read',$databaseId)){
+            DB::rollBack();
+            return response()->json(['errors' => []])->setStatusCode(403, 'You are not allowed to read databases on this server!');
         }
         
         $result = new \stdClass();

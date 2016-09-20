@@ -85,17 +85,25 @@ class ServiceController extends RootController {
      * @param int $serviceId
      * @return Response
      */
-    public function read($serviceId){
+    public function read($serviceId){                
         
         // Check if $serviceId is a positive integer
         if($serviceId <= 0){
             return response()->json(['errors' => array()])->setStatusCode(400, 'Invalid service ID');
         }
         
-        // Check if a service with such an ID exists
+        // Check if a service with such an ID exists    
         $service = Service::find($serviceId);
         if(empty($service)){
             return response()->json(['errors' => array()])->setStatusCode(400, 'Invalid service ID');
+        }
+        
+        $service = Service::select('id','server','stype','port','version','watch')->where('id',$serviceId)->first();
+        
+        // Access control
+        if(!$this->hasPermission('service',$service->server,'read',$serviceId)){
+            DB::rollBack();
+            return response()->json(['errors' => []])->setStatusCode(403, 'You are not allowed to read services on this server!');
         }
         
         $result = new \stdClass();

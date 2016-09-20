@@ -72,8 +72,9 @@ return array(
         'contact'   =>  'required|max:50|email',
         'server'    =>  'required|integer|exists:servers,id'
     ),
-    'update_service'    =>  array(        
-        'stype'      =>  'required|max:50|exists:service_types,codename',
+    'update_service'    =>  array(   
+        'id'        =>  'required|int|exists:services,id',
+        'stype'     =>  'required|max:50|exists:service_types,codename',
         'port'      =>  'required|integer',
         'version'   =>  'required|max:50'        
     ),

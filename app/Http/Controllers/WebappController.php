@@ -112,6 +112,14 @@ class WebappController extends RootController {
             return response()->json(['errors' => array()])->setStatusCode(400, 'Invalid webapp ID');
         }
         
+        $webapp = Webapp::select('id','url','server','language','developer','contact','watch')->where('id',$appId)->first();
+        
+        // Access control
+        if(!$this->hasPermission('webapp',$webapp->server,'read',$appId)){
+            DB::rollBack();
+            return response()->json(['errors' => []])->setStatusCode(403, 'You are not allowed to read webapps on this server!');
+        }
+        
         $result = new \stdClass();
         $result->data = $webapp;
         

@@ -15,7 +15,7 @@ class CreateServicesTable extends Migration
         Schema::create('services', function (Blueprint $table) {
             $table->increments('id');
             $table->integer('server')->unsigned();
-            $table->string('stype',15)->unique();
+            $table->string('stype',15);
             $table->string('port',6);
             $table->string('version',15);
             $table->integer('owner')->unsigned();
