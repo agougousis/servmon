@@ -7,7 +7,7 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 use App\User;
 use App\Models\Domain;
 
-class DomainManagementTest extends TestCase
+class DomainsApiTest extends TestCase
 {
     use DatabaseTransactions;    
     

@@ -8,7 +8,7 @@ use App\User;
 use App\Models\Domain;
 use App\Models\Server;
 
-class ServerManagementTest extends TestCase
+class ServersApiTest extends TestCase
 {   
     
     protected $admin;

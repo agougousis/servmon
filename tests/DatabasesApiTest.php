@@ -9,7 +9,7 @@ use App\Models\Domain;
 use App\Models\Server;
 use App\Models\Database;
 
-class DatabasesTest extends TestCase
+class DatabasesApiTest extends TestCase
 {
     
     protected $admin;

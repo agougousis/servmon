@@ -13,8 +13,18 @@ use Illuminate\Database\Eloquent\Model;
  */
 class ServerDelegation extends Model {
     
-    protected $table = 'server_delegations';    
+    protected $table = 'server_delegations'; 
+    protected $fillable = array('user_id','server_id');
 
+    /**
+     * Deletes all delegations related to a specific user
+     * 
+     * @param int $user_id
+     */
+    public static function deleteUserDelegations($user_id){
+        ServerDelegation::where('user_id',$user_id)->delete();
+    }
+    
     /**
      * Returns a list with all server delegations
      * 
@@ -59,8 +69,8 @@ class ServerDelegation extends Model {
      * 
      * @param array $domain_list
      */
-    public static function removeDelegationsInDomains($domain_list){
-        ServerDelegation::join('servers','server_delegations.server_id','=','servers.id')->where('user_id',Auth::user()->id)->whereIn('domain',$domain_list)->delete();
+    public static function removeUserDelegationsInDomains($user_id,$domain_list){
+        ServerDelegation::join('servers','server_delegations.server_id','=','servers.id')->where('user_id',$user_id)->whereIn('domain',$domain_list)->delete();
     }
     
 }

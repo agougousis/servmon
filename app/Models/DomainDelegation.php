@@ -13,7 +13,17 @@ use Illuminate\Database\Eloquent\Model;
 class DomainDelegation extends Model {
     
     protected $table = 'domain_delegations';    
+    protected $fillable = array('user_id','domain_id');
   
+    /**
+     * Deletes all delegations related to a specific user
+     * 
+     * @param int $user_id
+     */
+    public static function deleteUserDelegations($user_id){
+        DomainDelegation::where('user_id',$user_id)->delete();
+    }
+    
     /**
      * Removes a specific domain delegation
      * 

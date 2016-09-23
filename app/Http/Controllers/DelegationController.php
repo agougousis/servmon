@@ -183,21 +183,20 @@ class DelegationController extends RootController {
                     return response()->json(['errors' => $errors])->setStatusCode(400, 'Delegation request validation failed');
                 } else {
                     switch($delegation['dtype']){
-                        case 'domain':
+                        case 'domain':                            
                             $user = User::findByEmail($delegation['duser']);                        
                             $domain = Domain::findByFullname($delegation['ditem']);                        
 
                             // If the user has been delegated servers under this domain, remove these server delegations
-                            $descendantDomains = array_flatten($domain->descendantsAndSelf()->select('id')->get()->ToArray());                        
-                            ServerDelegation::removeDelegationsInDomains($descendantDomains);                
-
+                            $descendantDomains = array_flatten($domain->descendantsAndSelf()->select('id')->get()->ToArray());                                
+                            ServerDelegation::removeUserDelegationsInDomains($user->id,$descendantDomains);                                          
                             $newDelegation = new DomainDelegation();
                             $newDelegation->user_id = $user->id;
                             $newDelegation->domain_id = $domain->id;
                             $newDelegation->save();
                             $created[] = $newDelegation;
                             break;
-                        case 'server':
+                        case 'server':                            
                             $user = User::findByEmail($delegation['duser']); 
 
                             // If the server belongs to a domain delegated to the user, cancel the delegation                                                                                                                       

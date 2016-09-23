@@ -9,7 +9,7 @@ use App\Models\Domain;
 use App\Models\Server;
 use App\Models\Webapp;
 
-class WebappsTest extends TestCase
+class WebappsApiTest extends TestCase
 {
     
     protected $admin;

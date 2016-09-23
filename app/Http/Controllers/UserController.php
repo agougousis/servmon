@@ -9,6 +9,8 @@ use Input;
 use Config;
 use Validator;
 use App\User;
+use App\Models\DomainDelegation;
+use App\Models\ServerDelegation;
 use Illuminate\Http\Request;
 use App\Http\Controllers\RootController;
 
@@ -28,7 +30,7 @@ class UserController extends RootController {
      */
     public function read($user_id){
         
-        $user = User::find($user_id);
+        $user = User::where('id',$user_id)->select('id','email','firstname','lastname','activated','superuser','last_login')->first();
         if(!empty($user)){
             return response()->json($user)->setStatusCode(200,''); 
         } else {
@@ -151,14 +153,30 @@ class UserController extends RootController {
      * @param int $user_id
      * @return Response
      */
-    public function delete_user($user_id){     
-                
+    public function delete_user($user_id){                             
+        
         if(Auth::user()->id == $user_id){
             return response()->json(['errors' => []])->setStatusCode(400, 'You cannot delete your own account!');
         }
 
         $user = User::find($user_id);
-        $user->delete();                   
+        if(empty($user)){
+            return response()->json(['errors' => []])->setStatusCode(400, 'Invalid user ID!');
+        }
+
+        DB::beginTransaction();
+        try {
+            // Delete the user delegations
+            DomainDelegation::deleteUserDelegations($user_id);
+            ServerDelegation::deleteUserDelegations($user_id);
+            // Delete the user
+            $user->delete();             
+        } catch (Exception $ex) {
+            DB::rollBack();
+            $this->log_event('User deletion failed! ERROR: '.$ex->getMessage(),'error');
+            return response()->json([])->setStatusCode(500, 'User deleation failed! Please, contact the administrator.');
+        }
+        DB::commit();                          
 
         return response()->json([])->setStatusCode(200, 'The user has been deleted!');     
 

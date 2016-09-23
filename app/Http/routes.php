@@ -60,14 +60,14 @@ Route::group(['prefix' => 'api','middleware' => ['logged']], function () {
 // Elevated API endpoints
 Route::group(['prefix' => 'api','middleware' => ['superuser']], function () {        
     
-    Route::get('users/{userId}',array('uses'=>'UserController@read'));
+    Route::get('users/{userId}',array('uses'=>'UserController@read'))->where('userId', '[0-9]+');
     Route::get('users',array('uses'=>'UserController@search'));
     Route::post('users',array('uses'=>'UserController@add_users'));
     Route::put('users/{userId}/enable',array('uses'=>'UserController@enable_user'))->where('userId', '[0-9]+');    
     Route::put('users/{userId}/disable',array('uses'=>'UserController@disable_user'))->where('userId', '[0-9]+');    
     Route::put('users/{userId}/make_superuser',array('uses'=>'UserController@make_superuser'))->where('userId', '[0-9]+');
     Route::put('users/{userId}/unmake_superuser',array('uses'=>'UserController@unmake_superuser'))->where('userId', '[0-9]+');
-    Route::delete('users/{userId}',array('uses'=>'UserController@delete_user'));
+    Route::delete('users/{userId}',array('uses'=>'UserController@delete_user'))->where('userId', '[0-9]+');
     
     // Delegation Management    
     Route::post('delegations', array('uses'=>'DelegationController@create'));
