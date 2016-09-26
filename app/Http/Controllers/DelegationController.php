@@ -148,15 +148,14 @@ class DelegationController extends RootController {
         
         // Retrieve nodes array from JSON
         $delegations = $request->input('delegations');
-        $delegations_num = count($delegations);                
+        $delegations_num = count($delegations);                          
         
         // Validate the data for each node
         $created = array();
         $errors = array();
         $index = 0;
         DB::beginTransaction();
-        foreach($delegations as $delegation){
-            
+        foreach($delegations as $delegation){            
             try {
             
                 switch($delegation['dtype']){
@@ -196,14 +195,15 @@ class DelegationController extends RootController {
                             $newDelegation->save();
                             $created[] = $newDelegation;
                             break;
-                        case 'server':                            
+                        case 'server':                                
                             $user = User::findByEmail($delegation['duser']); 
-
+                            
                             // If the server belongs to a domain delegated to the user, cancel the delegation                                                                                                                       
-                            $server = Server::find($delegation['ditem']);
-                            if($this->canManageDomain($user->id,$server->domain)){
+                            $server = Server::find($delegation['ditem']);                                                        
+                            if($this->canManageDomain($user->id,$server->domain)){   
+                                DB::rollBack();
                                 return response()->json(['errors' => $errors])->setStatusCode(400, 'Delegation failed! Server belongs to a domain already delegated to this user.');
-                            } else {
+                            } else {                                
                                 $newDelegation = new ServerDelegation();
                                 $newDelegation->user_id = $user->id;
                                 $newDelegation->server_id = $delegation['ditem'];

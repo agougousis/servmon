@@ -74,7 +74,7 @@ class DomainController extends RootController {
      */
     public function create(Request $request) {                
         
-       // Retrieve nodes array from JSON
+        // Retrieve nodes array from JSON
         $domains = $request->input('domains');
         $domain_num = count($domains);                
         
@@ -103,19 +103,17 @@ class DomainController extends RootController {
                     return response()->json(['errors' => $errors])->setStatusCode(400, 'Domain validation failed');
                 } else {
                     // Locate the parent domain
-                    $parent = Domain::findByFullname($domain['parent_domain']);  
-                    
+                    $parent = Domain::findByFullname($domain['parent_domain']);                      
                     // Access control
                     if(empty($parent)){
                         $allowed = $this->hasPermission('domain',null,'create',null);
                     } else {
                         $allowed = $this->hasPermission('domain',$parent->id,'create',null);
-                    }                   
+                    }                 
                     if(!$allowed){
                         DB::rollBack();
                         return response()->json(['errors' => []])->setStatusCode(403, 'You are not allowed to create subdomains in this domain!');
                     }
-                    
                     // Create the new node
                     $newDomain = new Domain();
                     $newDomain->parent_id = null;

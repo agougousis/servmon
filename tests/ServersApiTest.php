@@ -7,6 +7,7 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 use App\User;
 use App\Models\Domain;
 use App\Models\Server;
+use App\Models\DomainDelegation;
 
 class ServersApiTest extends TestCase
 {   
@@ -16,7 +17,6 @@ class ServersApiTest extends TestCase
 
     protected function setUp(){
         parent::setUp();                 
-        $this->artisan("migrate:refresh");
         $this->artisan("db:seed");
         
         $this->add_sample_users();
@@ -35,81 +35,119 @@ class ServersApiTest extends TestCase
     
     protected function add_sample_domains(){        
         
-        // Add domains as admin
-        $this->be($this->admin);        
-        $post_data = array(
-            'domains'   =>  array(
-                array(
-                    'node_name'       =>  'gougousis.gr',
-                    'parent_domain'   =>  '',
-                    'fake_domain'     =>  0
-                ),
-                array(
-                    'node_name'       =>  'dom1',
-                    'parent_domain'   =>  'gougousis.gr',
-                    'fake_domain'     =>  0
-                )
-            )
-        ); 
+        // These are supposed to be created by $this->admin
+        $gougousis = new Domain([
+            'node_name' =>  'gougousis.gr',
+            'full_name' =>  'gougousis.gr',
+            'fake'      =>  0
+        ]);
+        $gougousis->save();
         
-        $this->call('POST', '/api/domains',$post_data,[],[],['HTTP_X-CSRF-Token'=>csrf_token(),'contentType'=>'application/json; charset=utf-8'],[]);
+        $dom1 = new Domain([
+            'node_name' =>  'dom1',
+            'full_name' =>  'dom1.gougousis.gr',
+            'fake'      =>  0
+        ]);
+        $dom1->save();
+        $dom1->makeChildOf($gougousis);
         
-        // Add domains as non-admin
-        $this->be($this->non_admin);        
-        $post_data = array(
-            'domains'   =>  array(
-                array(
-                    'node_name'       =>  'takis.gr',
-                    'parent_domain'   =>  '',
-                    'fake_domain'     =>  0
-                )
-            )
-        ); 
+        $dom2 = new Domain([
+            'node_name' =>  'dom2',
+            'full_name' =>  'dom2.gougousis.gr',
+            'fake'      =>  0
+        ]);
+        $dom2->save();
+        $dom2->makeChildOf($gougousis);
+                                     
+        $delegation = new DomainDelegation([
+            'user_id'   =>  $this->admin->id,
+            'domain_id' =>  $gougousis->id
+        ]);
+        $delegation->save();
         
-        $this->call('POST', '/api/domains',$post_data,[],[],['HTTP_X-CSRF-Token'=>csrf_token(),'contentType'=>'application/json; charset=utf-8'],[]);
+        // These are supposed to be created by $this->non_admin
+        $takis = new Domain([
+            'node_name' =>  'takis.gr',
+            'full_name' =>  'takis.gr',
+            'fake'      =>  0
+        ]);
+        $takis->save();   
         
+        $delegation = new DomainDelegation([
+            'user_id'   =>  $this->non_admin->id,
+            'domain_id' =>  $takis->id
+        ]);
+        $delegation->save();
     }
     
     protected function add_sample_servers(){
-        // Add servers a admin
-        $this->be($this->admin);
+        $dom1 = Domain::where('node_name','dom1')->first();
+        $takis = Domain::where('node_name','takis.gr')->first();
+        
+        DB::table('servers')->insert([
+           [
+                'hostname' =>  's1',
+                'domain'   =>  $dom1->parent_id,
+                'ip'    =>  '62.169.226.30',
+                'os'    =>  'Windows'
+           ],[
+                'hostname' =>  's2',
+                'domain'   =>  $dom1->id,
+                'ip'    =>  '148.251.138.169',
+                'os'    =>  'Linux'
+           ],[
+                'hostname' =>  's4',
+                'domain'   =>  $takis->id,
+                'ip'    =>  '77.235.54.162',
+                'os'    =>  'Windows'
+           ]
+        ]);             
+    }
+    
+    /** 
+     * @test 
+     * @group serversApi
+     */
+    public function can_create_servers(){
+        
+        // Add servers to a domain you can manage
+        $this->be($this->non_admin);  
         $post_data = array(
             'servers'   =>  array( 
                 array(
-                    'hostname' =>  's1',
-                    'domain'   =>  'gougousis.gr',
-                    'ip'    =>  '62.169.226.30',
-                    'os'    =>  'Windows'
-                ),
-                array(
-                    'hostname' =>  's2',
-                    'domain'   =>  'dom1.gougousis.gr',
-                    'ip'    =>  '148.251.138.169',
-                    'os'    =>  'Linux'
-                )
+                    'hostname'  =>  'cron',
+                    'domain'    =>  'takis.gr',
+                    'ip'        =>  '216.58.212.14',
+                    'os'        =>  'Android'
+                )               
             )
-        ); 
-        
-        $this->call('POST', '/api/servers',$post_data,[],[],['HTTP_X-CSRF-Token'=>csrf_token(),'contentType'=>'application/json; charset=utf-8'],[]);
-        
-        // Add servers as non-admin
-        $this->be($this->non_admin);
-        $post_data = array(
-            'servers'   =>  array(
-                array(
-                    'hostname' =>  's4',
-                    'domain'   =>  'takis.gr',
-                    'ip'    =>  '77.235.54.162',
-                    'os'    =>  'Windows'
-                )                
-            )
-        ); 
-        
+        );         
         $this->call('POST', '/api/servers',$post_data,[],[],['HTTP_X-CSRF-Token'=>csrf_token(),'contentType'=>'application/json; charset=utf-8'],[]);        
+        $this->assertEquals(200,$this->response->getStatusCode(),'Adding server to a domain you can manage failed!');
+        $servers = json_decode($this->response->getContent());
+        $this->assertEquals(1,count($servers),'When adding 1 server to a domain, the response should contain 1 server.');
+        $this->assertEquals('cron',$servers[0]->hostname);
         
+        // Add servers to a domain you cannot manage
+        $this->be($this->admin);          
+        $post_data = array(
+            'servers'   =>  array( 
+                array(
+                    'hostname'  =>  'cron2',
+                    'domain'    =>  'takis.gr',
+                    'ip'        =>  '216.58.212.15',
+                    'os'        =>  'Android'
+                )               
+            )
+        );         
+        $this->call('POST', '/api/servers',$post_data,[],[],['HTTP_X-CSRF-Token'=>csrf_token(),'contentType'=>'application/json; charset=utf-8'],[]);        
+        $this->assertEquals(403,$this->response->getStatusCode(),'Adding server to a domain you can manage failed!');
     }
     
-    /** @test */
+    /** 
+     * @test 
+     * @group serversApi
+     */
     public function get_servers_under_specific_domain(){         
         
         $this->be($this->admin);     
@@ -130,7 +168,10 @@ class ServersApiTest extends TestCase
 
     }
     
-    /** @test */
+    /** 
+     * @test 
+     * @group serversApi
+     */
     public function get_server_info(){ 
         
         $this->be($this->admin);     
@@ -152,7 +193,10 @@ class ServersApiTest extends TestCase
         $this->assertEquals(403,$this->response->getStatusCode(),'A user who is not superuser should not be able to read info about a server he cannot manage');
     }
     
-    /** @test */
+    /** 
+     * @test 
+     * @group serversApi
+     */
     public function update_server_info(){ 
 
         $this->be($this->admin);
@@ -190,7 +234,10 @@ class ServersApiTest extends TestCase
         
     }
     
-    /** @test */
+    /** 
+     * @test 
+     * @group serversApi
+     */
     public function delete_a_server(){ 
         $this->be($this->admin);
         
@@ -203,7 +250,10 @@ class ServersApiTest extends TestCase
         $this->assertEquals(403,$this->response->getStatusCode(),'A user should not be able to delete a server in a domain he cannot manage');
     }   
     
-    /** @test */
+    /** 
+     * @test 
+     * @group serversApi
+     */
     public function get_list_of_all_servers_the_user_can_nanage(){
         $this->be($this->admin);        
         $this->call('GET','api/servers');
@@ -213,7 +263,10 @@ class ServersApiTest extends TestCase
         $this->assertEquals('s2',$servers[1]->hostname,'The name of the first server the user can manage should be s2');
     }
     
-    /** @test */
+    /** 
+     * @test 
+     * @group serversApi
+     */
     public function get_list_of_servers_on_a_specific_domain(){
         $this->be($this->admin);
         

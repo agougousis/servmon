@@ -69,8 +69,8 @@ class DomainDelegation extends Model {
      * @param array $domainList
      * @return DomainDelegation
      */
-    public static function firstUserDelegationToDomains($userId,$domainList){
-        return DomainDelegation::where('user_id',$userId)->whereIn('domain_id',$domainList)->first();
+    public static function countUserDelegationToDomains($userId,$domainList){
+        return DomainDelegation::where('user_id',$userId)->whereIn('domain_id',$domainList)->count();
     }
     
 }

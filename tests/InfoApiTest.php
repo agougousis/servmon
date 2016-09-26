@@ -14,7 +14,6 @@ class InfoApiTest extends TestCase
     
     public function setUp(){
         parent::setUp();                   
-        $this->artisan("migrate:refresh");
         $this->artisan("db:seed");
         
         $this->add_sample_users();
@@ -29,7 +28,10 @@ class InfoApiTest extends TestCase
         $this->admin = User::where('superuser',1)->first();
     }
     
-    /** @test */
+    /** 
+     * @test 
+     * @group infoApi
+     */
     public function retrieve_list_of_supported_types(){
         
         $this->be($this->admin);
@@ -41,7 +43,10 @@ class InfoApiTest extends TestCase
         $this->assertEquals(5,count($list->database));
     }
     
-    /** @test */
+    /** 
+     * @test 
+     * @group infoApi
+     */
     public function retrieve_settings(){
         $this->be($this->admin);
         $this->call('GET','api/info/settings');
@@ -51,7 +56,10 @@ class InfoApiTest extends TestCase
         $this->assertObjectHasAttribute('monitoring_status',$list);        
     }
     
-    /** @test */
+    /** 
+     * @test 
+     * @group infoApi
+     */
     public function retrieve_my_profile(){
         $this->be($this->admin);
         // We are going to retrieve admin's profile

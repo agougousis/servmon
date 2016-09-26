@@ -8,6 +8,7 @@ use App\User;
 use App\Models\Domain;
 use App\Models\Server;
 use App\Models\Service;
+use App\Models\DomainDelegation;
 
 class ServicesApiTest extends TestCase
 {
@@ -17,7 +18,6 @@ class ServicesApiTest extends TestCase
     
     public function setUp(){
         parent::setUp();                   
-        $this->artisan("migrate:refresh");
         $this->artisan("db:seed");
         
         $this->add_sample_users();
@@ -37,78 +37,74 @@ class ServicesApiTest extends TestCase
     
     protected function add_sample_domains(){        
         
-        // Add domains as admin
-        $this->be($this->admin);        
-        $post_data = array(
-            'domains'   =>  array(
-                array(
-                    'node_name'       =>  'gougousis.gr',
-                    'parent_domain'   =>  '',
-                    'fake_domain'     =>  0
-                ),
-                array(
-                    'node_name'       =>  'dom1',
-                    'parent_domain'   =>  'gougousis.gr',
-                    'fake_domain'     =>  0
-                )
-            )
-        ); 
+        // These are supposed to be created by $this->admin
+        $gougousis = new Domain([
+            'node_name' =>  'gougousis.gr',
+            'full_name' =>  'gougousis.gr',
+            'fake'      =>  0
+        ]);
+        $gougousis->save();
         
-        $this->call('POST', '/api/domains',$post_data,[],[],['HTTP_X-CSRF-Token'=>csrf_token(),'contentType'=>'application/json; charset=utf-8'],[]);
+        $dom1 = new Domain([
+            'node_name' =>  'dom1',
+            'full_name' =>  'dom1.gougousis.gr',
+            'fake'      =>  0
+        ]);
+        $dom1->save();
+        $dom1->makeChildOf($gougousis);
         
-        // Add domains as non-admin
-        $this->be($this->non_admin);        
-        $post_data = array(
-            'domains'   =>  array(
-                array(
-                    'node_name'       =>  'takis.gr',
-                    'parent_domain'   =>  '',
-                    'fake_domain'     =>  0
-                )
-            )
-        ); 
+        $dom2 = new Domain([
+            'node_name' =>  'dom2',
+            'full_name' =>  'dom2.gougousis.gr',
+            'fake'      =>  0
+        ]);
+        $dom2->save();
+        $dom2->makeChildOf($gougousis);
+                                     
+        $delegation = new DomainDelegation([
+            'user_id'   =>  $this->admin->id,
+            'domain_id' =>  $gougousis->id
+        ]);
+        $delegation->save();
         
-        $this->call('POST', '/api/domains',$post_data,[],[],['HTTP_X-CSRF-Token'=>csrf_token(),'contentType'=>'application/json; charset=utf-8'],[]);
+        // These are supposed to be created by $this->non_admin
+        $takis = new Domain([
+            'node_name' =>  'takis.gr',
+            'full_name' =>  'takis.gr',
+            'fake'      =>  0
+        ]);
+        $takis->save();   
+        
+        $delegation = new DomainDelegation([
+            'user_id'   =>  $this->non_admin->id,
+            'domain_id' =>  $takis->id
+        ]);
+        $delegation->save();
         
     }
     
     protected function add_sample_servers(){
-        // Add servers a admin
-        $this->be($this->admin);
-        $post_data = array(
-            'servers'   =>  array( 
-                array(
-                    'hostname' =>  's1',
-                    'domain'   =>  'gougousis.gr',
-                    'ip'    =>  '62.169.226.30',
-                    'os'    =>  'Windows'
-                ),
-                array(
-                    'hostname' =>  's2',
-                    'domain'   =>  'dom1.gougousis.gr',
-                    'ip'    =>  '148.251.138.169',
-                    'os'    =>  'Linux'
-                )
-            )
-        ); 
+        $dom1 = Domain::where('node_name','dom1')->first();
+        $takis = Domain::where('node_name','takis.gr')->first();
         
-        $this->call('POST', '/api/servers',$post_data,[],[],['HTTP_X-CSRF-Token'=>csrf_token(),'contentType'=>'application/json; charset=utf-8'],[]);
-        
-        // Add servers as non-admin
-        $this->be($this->non_admin);
-        $post_data = array(
-            'servers'   =>  array(
-                array(
-                    'hostname' =>  's4',
-                    'domain'   =>  'takis.gr',
-                    'ip'    =>  '77.235.54.162',
-                    'os'    =>  'Windows'
-                )                
-            )
-        ); 
-        
-        $this->call('POST', '/api/servers',$post_data,[],[],['HTTP_X-CSRF-Token'=>csrf_token(),'contentType'=>'application/json; charset=utf-8'],[]);        
-        
+        DB::table('servers')->insert([
+           [
+                'hostname' =>  's1',
+                'domain'   =>  $dom1->parent_id,
+                'ip'    =>  '62.169.226.30',
+                'os'    =>  'Windows'
+           ],[
+                'hostname' =>  's2',
+                'domain'   =>  $dom1->id,
+                'ip'    =>  '148.251.138.169',
+                'os'    =>  'Linux'
+           ],[
+                'hostname' =>  's4',
+                'domain'   =>  $takis->id,
+                'ip'    =>  '77.235.54.162',
+                'os'    =>  'Windows'
+           ]
+        ]);             
     }
     
     protected function add_sample_services(){
@@ -140,7 +136,10 @@ class ServicesApiTest extends TestCase
         $service->save();
     }
     
-    /** @test */
+    /** 
+     * @test 
+     * @group servicesApi
+     */
     public function add_services(){    
         
         $this->be($this->non_admin);  
@@ -189,7 +188,10 @@ class ServicesApiTest extends TestCase
         
     }
     
-    /** @test */
+    /** 
+     * @test 
+     * @group servicesApi
+     */
     public function update_services(){    
         
         $this->be($this->admin);  
@@ -232,7 +234,10 @@ class ServicesApiTest extends TestCase
         
     }
     
-    /** @test */
+    /** 
+     * @test 
+     * @group servicesApi
+     */
     public function delete_services(){    
         
         $this->be($this->admin);  
@@ -249,7 +254,10 @@ class ServicesApiTest extends TestCase
         
     }
     
-    /** @test */
+    /** 
+     * @test 
+     * @group servicesApi
+     */
     public function read_service_info(){    
         
         $this->be($this->admin);  

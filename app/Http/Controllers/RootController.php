@@ -122,14 +122,14 @@ class RootController extends Controller {
      * @param int $domainId
      * @return boolean
      */
-    protected function canManageDomain($userId,$domainId){
-        
+    protected function canManageDomain($userId,$domainId){        
         $domain = Domain::find($domainId);
+        
         // Find domain's ancestors (including self)
-        $ancestorDomains = array_flatten($domain->ancestorsAndSelf()->select('id')->get()->ToArray());  
+        $ancestorDomains = array_flatten($domain->ancestorsAndSelf()->select('id')->get()->ToArray());          
         // If the user has been delegated at least one of domain's ancestors, then he can manage the domain
-        $userRelationsToAncestors = DomainDelegation::firstUserDelegationToDomains($userId,$ancestorDomains);
-        if(empty($userRelationsToAncestors)){
+        $countUserRelationsToAncestors = DomainDelegation::countUserDelegationToDomains($userId,$ancestorDomains);        
+        if($countUserRelationsToAncestors == 0){
            return false;
         } else {
             return true;
@@ -203,7 +203,7 @@ class RootController extends Controller {
             case 'domain':
                 
                 switch($actionType){
-                    case 'create':
+                    case 'create':                        
                         if(($context == null)||($this->canManageDomain($userId, $context))){
                             return true;
                         } else {

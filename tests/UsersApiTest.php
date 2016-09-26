@@ -19,7 +19,6 @@ class UsersApiTest extends TestCase
     
     public function setUp(){
         parent::setUp();                   
-        $this->artisan("migrate:refresh");
         $this->artisan("db:seed");
         
         $this->add_sample_users();        
@@ -40,43 +39,49 @@ class UsersApiTest extends TestCase
         
     protected function add_sample_domains(){        
         
-        // Add domains as admin
-        $this->be($this->admin);        
-        $post_data = array(
-            'domains'   =>  array(
-                array(
-                    'node_name'       =>  'gougousis.gr',
-                    'parent_domain'   =>  '',
-                    'fake_domain'     =>  0
-                ),
-                array(
-                    'node_name'       =>  'dom1',
-                    'parent_domain'   =>  'gougousis.gr',
-                    'fake_domain'     =>  0
-                ),
-                array(
-                    'node_name'       =>  'dom2',
-                    'parent_domain'   =>  'gougousis.gr',
-                    'fake_domain'     =>  0
-                )
-            )
-        ); 
+        // These are supposed to be created by $this->admin
+        $gougousis = new Domain([
+            'node_name' =>  'gougousis.gr',
+            'full_name' =>  'gougousis.gr',
+            'fake'      =>  0
+        ]);
+        $gougousis->save();
         
-        $this->call('POST', '/api/domains',$post_data,[],[],['HTTP_X-CSRF-Token'=>csrf_token(),'contentType'=>'application/json; charset=utf-8'],[]);
+        $dom1 = new Domain([
+            'node_name' =>  'dom1',
+            'full_name' =>  'dom1.gougousis.gr',
+            'fake'      =>  0
+        ]);
+        $dom1->save();
+        $dom1->makeChildOf($gougousis);
         
-        // Add domains as non-admin
-        $this->be($this->non_admin);        
-        $post_data = array(
-            'domains'   =>  array(
-                array(
-                    'node_name'       =>  'takis.gr',
-                    'parent_domain'   =>  '',
-                    'fake_domain'     =>  0
-                )
-            )
-        ); 
+        $dom2 = new Domain([
+            'node_name' =>  'dom2',
+            'full_name' =>  'dom2.gougousis.gr',
+            'fake'      =>  0
+        ]);
+        $dom2->save();
+        $dom2->makeChildOf($gougousis);
+                                     
+        $delegation = new DomainDelegation([
+            'user_id'   =>  $this->admin->id,
+            'domain_id' =>  $gougousis->id
+        ]);
+        $delegation->save();
         
-        $this->call('POST', '/api/domains',$post_data,[],[],['HTTP_X-CSRF-Token'=>csrf_token(),'contentType'=>'application/json; charset=utf-8'],[]);
+        // These are supposed to be created by $this->non_admin
+        $takis = new Domain([
+            'node_name' =>  'takis.gr',
+            'full_name' =>  'takis.gr',
+            'fake'      =>  0
+        ]);
+        $takis->save();   
+        
+        $delegation = new DomainDelegation([
+            'user_id'   =>  $this->non_admin->id,
+            'domain_id' =>  $takis->id
+        ]);
+        $delegation->save();
         
     }
     
@@ -97,7 +102,10 @@ class UsersApiTest extends TestCase
         
     }        
     
-    /** @test */
+    /** 
+     * @test 
+     * @group usersApi
+     */
     public function search_users(){
         $this->be($this->admin);
         $this->call('GET','api/users');
@@ -105,7 +113,10 @@ class UsersApiTest extends TestCase
         $this->assertEquals(4,count($users));
     }
     
-    /** @test */
+    /** 
+     * @test 
+     * @group usersApi
+     */
     public function read_user_info(){
         $this->be($this->admin);
         $this->visit('api/users/1')->seeJsonEquals([
@@ -120,7 +131,10 @@ class UsersApiTest extends TestCase
 
     }
     
-    /** @test */
+    /** 
+     * @test 
+     * @group usersApi
+     */
     public function create_users(){
         $this->be($this->admin);  
         
@@ -167,7 +181,10 @@ class UsersApiTest extends TestCase
         $this->assertEquals(401,$this->response->getStatusCode(),'A non-superuser should not be able to add new users!');
     }
     
-    /** @test */
+    /** 
+     * @test 
+     * @group usersApi
+     */
     public function activate_deactivate_users(){
         
         $this->be($this->admin);
@@ -199,7 +216,10 @@ class UsersApiTest extends TestCase
         $this->assertEquals(401,$this->response->getStatusCode(),'You cannot deactivate yourself!');
     } 
     
-    /** @test */
+    /** 
+     * @test 
+     * @group usersApi
+     */
     public function make_unmake_superusers(){
         
         $this->be($this->admin);
@@ -216,9 +236,9 @@ class UsersApiTest extends TestCase
         $old_superuser = User::find($this->non_admin->id);
         $this->assertEquals(0,$old_superuser->superuser);
 
-        // You cannot unmake youeself from being superuser
+        // You cannot unmake yourself from being superuser
         $this->call('PUT', '/api/users/'.$this->admin->id.'/unmake_superuser',[],[],[],['HTTP_X-CSRF-Token'=>csrf_token(),'contentType'=>'application/json; charset=utf-8'],[]);        
-        $this->assertEquals(401,$this->response->getStatusCode(),'A non-superuser should not be able to unmake superusers!');
+        $this->assertEquals(400,$this->response->getStatusCode(),'You cannot revoke superuser privilege from yourself!');
         
         $this->be($this->non_admin);
         
@@ -232,7 +252,10 @@ class UsersApiTest extends TestCase
                 
     }
     
-    /** @test */
+    /** 
+     * @test 
+     * @group usersApi
+     */
     public function delete_users(){
         
         // A non-superuser tries to delete a user

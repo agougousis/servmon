@@ -6,68 +6,123 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 
 use App\User;
 use App\Models\Domain;
+use App\Models\DomainDelegation;
 
 class DomainsApiTest extends TestCase
 {
-    use DatabaseTransactions;    
-    
     protected $admin;
     protected $non_admin;
     
     public function setUp(){
         parent::setUp();                   
-        $this->artisan("migrate:refresh");
         $this->artisan("db:seed");
+        
+        $this->add_sample_users();
+        $this->add_sample_domains();
     }
     
-    protected function add_sample_data(){ 
-        
+    protected function add_sample_users(){
         // An admin user already exists from seeding. We also need
         // a non-admin user
         factory(User::class,1)->create();        
         
         $this->non_admin = User::where('superuser',0)->first();
         $this->admin = User::where('superuser',1)->first();
-        
-        // Add domains as admin
-        $this->be($this->admin);
-        
-        $post_data = array(
-            'domains'   =>  array(
-                array(
-                    'node_name'       =>  'gougousis.gr',
-                    'parent_domain'   =>  '',
-                    'fake_domain'     =>  0
-                ),
-                array(
-                    'node_name'       =>  'dom1',
-                    'parent_domain'   =>  'gougousis.gr',
-                    'fake_domain'     =>  0
-                )
-            )
-        ); 
-        
-        $this->call('POST', '/api/domains',$post_data,[],[],['HTTP_X-CSRF-Token'=>csrf_token(),'contentType'=>'application/json; charset=utf-8'],[]);
-        
-        // Add domains as non-admin
-        $this->be($this->non_admin);        
-        $post_data = array(
-            'domains'   =>  array(
-                array(
-                    'node_name'       =>  'takis.gr',
-                    'parent_domain'   =>  '',
-                    'fake_domain'     =>  0
-                )
-            )
-        ); 
-        
-        $this->call('POST', '/api/domains',$post_data,[],[],['HTTP_X-CSRF-Token'=>csrf_token(),'contentType'=>'application/json; charset=utf-8'],[]);
-        
     }
     
-     /** @test */
-    public function can_search_domains(){ 
-        $this->add_sample_data();
+    protected function add_sample_domains(){        
+        
+        // These are supposed to be created by $this->admin
+        $gougousis = new Domain([
+            'node_name' =>  'gougousis.gr',
+            'full_name' =>  'gougousis.gr',
+            'fake'      =>  0
+        ]);
+        $gougousis->save();
+        
+        $dom1 = new Domain([
+            'node_name' =>  'dom1',
+            'full_name' =>  'dom1.gougousis.gr',
+            'fake'      =>  0
+        ]);
+        $dom1->save();
+        $dom1->makeChildOf($gougousis);
+        
+        $dom2 = new Domain([
+            'node_name' =>  'dom2',
+            'full_name' =>  'dom2.gougousis.gr',
+            'fake'      =>  0
+        ]);
+        $dom2->save();
+        $dom2->makeChildOf($gougousis);
+                                     
+        $delegation = new DomainDelegation([
+            'user_id'   =>  $this->admin->id,
+            'domain_id' =>  $gougousis->id
+        ]);
+        $delegation->save();
+        
+        // These are supposed to be created by $this->non_admin
+        $takis = new Domain([
+            'node_name' =>  'takis.gr',
+            'full_name' =>  'takis.gr',
+            'fake'      =>  0
+        ]);
+        $takis->save();   
+        
+        $delegation = new DomainDelegation([
+            'user_id'   =>  $this->non_admin->id,
+            'domain_id' =>  $takis->id
+        ]);
+        $delegation->save();
+    }
+    
+    /** 
+     * @test 
+     * @group domainsApi
+     */
+    public function can_create_domains(){
+        // Adding a root domain with subdomain
+        $this->be($this->non_admin);  
+        $post_data = array(
+            'domains'   =>  array( 
+                array(
+                    'node_name'     =>  'test.gr',
+                    'parent_domain' =>  null,
+                    'fake_domain'   =>  0
+                ),    
+                array(
+                    'node_name'     =>  'dom1',
+                    'parent_domain' =>  'test.gr',
+                    'fake_domain'   =>  0
+                )
+            )
+        );         
+        $this->call('POST', '/api/domains',$post_data,[],[],['HTTP_X-CSRF-Token'=>csrf_token(),'contentType'=>'application/json; charset=utf-8'],[]);        
+        $this->assertEquals(200,$this->response->getStatusCode(),'Adding root domain with subdomain failed!');
+        $domains = json_decode($this->response->getContent());
+        $this->assertEquals(2,count($domains),'When adding 2 domains, the response should contain 2 domains.');
+        $this->assertEquals('test.gr',$domains[0]->node_name);
+        
+        // Adding a subdomain to a domain you cannot manage 
+        $post_data = array(
+            'domains'   =>  array( 
+                array(
+                    'node_name'     =>  'dom7',
+                    'parent_domain' =>  'gougousis.gr',
+                    'fake_domain'   =>  0
+                )
+            )
+        );         
+        $this->call('POST', '/api/domains',$post_data,[],[],['HTTP_X-CSRF-Token'=>csrf_token(),'contentType'=>'application/json; charset=utf-8'],[]);        
+        $this->assertEquals(403,$this->response->getStatusCode(),'You should not be able to add a subdomain to a domain you cannot manage!');
+    }
+    
+    /** 
+     * @test 
+     * @group domainsApi
+     */
+    public function can_search_domains(){         
         
         // Admin searching
         $this->be($this->admin);        
@@ -79,10 +134,14 @@ class DomainsApiTest extends TestCase
                     [
                         'nid'   =>  2,
                         'text'  =>  'dom1.gougousis.gr'
+                    ],
+                    [
+                        'nid'   =>  3,
+                        'text'  =>  'dom2.gougousis.gr'
                     ]
                 ]
             ],[
-                'nid'   =>  3,
+                'nid'   =>  4,
                 'text'  =>  'takis.gr',
                 'state' =>  [
                     'disabled'  =>  true
@@ -106,20 +165,28 @@ class DomainsApiTest extends TestCase
                         'state' =>  [
                             'disabled'  =>  true
                         ]
+                    ],[
+                        'nid'   =>  3,
+                        'text'  =>  'dom2.gougousis.gr',
+                        'state' =>  [
+                            'disabled'  =>  true
+                        ]
                     ]
                 ]
             ],[
-                'nid'   =>  3,
+                'nid'   =>  4,
                 'text'  =>  'takis.gr'               
             ]
         ]);
        
     }    
     
-     /** @test */
+    /** 
+     * @test 
+     * @group domainsApi
+     */
     public function can_delete_domains(){ 
-        
-        $this->add_sample_data();
+                
         $this->be($this->admin);
         
         // Admin - Try to delete a domain that he can manage
@@ -127,9 +194,15 @@ class DomainsApiTest extends TestCase
         $this->visit('api/domains')->seeJsonEquals([
             [
                 'nid'   =>  1,
-                'text'  =>  'gougousis.gr'                
+                'text'  =>  'gougousis.gr'                ,
+                'children'  =>  [                    
+                    [
+                        'nid'   =>  3,
+                        'text'  =>  'dom2.gougousis.gr'
+                    ]
+                ]
             ],[
-                'nid'   =>  3,
+                'nid'   =>  4,
                 'text'  =>  'takis.gr',
                 'state' =>  [
                     'disabled'  =>  true
@@ -151,6 +224,15 @@ class DomainsApiTest extends TestCase
                 'text'  =>  'gougousis.gr',
                 'state' =>  [
                     'disabled'  =>  true
+                ],
+                'children'  =>  [                    
+                    [
+                        'nid'   =>  3,
+                        'text'  =>  'dom2.gougousis.gr',
+                        'state' =>  [
+                            'disabled'  =>  true
+                        ]
+                    ]
                 ]
             ]
         ]);

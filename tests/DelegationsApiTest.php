@@ -20,7 +20,6 @@ class DelegationsApiTest extends TestCase
     
     public function setUp(){
         parent::setUp();                   
-        $this->artisan("migrate:refresh");
         $this->artisan("db:seed");
         
         $this->add_sample_users();
@@ -43,82 +42,80 @@ class DelegationsApiTest extends TestCase
     
     protected function add_sample_domains(){        
         
-        // Add domains as admin
-        $this->be($this->admin);        
-        $post_data = array(
-            'domains'   =>  array(
-                array(
-                    'node_name'       =>  'gougousis.gr',
-                    'parent_domain'   =>  '',
-                    'fake_domain'     =>  0
-                ),
-                array(
-                    'node_name'       =>  'dom1',
-                    'parent_domain'   =>  'gougousis.gr',
-                    'fake_domain'     =>  0
-                ),
-                array(
-                    'node_name'       =>  'dom2',
-                    'parent_domain'   =>  'gougousis.gr',
-                    'fake_domain'     =>  0
-                )
-            )
-        ); 
+        // These are supposed to be created by $this->admin
+        $gougousis = new Domain([
+            'node_name' =>  'gougousis.gr',
+            'full_name' =>  'gougousis.gr',
+            'fake'      =>  0
+        ]);
+        $gougousis->save();
         
-        $this->call('POST', '/api/domains',$post_data,[],[],['HTTP_X-CSRF-Token'=>csrf_token(),'contentType'=>'application/json; charset=utf-8'],[]);
+        $dom1 = new Domain([
+            'node_name' =>  'dom1',
+            'full_name' =>  'dom1.gougousis.gr',
+            'fake'      =>  0
+        ]);
+        $dom1->save();
+        $dom1->makeChildOf($gougousis);
         
-        // Add domains as non-admin
-        $this->be($this->non_admin);        
-        $post_data = array(
-            'domains'   =>  array(
-                array(
-                    'node_name'       =>  'takis.gr',
-                    'parent_domain'   =>  '',
-                    'fake_domain'     =>  0
-                )
-            )
-        ); 
+        $dom2 = new Domain([
+            'node_name' =>  'dom2',
+            'full_name' =>  'dom2.gougousis.gr',
+            'fake'      =>  0
+        ]);
+        $dom2->save();
+        $dom2->makeChildOf($gougousis);
+                                     
+        $delegation = new DomainDelegation([
+            'user_id'   =>  $this->admin->id,
+            'domain_id' =>  $gougousis->id
+        ]);
+        $delegation->save();
         
-        $this->call('POST', '/api/domains',$post_data,[],[],['HTTP_X-CSRF-Token'=>csrf_token(),'contentType'=>'application/json; charset=utf-8'],[]);
+        // These are supposed to be created by $this->non_admin
+        $takis = new Domain([
+            'node_name' =>  'takis.gr',
+            'full_name' =>  'takis.gr',
+            'fake'      =>  0
+        ]);
+        $takis->save();   
+        
+        $delegation = new DomainDelegation([
+            'user_id'   =>  $this->non_admin->id,
+            'domain_id' =>  $takis->id
+        ]);
+        $delegation->save();
         
     }
     
     protected function add_sample_servers(){
-        // Add servers a admin
-        $this->be($this->admin);
-        $post_data = array(
-            'servers'   =>  array( 
-                array(
-                    'hostname' =>  's1',
-                    'domain'   =>  'gougousis.gr',
-                    'ip'    =>  '62.169.226.30',
-                    'os'    =>  'Windows'
-                ),
-                array(
-                    'hostname' =>  's2',
-                    'domain'   =>  'dom1.gougousis.gr',
-                    'ip'    =>  '148.251.138.169',
-                    'os'    =>  'Linux'
-                )
-            )
-        ); 
         
-        $this->call('POST', '/api/servers',$post_data,[],[],['HTTP_X-CSRF-Token'=>csrf_token(),'contentType'=>'application/json; charset=utf-8'],[]);
+        $takis = Domain::where('node_name','takis.gr')->first();
+        $dom1 = Domain::where('node_name','dom1')->first();
         
-        // Add servers as non-admin
-        $this->be($this->non_admin);
-        $post_data = array(
-            'servers'   =>  array(
-                array(
-                    'hostname' =>  's4',
-                    'domain'   =>  'takis.gr',
-                    'ip'    =>  '77.235.54.162',
-                    'os'    =>  'Windows'
-                )                
-            )
-        ); 
+        $s1 = new Server([
+            'hostname'  =>  's1',
+            'domain'    =>  $dom1->parent_id,
+            'ip'        =>  '62.169.226.30',
+            'os'        =>  'Windows'
+        ]);
+        $s1->save();
         
-        $this->call('POST', '/api/servers',$post_data,[],[],['HTTP_X-CSRF-Token'=>csrf_token(),'contentType'=>'application/json; charset=utf-8'],[]);        
+        $s2 = new Server([
+            'hostname'  =>  's2',
+            'domain'    =>  $dom1->id,
+            'ip'        =>  '148.251.138.169',
+            'os'        =>  'Linux'
+        ]);
+        $s2->save();
+        
+        $s4 = new Server([
+            'hostname'  =>  's4',
+            'domain'    =>  $takis->id,
+            'ip'        =>  '77.235.54.162',
+            'os'        =>  'Windows'
+        ]);
+        $s4->save();                               
         
     }
     
@@ -150,9 +147,13 @@ class DelegationsApiTest extends TestCase
         
     } 
     
-    /** @test */
+    
+    /** 
+     * @test 
+     * @group delegationsApi
+     */
     public function create_server_delegations(){ 
-        
+
         // Admin tries to delegate a server to a user who cannot manage server's domain
         $this->be($this->admin);  
         $server = Server::where('hostname','s2')->first();
@@ -166,7 +167,7 @@ class DelegationsApiTest extends TestCase
             )
         );        
         $this->call('POST', '/api/delegations',$post_data,[],[],['HTTP_X-CSRF-Token'=>csrf_token(),'contentType'=>'application/json; charset=utf-8'],[]);
-        $this->assertEquals(200,$this->response->getStatusCode(),"An admin should be able to delegate a server to a user who cannot manage server's domaine!");
+        $this->assertEquals(200,$this->response->getStatusCode(),"An admin should be able to delegate a server to a user who cannot manage server's domaine!");        
         
         // Admin tries to delegate a server to user who manages the server's domain 
         $server = Server::where('hostname','s4')->first();
@@ -178,9 +179,10 @@ class DelegationsApiTest extends TestCase
                     'duser' =>  $this->non_admin->email       
                 )
             )
-        );     
+        );        
         $this->call('POST', '/api/delegations',$post_data,[],[],['HTTP_X-CSRF-Token'=>csrf_token(),'contentType'=>'application/json; charset=utf-8'],[]);
-        $this->assertEquals(400,$this->response->getStatusCode(),"An admin should not be able to delegate a server to a user who can manage server's domaine!");        
+        $this->assertEquals(400,$this->response->getStatusCode(),"An admin should be able to delegate a server to a user who cannot manage server's domaine!");
+        $delegation = ServerDelegation::where('user_id',$this->non_admin->id)->get()->toArray();
         
         // Non-admin domain manager tries to delegate server
         $this->be($this->non_admin);  
@@ -195,11 +197,13 @@ class DelegationsApiTest extends TestCase
             )
         );     
         $this->call('POST', '/api/delegations',$post_data,[],[],['HTTP_X-CSRF-Token'=>csrf_token(),'contentType'=>'application/json; charset=utf-8'],[]);
-        $this->assertEquals(401,$this->response->getStatusCode(),"An admin should not be able to delegate a server to a user who cannot manage server's domaine!");        
-        
+        $this->assertEquals(401,$this->response->getStatusCode(),"An non admin should not be able to delegate a server to a user who cannot manage server's domaine!");        
     }
     
-    /** @test */
+    /** 
+     * @test 
+     * @group delegationsApi
+     */
     public function create_domain_delegations(){                
         
          // Try to delegate a domain you cannot manage without being superuser   
@@ -257,7 +261,10 @@ class DelegationsApiTest extends TestCase
         $this->assertTrue(empty($delegation));
     }
     
-    /** @test */
+    /** 
+     * @test 
+     * @group delegationsApi
+     */
     public function delete_domain_delegation(){          
         
         $delegation = DomainDelegation::where('user_id',$this->admin2->id)->first();
@@ -279,10 +286,13 @@ class DelegationsApiTest extends TestCase
         $this->assertEquals(200,$this->response->getStatusCode(),'A user who is superuser and cannot manage this domain, should be able to delete a domain delegation of this domain.');   
                
         $newUserDelegations = DomainDelegation::where('user_id',$this->admin->id)->first();
-        $this->assertEquals(1,count($newUserDelegations)); 
+        $this->assertEquals(0,count($newUserDelegations),''); 
     }
     
-    /** @test */
+    /** 
+     * @test 
+     * @group delegationsApi
+     */
     public function delete_server_delegation(){
         $this->add_sample_server_delegations();
         $delegation = ServerDelegation::where('user_id',$this->admin2->id)->first();        
@@ -304,7 +314,10 @@ class DelegationsApiTest extends TestCase
         
     }
     
-    /** @test */
+    /** 
+     * @test 
+     * @group delegationsApi
+     */
     public function search_delegations(){ 
         $this->add_sample_server_delegations();        
         $server = Server::where('hostname','s4')->first();                
@@ -346,7 +359,6 @@ class DelegationsApiTest extends TestCase
         $this->assertEquals($actual,$expected);        
         
     }
-    
     
     
 }
