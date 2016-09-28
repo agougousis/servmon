@@ -1,3 +1,5 @@
+<script type="text/javascript" src="{{ asset('js/per_page/delegations_page.js') }}"></script>
+
 <div class="container">
     
     <div class="panel panel-warning" style="margin-top: 30px">

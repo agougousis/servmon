@@ -1,3 +1,5 @@
+<script type="text/javascript" src="{{ asset('js/per_page/configuration_page.js') }}"></script>
+
 <div class="container">
 
     <div class="panel panel-info" style="margin-top: 30px">

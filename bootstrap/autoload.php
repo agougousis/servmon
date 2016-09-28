@@ -1,5 +1,8 @@
 <?php
 
+// Change the max nesting level for xdebug (required if you want code coverage analysis from phpunit)
+//ini_set('xdebug.max_nesting_level', 150); 
+
 define('LARAVEL_START', microtime(true));
 
 /*

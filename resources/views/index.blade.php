@@ -1,3 +1,4 @@
+<script type="text/javascript" src="{{ asset('js/per_page/home_page.js') }}"></script>
 
 <div class="row" style="margin:30px">
     <div class="col-md-6">

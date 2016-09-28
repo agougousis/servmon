@@ -10,7 +10,7 @@
         "baum/baum": "~1.1",
         "laravelcollective/html": "5.2.*",
         "paragonie/constant_time_encoding": "^1.0",
-        "backup-manager/laravel": "^1.1"
+        "backup-manager/laravel": "^1.1" 
     },
     "require-dev": {
         "fzaninotto/faker": "~1.4",

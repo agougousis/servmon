@@ -1,3 +1,5 @@
+<script type="text/javascript" src="{{ asset('js/per_page/users_page.js') }}"></script>
+
 <div class="container">
 
     <div class="row">

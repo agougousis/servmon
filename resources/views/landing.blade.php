@@ -1,3 +1,5 @@
+<script type="text/javascript" src="{{ asset('js/per_page/login_page.js') }}"></script>
+
 <style type="text/css">
     #login-panel {
         width: 400px;

@@ -13,7 +13,7 @@
         <script type="text/javascript" src="{{ asset('js/bootstrap-toggle.min.js') }}"></script>
         <script type="text/javascript" src="{{ asset('js/jstree.min.js') }}"></script>
         <script type="text/javascript" src="{{ asset('js/toastr.js') }}"></script>
-        <script type="text/javascript" src="{{ asset('js/monitor.js') }}"></script>
+        <script type="text/javascript" src="{{ asset('js/common.js') }}"></script>
     </head>
     <body>        
         
