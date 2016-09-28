@@ -24,8 +24,7 @@
             "database"
         ],
         "psr-4": {
-            "App\\": "app/",
-            "phpseclib\\": "app/Packages/phpseclib"
+            "App\\": "app/"            
         },
         "files": [
             "app/Tools/helper.php"

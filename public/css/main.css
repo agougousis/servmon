@@ -50,7 +50,7 @@ body {
 }
 
 #services-list-table td:nth-child(4), #webapps-list-table td:nth-child(3) {
-    width: 150px;
+    width: 170px;
 }
 
 .add-item-icon {
