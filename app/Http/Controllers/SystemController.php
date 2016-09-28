@@ -16,21 +16,7 @@ use Illuminate\Http\Request;
  * @license MIT
  * @author Alexandros Gougousis
  */
-class SystemController extends RootController {                
-    
-    /**
-     * Displays the installation page
-     * 
-     * @return View
-     */
-    public function installation_page(){
-        
-        if(config('app.installation') == 'done'){
-            return Redirect::to('/');
-        } 
-        return $this->load_view('installation','Installation Page');
-        
-    } 
+class SystemController extends RootController {                         
     
     /**
      * Installs the application

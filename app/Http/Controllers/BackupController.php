@@ -42,18 +42,7 @@ class BackupController extends RootController {
         }
         return response()->json($backup_list)->setStatusCode(200, '');
         
-    }
-    
-    /**
-     * Displays the backup administration page
-     * 
-     * @return View
-     */
-    public function backup_page(){                            
-        
-        return $this->load_view('backup',"Backup");
-        
-    }
+    }        
     
     /**
      * Creates a new database backup of monitorable items

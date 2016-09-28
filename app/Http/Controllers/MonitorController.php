@@ -101,18 +101,7 @@ class MonitorController extends RootController {
             return response()->json([])->setStatusCode(200, 'Monitoring status updated!');
         }                
         
-    }
-    
-    /**
-     * Displays the monitoring configuration page
-     * 
-     * @return View
-     */
-    public function configure(){
-
-        return $this->load_view('configure',"Configuration Page");
-        
-    }
+    }        
     
     /**
      * Updates the monitoring status of every monitorable item

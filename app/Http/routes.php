@@ -90,11 +90,11 @@ Route::group(['prefix' => 'api','middleware' => ['superuser']], function () {
 // Elevated Web Pages
 Route::group(['middleware' => ['superuser']], function () {
     
-    Route::get('user_management',array('uses'=>'UserController@user_management'));
-    Route::get('user_management/{userId}',array('uses'=>'UserController@user_profile_management'))->where('userId', '[0-9]+');
-    Route::get('/domains/delegation', array('uses'=>'DelegationController@delegations_page'));       
-    Route::get('/backup', array('uses'=>'BackupController@backup_page'));   
-    Route::get('/monitor/configure', array('uses'=>'MonitorController@configure'));
+    Route::get('user_management',array('uses'=>'WebController@user_management'));
+    Route::get('user_management/{userId}',array('uses'=>'WebController@user_profile_management'))->where('userId', '[0-9]+');
+    Route::get('/domains/delegation', array('uses'=>'WebController@delegations_page'));       
+    Route::get('/backup', array('uses'=>'WebController@backup_page'));   
+    Route::get('/monitor/configure', array('uses'=>'WebController@configure'));
 
 });
 
@@ -106,10 +106,10 @@ Route::group(['middleware' => ['logged']], function () {
     
 });
 
-// Visitor Web Pages
+// Visitor Routes
 Route::group(['middleware' => ['myweb']], function () {   
      
-    Route::get('installation_page',array('uses'=>'SystemController@installation_page'));
+    Route::get('installation_page',array('uses'=>'WebController@installation_page'));
     Route::post('install',array('uses'=>'SystemController@install'));
      
     // Authentication

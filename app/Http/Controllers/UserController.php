@@ -71,18 +71,6 @@ class UserController extends RootController {
                 
         return response()->json($users)->setStatusCode(200,''); 
         
-    }
-
-    /*
-     * Displays the user management page.
-     * 
-     * @return View
-     */
-    public function user_management(){
-      
-        $title = 'User Management';                
-        return $this->load_view('admin.user_management', $title);
-
     }    
 
     /*
@@ -224,25 +212,7 @@ class UserController extends RootController {
                 return response()->json($user)->setStatusCode(200, 'User activated!'); 
             }
 
-    }
-
-    /**
-     * Display a user's profile
-     * 
-     * @param int $user_id
-     * @return Response
-     */
-    public function user_profile_management($user_id){
-
-            $user = User::find($user_id);   
-            if(empty($user)){
-                return $this->custom_error_message("User not found!");
-            }                                   
-            
-            $data['user_id'] = $user_id;             
-            return $this->load_view('admin.user_profile_manage', 'User Profile',$data);            
-            
-    }
+    }    
     
     /**
      * Grants superuser privileges to a user

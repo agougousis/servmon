@@ -22,18 +22,7 @@ use App\Http\Controllers\RootController;
  * @license MIT
  * @author Alexandros Gougousis
  */
-class DelegationController extends RootController {
-    
-    /**
-     * Displays the delegations management page
-     * 
-     * @return View
-     */
-    public function delegations_page(){                 
-        
-        return $this->load_view('delegations','Administration Delegation');
-        
-    }
+class DelegationController extends RootController {        
     
     /**
      * Returns information delegations
