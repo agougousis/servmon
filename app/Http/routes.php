@@ -5,6 +5,9 @@ Route::group(['prefix' => 'api','middleware' => ['myweb']], function () {
     
     Route::post('/login', array('uses'=>'LoginController@login'));  
     
+    // Password reset
+    Route::post('password_reset_request',array('uses'=>'PasswordController@send_reset_link'));    
+    Route::post('password_reset/{code}', array('uses' => 'PasswordController@set_password')); 
 });
 
 // Normal API endpoints
@@ -115,6 +118,11 @@ Route::group(['middleware' => ['myweb']], function () {
     // Authentication
     Route::get('/', array('uses'=>'WebController@landing_page'));              
     
+    // Password Reset 
+    Route::get('password_reset_request',array('uses'=>'WebController@password_reset_request'));    
+    Route::get('reset_link_sent',array('uses'=>'WebController@reset_link_sent'));
+    Route::get('password_reset/{code}', array('uses' => 'WebController@set_password_page'));
+        
 });        
  
  

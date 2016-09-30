@@ -1,15 +1,9 @@
 <script type="text/javascript" src="{{ asset('js/per_page/login_page.js') }}"></script>
 
-<style type="text/css">
-    #login-panel {
-        width: 400px;
-    }
-</style>
-
 
 {{ Form::open(array('class'=>'form-horizontal','style'=>'color:white')) }}
 
-<div class="panel panel-default" id="login-panel" style="color: black">
+<div class="panel panel-default" id="login-panel" style="color: black; width: 400px">
     <div class="panel-body">
 
         <div style="text-align: center; margin-bottom: 20px">
@@ -35,7 +29,7 @@
                     <div class="btn btn-primary" style="width: 100%" onclick="ajaxManager.login()">Sign in</div>
                 </div>
             </div>
-            <div class="col-sm-offset-2 col-sm-10" style="text-align: right"><a href="">Forgot your password?</a></div>
+            <div class="col-sm-offset-2 col-sm-10" style="text-align: right"><a href="{{ url('password_reset_request') }}">Forgot your password?</a></div>
         
     </div>
 </div>

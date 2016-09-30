@@ -8,6 +8,14 @@ return array(
         'dbpwd'     =>  'required|max:30',
         'url'       =>  'required|url|max:200'
     ),    
+    'password_reset_request'    =>  array(
+        'email'     =>  'required|email|exists:users,email',
+        'captcha'   =>  'required|captcha',
+    ),
+    'password_reset'    =>  array(
+        'new_password'      =>  'required|min:6',
+        'repeat_password'   =>  'required|same:new_password',
+    ),
     'add_user'  =>  array(
         'firstname' =>  'required|max:30',
         'lastname'  =>  'required|max:30',

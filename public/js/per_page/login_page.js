@@ -1,6 +1,8 @@
 
 function AjaxManagerClass(){
     
+    this.baseUrl = window.location.protocol + "//" + window.location.host + "/";  
+    
     // User actions not related to modal windows
     
     this.login = function(){
@@ -11,7 +13,7 @@ function AjaxManagerClass(){
         };
 
         $.ajax({
-            url: window.location.protocol + "//" + window.location.host+"/api/login",
+            url: this.baseUrl+"/api/login",
             type: 'POST',
             dataType: 'json',
             data: JSON.stringify(postData),

@@ -4,13 +4,16 @@ namespace App\Http\Controllers;
 
 use Auth;
 use Config;
+use DateTime;
 use Redirect;
+use App\User;
+use App\Models\PasswordResetLink;
 
 /**
  * Implements functionality related to backups
  *
  * @license MIT
- * @author Alexandros Gougousis
+ * @author Alexandros Gougousis 
  */
 class WebController extends RootController {    
     
@@ -87,13 +90,13 @@ class WebController extends RootController {
      */
     public function user_profile_management($user_id){
 
-            $user = User::find($user_id);   
-            if(empty($user)){
-                return $this->custom_error_message("User not found!");
-            }                                   
-            
-            $data['user_id'] = $user_id;             
-            return $this->load_view('admin.user_profile_manage', 'User Profile',$data);            
+        $user = User::find($user_id);   
+        if(empty($user)){
+            return $this->custom_error_message("User not found!");
+        }                                   
+
+        $data['user_id'] = $user_id;             
+        return $this->load_view('admin.user_profile_manage', 'User Profile',$data);            
             
     }
     
@@ -128,6 +131,49 @@ class WebController extends RootController {
         
         return $this->load_view('delegations','Administration Delegation');
         
+    }
+    
+    /**
+     * Displays password reset request form
+     * 
+     * @return View
+     */
+    public function password_reset_request(){          
+        return $this->load_view('password_reset_request','Password reset request');
+    }
+    
+    /**
+     * Displays a message about the password reset link sent to the user
+     * 
+     * @return View
+     */
+    public function reset_link_sent(){
+        return $this->load_view('reset_link_sent','Password reset requested');
+    } 
+    
+    /**
+     * Displays a form to set a new password
+     * 
+     * @param string $code
+     * @return View
+     */
+    public function set_password_page($code){
+        $linkInfo = PasswordResetLink::where('code','=',$code)->first();
+
+        if(!empty($linkInfo)){
+            $now = new DateTime();
+            $valid_until = new DateTime($linkInfo->valid_until);
+            if($now > $valid_until){
+                $this->log_event("Expired reset link.",'authnetication');
+                return $this->load_view('errors.expired_link','Invalid link');
+            } else {
+                $data = ['code' => $code];
+                return $this->load_view('set_password_page','Password reset page',$data);
+            }
+        } else {
+            $this->log_event("Illegal reset link.",'authentication');
+            return $this->load_view('errors.illegal','');
+        }                
     }
     
 }

@@ -13,7 +13,7 @@
             <img src="{{ asset('images/configuration.png') }}">
         </div>
         
-        <div style="text-align: center; margin-bottom: 20px">System Configuration</div>
+        <div style="text-align: center; margin-bottom: 20px; font-weight: bold; font-size: 24px">ServMon Installation</div>
         
             <div class="form-group">                
                 <label for="url" class="col-sm-3 control-label"><img src="{{ asset('images/url.png') }}" style="height: 26px"></label>

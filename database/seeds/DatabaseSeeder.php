@@ -22,7 +22,7 @@ class DatabaseSeeder extends Seeder
         // Empty all the tables before seeding
         // Some tables that are not seeded are truncated because they are used 
         // in testing and we need to clear them out before each test
-        $tables = ['users','service_types','webapp_types','database_types','settings','domains','servers','services','webapps','databases','domain_delegations','server_delegations','system_logs'];
+        $tables = ['users','service_types','webapp_types','database_types','settings','domains','servers','services','webapps','databases','domain_delegations','server_delegations','system_logs','password_reset_links'];
         foreach($tables as $table){
             DB::table($table)->truncate();
         }
