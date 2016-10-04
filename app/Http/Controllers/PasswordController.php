@@ -28,7 +28,7 @@ class PasswordController extends RootController {
      * @return Response
      */
     public function send_reset_link(Request $request){
-        $form = $request->input();            
+        $form = $request->input();
         $rules = config('validation.password_reset_request');
         $validation = Validator::make($form,$rules);
 
@@ -40,9 +40,9 @@ class PasswordController extends RootController {
                         'field'     =>  $key,
                         'message'   =>  $msg
                     );
-                }                    
+                }
             }
-            return response()->json(['errors' => $errors])->setStatusCode(400, 'Monitoring parameters could not be validated!');
+            return response()->json(['errors' => $errors])->setStatusCode(400, '');
         } else {
             DB::beginTransaction();
             try {

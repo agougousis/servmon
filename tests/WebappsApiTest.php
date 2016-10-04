@@ -276,7 +276,7 @@ class WebappsApiTest extends TestCase
                     'language'  =>  'php',
                     'developer' =>  'Aris Tomas',
                     'contact'   =>  'aris@tomas.com',
-                    'watch'     =>  '0'
+                    'watch'     =>  0
                 ]
         ]);
                 

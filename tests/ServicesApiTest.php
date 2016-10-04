@@ -271,7 +271,7 @@ class ServicesApiTest extends TestCase
                     'stype' =>  'tomcat',
                     'port'  =>  '8080',
                     'version'=> '7',
-                    'watch' =>  '0'
+                    'watch' =>  0
                 ]
         ]);
                 

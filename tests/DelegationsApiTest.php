@@ -341,13 +341,13 @@ class DelegationsApiTest extends TestCase
         ];
         $expected = json_encode($structure);
         $actual = json_encode($response->domain_delegations->{$n});
-        $this->assertEquals($actual,$expected);
+        $this->assertEquals($expected,$actual);
         
         $structure = [
             $server->id =>  [
                 [
                     'id'    =>  1,
-                    'server_id' =>  $server->id.'',
+                    'server_id' =>  $server->id,
                     'email'     =>  $this->admin2->email,
                     'firstname' =>  $this->admin2->firstname,
                     'lastname'  =>  $this->admin2->lastname
@@ -356,7 +356,7 @@ class DelegationsApiTest extends TestCase
         ];
         $expected = json_encode($structure);
         $actual = json_encode($response->server_delegations);
-        $this->assertEquals($actual,$expected);        
+        $this->assertEquals($expected,$actual);        
         
     }
     

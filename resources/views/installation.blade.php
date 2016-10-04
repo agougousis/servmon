@@ -1,3 +1,6 @@
+<script type="text/javascript" src="{{ asset('js/per_page/installation.js') }}"></script>
+
+
 <style type="text/css">
     #installation-panel {
         width: 500px;

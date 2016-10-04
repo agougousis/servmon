@@ -1,7 +1,7 @@
 <?php
 
 // Visitor API endpoints
-Route::group(['prefix' => 'api','middleware' => ['myweb']], function () { 
+Route::group(['prefix' => 'api','middleware' => ['web']], function () { 
     
     Route::post('/login', array('uses'=>'LoginController@login'));  
     
@@ -110,7 +110,7 @@ Route::group(['middleware' => ['logged']], function () {
 });
 
 // Visitor Routes
-Route::group(['middleware' => ['myweb']], function () {   
+Route::group(['middleware' => ['web']], function () {   
      
     Route::get('installation_page',array('uses'=>'WebController@installation_page'));
     Route::post('install',array('uses'=>'SystemController@install'));

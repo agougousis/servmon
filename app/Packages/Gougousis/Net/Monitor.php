@@ -9,8 +9,16 @@ class Monitor {
         // Ping only once with 3 sec time limit
         exec("ping -c 1 -W $timeout $ip",$out,$status);
         
-        // Extract info
+        // In case response in empty
         $outString = implode('',$out);
+        if(empty($outString)){
+            return array(
+                'status'    =>  'off',
+                'time'      =>  ''
+            ); 
+        } 
+        
+        // In case the server is up
         if(stripos($outString,'0 received') === false){
             $timeParts = explode('=',$out[count($out)-1]);
             $timeValues = explode('/',$timeParts[1]);
@@ -19,12 +27,13 @@ class Monitor {
                 'status'    =>  'on',
                 'time'      =>  $timeValues[1]
             );
-        } else {
-            return array(
-                'status'    =>  'off',
-                'time'      =>  ''
-            );            
-        }
+        } 
+        
+        // In case the server is down
+        return array(
+            'status'    =>  'off',
+            'time'      =>  ''
+        );
     }
     
     public static function scanPort($protocol,$port,$ip,$timeout){
