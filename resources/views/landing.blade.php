@@ -26,7 +26,7 @@
             </div>
             <div class="form-group">
                 <div class="col-sm-offset-2 col-sm-10">
-                    <div class="btn btn-primary" style="width: 100%" onclick="ajaxManager.login()">Sign in</div>
+                    <div id="loginButton" class="btn btn-primary" style="width: 100%" onclick="ajaxManager.login()">Sign in</div>
                 </div>
             </div>
             <div class="col-sm-offset-2 col-sm-10" style="text-align: right"><a href="{{ url('password_reset_request') }}">Forgot your password?</a></div>

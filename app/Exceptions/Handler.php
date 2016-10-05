@@ -50,7 +50,7 @@ class Handler extends ExceptionHandler
         }
         
         if ($e instanceof \PDOException) {
-            //return view('errors.503');
+            return view('errors.503');
         }
         
         return parent::render($request, $e);

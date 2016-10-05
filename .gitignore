@@ -5,3 +5,4 @@ Homestead.yaml
 Homestead.json
 phpunit.xml
 .env
+tests/_output/*
