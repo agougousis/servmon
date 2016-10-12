@@ -395,9 +395,9 @@ function GuiManagerClass(){
     
     this.indicateServerLine = function(oldSelectedId,newSelectedId){
         if(oldSelectedId > 0){       
-            $('#server-'+oldSelectedId).css('background-color','');            
+            $('#server-'+oldSelectedId).removeClass('selected-server-line');            
         } 
-        $('#server-'+newSelectedId).css('background-color','#f5f5f5');
+        $('#server-'+newSelectedId).addClass('selected-server-line');
     }
     
     this.reloadTree = function(treeData){

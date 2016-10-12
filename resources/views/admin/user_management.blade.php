@@ -9,7 +9,7 @@
                 <div class="panel-heading">User Management</div>
                 <div class="panel-body">
                     <div style='text-align: right; margin-bottom: 10px'>
-                        <div class="btn btn-primary btn-sm" data-toggle="modal" data-target="#addUserDialog">Add new User</div>
+                        <div id="addUserButton" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#addUserDialog">Add new User</div>
                     </div>
                     <table class='table table-bordered table-condensed' id="usersTable">
                         <thead>
@@ -82,7 +82,7 @@
       </div>
       <div class="modal-footer" style="margin-top:0px">
         <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-primary" onclick="ajaxManager.addUserModalSubmit()">Submit</button>
+        <button type="button" id="add_user_confirm" class="btn btn-primary" onclick="ajaxManager.addUserModalSubmit()">Submit</button>
       </div>
     </div>
   </div>
@@ -105,7 +105,7 @@
       </div>
       <div class="modal-footer" style="margin-top:0px">
         <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-primary" onclick="ajaxManager.deleteUserModalSubmit()">Delete</button>
+        <button type="button" class="btn btn-primary" id="deleteUserConfirmButton" onclick="ajaxManager.deleteUserModalSubmit()">Delete</button>
       </div>
     </div>
   </div>
@@ -119,7 +119,7 @@
         <h4 class="modal-title" id="myModalLabel">Change superuser status</h4>
       </div>
       <div class="modal-body">
-        {{ Form::open(array('id'=>'superuserForm','name'=>'deleteUserForm')) }}
+        {{ Form::open(array('id'=>'superuserForm','name'=>'superuserForm')) }}
 
         <span class="label label-danger">Warning!</span> <span id="change_status_message"></span>
         <input type="hidden" name="user_id" value="">        
@@ -129,7 +129,7 @@
       </div>
       <div class="modal-footer" style="margin-top:0px">
         <button type="button" class="btn btn-default" data-dismiss="modal">No</button>
-        <button type="button" class="btn btn-primary" onclick="ajaxManager.superuserModalSubmit();" id=deleteUserButton">Yes</button>
+        <button type="button" class="btn btn-primary" onclick="ajaxManager.superuserModalSubmit();" id="superuserConfirmButton">Yes</button>
       </div>
     </div>
   </div>

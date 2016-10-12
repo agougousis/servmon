@@ -251,6 +251,7 @@ class DomainController extends RootController {
 
                 foreach($roots as $root){  // $root is an Sname model
                     $phpRoot = new \stdClass();
+                    $phpRoot->id = "treeItem-".$root->full_name;
                     $phpRoot->nid = $root->id;
                     $phpRoot->text = $root->full_name; 
                     if(!in_array($root->id,$my_domain_ids)){
@@ -296,6 +297,7 @@ class DomainController extends RootController {
             foreach($children as $child) {  
                 $countLeaves = $child->leaves()->get()->count();
                 $newChild = new \stdClass();
+                $newChild->id = "treeItem-".$child->full_name;  // need it for acceptance testing
                 $newChild->nid = $child->id;
                 $newChild->text = $child->full_name;  
                 if($child->fake){

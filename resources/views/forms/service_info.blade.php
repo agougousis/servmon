@@ -30,7 +30,7 @@
 
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-danger" onclick="ajaxManager.deleteServiceModalSubmit()" style="float: left">Delete</button>
+                <button type="button" class="btn btn-danger" id="delete_service_button" onclick="ajaxManager.deleteServiceModalSubmit()" style="float: left">Delete</button>
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                 <button type="button" class="btn btn-primary" id="update_service_button" onclick="ajaxManager.editServiceModalSubmit()">Save</button>
             </div>

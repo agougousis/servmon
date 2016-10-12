@@ -91,7 +91,7 @@ function AjaxManagerClass(){
                     if(domainDelegations[domainName] != null){
                         var delegations = domainDelegations[domainName];
                         for(var k=0; k<delegations.length; k++){
-                            delegatedNames = delegatedNames+ "<div id='domainDelegation"+delegations[k].id+"' class='alert alert-warning' role='alert' style='padding: 5px; margin-bottom: 0px; display: inline-block'>  <button type='button' class='close' aria-label='Revoke' style='margin-left: 10px' onclick='ajaxManager.revokeDelegationIconClicked(\"domain\","+delegations[k].id+")'><span aria-hidden='true'>&times;</span></button>"+delegations[k].firstname+" "+delegations[k].lastname+"</div>";
+                            delegatedNames = delegatedNames+ "<div id='domainDelegation"+delegations[k].id+"' class='alert alert-warning delegationItem' role='alert' style='padding: 5px; margin-bottom: 0px; display: inline-block'>  <button type='button' class='close' aria-label='Revoke' style='margin-left: 10px' onclick='ajaxManager.revokeDelegationIconClicked(\"domain\","+delegations[k].id+")'><span aria-hidden='true'>&times;</span></button>"+delegations[k].firstname+" "+delegations[k].lastname+"</div>";
                         }
                     }
 
@@ -102,7 +102,7 @@ function AjaxManagerClass(){
                         if(serverDelegations[serverData.id] != null){
                             delegations = serverDelegations[serverData.id];
                             for(var k=0; k<delegations.length; k++){
-                                delegatedNames = delegatedNames+ "<div id='serverDelegation"+delegations[k].id+"' class='alert alert-warning' role='alert' style='padding: 5px; margin-bottom: 0px; display: inline-block'>  <button type='button' class='close' aria-label='Revoke' style='margin-left: 10px' onclick='ajaxManager.revokeDelegationIconClicked(\"server\","+delegations[k].id+")'><span aria-hidden='true'>&times;</span></button>"+delegations[k].firstname+" "+delegations[k].lastname+"</div>";
+                                delegatedNames = delegatedNames+ "<div id='serverDelegation"+delegations[k].id+"' class='alert alert-warning delegationItem' role='alert' style='padding: 5px; margin-bottom: 0px; display: inline-block'>  <button type='button' class='close' aria-label='Revoke' style='margin-left: 10px' onclick='ajaxManager.revokeDelegationIconClicked(\"server\","+delegations[k].id+")'><span aria-hidden='true'>&times;</span></button>"+delegations[k].firstname+" "+delegations[k].lastname+"</div>";
                             }
                         }                    
                         mTable.append("<tr id='serverLine"+serverData.id+"'><td style='padding-left: "+((parseInt(domainData.depth)+2)*25)+"px'><img class='conf-img' src='/images/server.png' title='server'>"+serverData.hostname+"</td><td>"+delegatedNames+"</td><td><img src='/images/add_user.png' class='imgLink' title='New delegation' onclick='ajaxManager.addDelegationIconClicked(\"server\","+serverData.id+")'></td></tr>");                    

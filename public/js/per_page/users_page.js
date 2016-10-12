@@ -15,9 +15,9 @@ function AjaxManagerClass(){
                     var user = data[j];
                     var light = "" , status = "";
                     if(user.superuser == 1){
-                        superuserIcon = "<img class='imgLink' src='"+ajaxManager.baseUrl+"images/super.png' onmouseover='this.src=\""+ajaxManager.baseUrl+"images/edit.png\"' onmouseout='this.src=\""+ajaxManager.baseUrl+"images/super.png\"' onclick='ajaxManager.superuserIconClicked("+user.id+",0)'>";
+                        superuserIcon = "<img class='imgLink superuserIcon' src='"+ajaxManager.baseUrl+"images/super.png' onmouseover='this.src=\""+ajaxManager.baseUrl+"images/edit.png\"' onmouseout='this.src=\""+ajaxManager.baseUrl+"images/super.png\"' onclick='ajaxManager.superuserIconClicked("+user.id+",0)'>";
                     } else {
-                        superuserIcon = "<img class='imgLink' src='"+ajaxManager.baseUrl+"images/super_black.png' onmouseover='this.src=\""+ajaxManager.baseUrl+"images/edit.png\"' onmouseout='this.src=\""+ajaxManager.baseUrl+"images/super_black.png\"' onclick='ajaxManager.superuserIconClicked("+user.id+",1)'>"
+                        superuserIcon = "<img class='imgLink superuserIcon' src='"+ajaxManager.baseUrl+"images/super_black.png' onmouseover='this.src=\""+ajaxManager.baseUrl+"images/edit.png\"' onmouseout='this.src=\""+ajaxManager.baseUrl+"images/super_black.png\"' onclick='ajaxManager.superuserIconClicked("+user.id+",1)'>"
                     }
                     if(user.activated == 1){
                         light = "<span class='glyphicon glyphicon-ok-sign' style='color:green'></span>"
@@ -25,9 +25,9 @@ function AjaxManagerClass(){
                         light = "<span class='glyphicon glyphicon-minus-sign' style='color:red'></span>";
                     }
                     if(user.activated == 1){
-                        status = "<div class='linkStyle' onclick='ajaxManager.disableUser("+user.id+")'> Disable </div>";
+                        status = "<div class='linkStyle disableUserButton' onclick='ajaxManager.disableUser("+user.id+")'> Disable </div>";
                     } else {
-                        status = "<div class='linkStyle' onclick='ajaxManager.enableUser("+user.id+")'> Enable </div>";
+                        status = "<div class='linkStyle enableUserButton' onclick='ajaxManager.enableUser("+user.id+")'> Enable </div>";
                     }
 
                     $('#usersTable tbody').append("<tr id='user"+user.id+"_row'>"+
@@ -41,7 +41,7 @@ function AjaxManagerClass(){
                         "<td>"+
                         "<a href='"+ajaxManager.baseUrl+"user_management/"+user.id+"'> View </a>"+
                         status+
-                        "<div class='linkStyle' onclick='ajaxManager.deleteUserIconClicked("+user.id+")'> Delete </div>"+
+                        "<div class='linkStyle deleteUserButton' onclick='ajaxManager.deleteUserIconClicked("+user.id+")'> Delete </div>"+
                         "</td>"+
                         "</tr>"
                     );
@@ -260,13 +260,19 @@ function AjaxManagerClass(){
             type: 'PUT',
             headers:{'X-CSRF-Token': $('#page_token').val()},
             success: function( data,textStatus,jqXHR ) {
+
+                superuserIconOn = "<img class='imgLink superuserIcon' src='"+ajaxManager.baseUrl+"images/super.png' onmouseover='this.src=\""+ajaxManager.baseUrl+"images/edit.png\"' onmouseout='this.src=\""+ajaxManager.baseUrl+"images/super.png\"' onclick='ajaxManager.superuserIconClicked("+userId+",0)'>";
+                superuserIconOff = "<img class='imgLink superuserIcon' src='"+ajaxManager.baseUrl+"images/super_black.png' onmouseover='this.src=\""+ajaxManager.baseUrl+"images/edit.png\"' onmouseout='this.src=\""+ajaxManager.baseUrl+"images/super_black.png\"' onclick='ajaxManager.superuserIconClicked("+userId+",1)'>"
+                
                 eManager.selectedServer = '';
                 $('#loading-image').hide();
                 $('#superuserDialog').modal('hide'); 
                 if(new_superuser_status == 1){
-                    $('#user'+userId+"_row td:nth-child(1) img").attr("src", eManager.baseUrl+'images/super.png');
+                    $('#user'+userId+"_row td:nth-child(1)").empty();
+                    $('#user'+userId+"_row td:nth-child(1)").html(superuserIconOn);                    
                 } else {
-                    $('#user'+userId+"_row td:nth-child(1) img").attr("src", eManager.baseUrl+'images/super_black.png');
+                    $('#user'+userId+"_row td:nth-child(1)").empty();
+                    $('#user'+userId+"_row td:nth-child(1)").html(superuserIconOff);      
                 }                
                 toastr.success(jqXHR.statusText);                                            
             },
