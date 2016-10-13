@@ -1,3 +1,4 @@
+/nbproject
 /vendor
 /node_modules
 /public/storage
@@ -6,3 +7,4 @@ Homestead.json
 phpunit.xml
 .env
 tests/_output/*
+.project
