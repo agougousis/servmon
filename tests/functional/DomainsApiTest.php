@@ -128,19 +128,23 @@ class DomainsApiTest extends TestCase
         $this->be($this->admin);        
         $this->visit('api/domains')->seeJsonEquals([
             [
+                'id'    =>  'treeItem-gougousis.gr',
                 'nid'   =>  1,
                 'text'  =>  'gougousis.gr',
                 'children'  =>  [
                     [
+                        'id'    =>  'treeItem-dom1.gougousis.gr',
                         'nid'   =>  2,
                         'text'  =>  'dom1.gougousis.gr'
                     ],
                     [
+                        'id'    =>  'treeItem-dom2.gougousis.gr',
                         'nid'   =>  3,
                         'text'  =>  'dom2.gougousis.gr'
                     ]
                 ]
             ],[
+                'id'    =>  'treeItem-takis.gr',
                 'nid'   =>  4,
                 'text'  =>  'takis.gr',
                 'state' =>  [
@@ -153,6 +157,7 @@ class DomainsApiTest extends TestCase
         $this->be($this->non_admin);
         $this->visit('api/domains')->seeJsonEquals([
             [
+                'id'    =>  'treeItem-gougousis.gr',
                 'nid'   =>  1,
                 'text'  =>  'gougousis.gr',
                 'state' =>  [
@@ -160,12 +165,14 @@ class DomainsApiTest extends TestCase
                 ],
                 'children'  =>  [
                     [
+                        'id'    =>  'treeItem-dom1.gougousis.gr',
                         'nid'   =>  2,
                         'text'  =>  'dom1.gougousis.gr',
                         'state' =>  [
                             'disabled'  =>  true
                         ]
                     ],[
+                        'id'    =>  'treeItem-dom2.gougousis.gr',
                         'nid'   =>  3,
                         'text'  =>  'dom2.gougousis.gr',
                         'state' =>  [
@@ -174,6 +181,7 @@ class DomainsApiTest extends TestCase
                     ]
                 ]
             ],[
+                'id'    =>  'treeItem-takis.gr',
                 'nid'   =>  4,
                 'text'  =>  'takis.gr'               
             ]
@@ -193,15 +201,18 @@ class DomainsApiTest extends TestCase
         $this->call('DELETE', '/api/domains/dom1.gougousis.gr',[],[],[],['HTTP_X-CSRF-Token'=>csrf_token()]);        
         $this->visit('api/domains')->seeJsonEquals([
             [
+                'id'    =>  'treeItem-gougousis.gr',
                 'nid'   =>  1,
                 'text'  =>  'gougousis.gr'                ,
                 'children'  =>  [                    
                     [
+                        'id'    =>  'treeItem-dom2.gougousis.gr',
                         'nid'   =>  3,
                         'text'  =>  'dom2.gougousis.gr'
                     ]
                 ]
             ],[
+                'id'    =>  'treeItem-takis.gr',
                 'nid'   =>  4,
                 'text'  =>  'takis.gr',
                 'state' =>  [
@@ -220,6 +231,7 @@ class DomainsApiTest extends TestCase
         $this->call('DELETE', '/api/domains/takis.gr',[],[],[],['HTTP_X-CSRF-Token'=>csrf_token()]);                
         $this->visit('api/domains')->seeJsonEquals([
             [
+                'id'    =>  'treeItem-gougousis.gr',
                 'nid'   =>  1,
                 'text'  =>  'gougousis.gr',
                 'state' =>  [
@@ -227,6 +239,7 @@ class DomainsApiTest extends TestCase
                 ],
                 'children'  =>  [                    
                     [
+                        'id'    =>  'treeItem-dom2.gougousis.gr',
                         'nid'   =>  3,
                         'text'  =>  'dom2.gougousis.gr',
                         'state' =>  [
