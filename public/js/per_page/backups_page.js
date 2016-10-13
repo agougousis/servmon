@@ -30,10 +30,10 @@ function AjaxManagerClass(){
             async: false,
             success: function( data ) {                                
                 for(var w=0; w<data.length; w++){
-                    $('#backup-list-table tbody').append("<tr>"+
+                    $('#backup-list-table tbody').append("<tr class='backup-item-row'>"+
                             "<td>"+data[w].when+"</td>"+"<td>"+data[w].size+"</td><td>"+
-                            "<img class='imgLink' src='"+ajaxManager.baseUrl+"images/delete.png' onclick=\"ajaxManager.deleteBackupIconClicked('"+data[w].filename+"')\">"+
-                            "<img class='imgLink' src='"+ajaxManager.baseUrl+"images/restore.png' onclick=\"ajaxManager.restoreBackupIconClicked('"+data[w].filename+"')\">"+
+                            "<img class='imgLink backupDeleteIcon' src='"+ajaxManager.baseUrl+"images/delete.png' onclick=\"ajaxManager.deleteBackupIconClicked('"+data[w].filename+"')\">"+
+                            "<img class='imgLink backupRestoreIcon' src='"+ajaxManager.baseUrl+"images/restore.png' onclick=\"ajaxManager.restoreBackupIconClicked('"+data[w].filename+"')\">"+
                             "</td></tr>");
                 }
             },
@@ -97,7 +97,7 @@ function AjaxManagerClass(){
         
         $('#loading-image').center().show();
         $.ajax({
-            url: this.baseUrl+"api/backup/"+$('#delete_backup_filename').val(),
+            url: this.baseUrl+"api/backup/"+$("#deleteBackupForm input[name='delete_backup_filename']").val(),
             type: 'DELETE',
             dataType: 'json',
             contentType:"application/json; charset=utf-8",

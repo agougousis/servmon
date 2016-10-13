@@ -8,7 +8,7 @@
             {{ Form::open(array('class'=>'form-horizontal','id'=>'changeStatusForm')) }}
                 <input id="monitoringButton" name="monitoring_status" data-toggle="toggle" data-on="Monitoring On" data-off="Monitoring Off" type="checkbox">
                 Monitoring Period: {{ Form::select('monitoring_period',array('10'=>'10 min','30'=>'30 min','60'=>'1 hour'),'',array("autocomplete"=>"off")) }}                        
-                <div class="btn btn-primary" style="float: right; margin-right: 20px" onclick="ajaxManager.monitoringStatusButtonClicked()">Save State</div>
+                <div class="btn btn-primary" id="saveStateButton" style="float: right; margin-right: 20px" onclick="ajaxManager.monitoringStatusButtonClicked()">Save State</div>
             {{ Form::close() }}
             <div style="clear: right"></div>
         </div>
@@ -23,7 +23,7 @@
 
                 </tbody>
             </table>
-            <div style="text-align: right; margin-bottom: 10px"><div class="btn btn-sm btn-primary" onclick="ajaxManager.updateConfigurationButtonClicked()">Update Configuration</div></div>
+            <div style="text-align: right; margin-bottom: 10px"><div class="btn btn-sm btn-primary" id="updateConfigurationButton" onclick="ajaxManager.updateConfigurationButtonClicked()">Update Configuration</div></div>
             {{ Form::close() }}
         </div>
     </div>

@@ -19,7 +19,7 @@
 
                     <div style="text-align: right">
                         {{ Form::open(array('id'=>'createBackupForm','name'=>'createBackupForm')) }}
-                        <button type='button' class="btn btn-primary" onclick="ajaxManager.createBackupIconclicked()">Backup</button>
+                        <button type='button' class="btn btn-primary" id="createBackupButton" onclick="ajaxManager.createBackupIconclicked()">Backup</button>
                         {{ Form::close() }}
                     </div>
 
@@ -64,7 +64,7 @@
       </div>
       <div class="modal-footer" style="margin-top:0px">
         <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-primary" id=deleteBackupButton" onclick="ajaxManager.deleteBackupModalSubmit()">Delete</button>
+        <button type="button" class="btn btn-primary" id="deleteBackupButton" onclick="ajaxManager.deleteBackupModalSubmit()">Delete</button>
       </div>
     </div>
   </div>

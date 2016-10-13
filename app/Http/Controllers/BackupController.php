@@ -38,6 +38,17 @@ class BackupController extends RootController {
                     'size'  =>  $filesize,
                     'filename'  =>  $filename
                 );
+                
+                // Sort backups from newest to oldest
+                usort($backup_list, function($a,$b){
+                    $date_a = strtotime($a['when']);
+                    $date_b = strtotime($b['when']);
+                    if ($date_a == $date_b) {
+                        return 0;
+                    }
+                    return ($date_a < $date_b) ? -1 : 1;
+                });
+                
             }
         }
         return response()->json($backup_list)->setStatusCode(200, '');
