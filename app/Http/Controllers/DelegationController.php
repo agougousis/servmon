@@ -7,7 +7,6 @@ use Auth;
 use Input;
 use Config;
 use Illuminate\Http\Request;
-use Validator;
 use App\User;
 use App\Models\Domain;
 use App\Models\Server;
@@ -147,61 +146,52 @@ class DelegationController extends RootController {
         foreach($delegations as $delegation){            
             try {
             
+                // Form validation
                 switch($delegation['dtype']){
-                    case 'domain':
-                        $rules = config('validation.domain_delegation_create');
+                    case 'domain':                        
+                        $errors = $this->loadValidationErrors('validation.domain_delegation_create',$delegation,$errors,$index);
                         break;
-                    case 'server':
-                        $rules = config('validation.server_delegation_create');
+                    case 'server':                        
+                        $errors = $this->loadValidationErrors('validation.server_delegation_create',$delegation,$errors,$index);
                         break;
-                }
-                
-                $validator = Validator::make($delegation,$rules);
-                if ($validator->fails()){
-                    foreach($validator->errors()->getMessages() as $key => $errorMessages){
-                        foreach($errorMessages as $msg){
-                            $errors[] = array(
-                                'index'     =>  $index,
-                                'field'     =>  $key,
-                                'message'   =>  $msg
-                            );
-                        }                    
-                    }
+                }                                
+                if(!empty($errors)){
                     DB::rollBack();
                     return response()->json(['errors' => $errors])->setStatusCode(400, 'Delegation request validation failed');
-                } else {
-                    switch($delegation['dtype']){
-                        case 'domain':                            
-                            $user = User::findByEmail($delegation['duser']);                        
-                            $domain = Domain::findByFullname($delegation['ditem']);                        
+                }                 
+                                
+                switch($delegation['dtype']){
+                    case 'domain':                            
+                        $user = User::findByEmail($delegation['duser']);                        
+                        $domain = Domain::findByFullname($delegation['ditem']);                        
 
-                            // If the user has been delegated servers under this domain, remove these server delegations
-                            $descendantDomains = array_flatten($domain->descendantsAndSelf()->select('id')->get()->ToArray());                                
-                            ServerDelegation::removeUserDelegationsInDomains($user->id,$descendantDomains);                                          
-                            $newDelegation = new DomainDelegation();
-                            $newDelegation->user_id = $user->id;
-                            $newDelegation->domain_id = $domain->id;
-                            $newDelegation->save();
-                            $created[] = $newDelegation;
-                            break;
-                        case 'server':                                
-                            $user = User::findByEmail($delegation['duser']); 
-                            
-                            // If the server belongs to a domain delegated to the user, cancel the delegation                                                                                                                       
-                            $server = Server::find($delegation['ditem']);                                                        
-                            if($this->canManageDomain($user->id,$server->domain)){   
-                                DB::rollBack();
-                                return response()->json(['errors' => $errors])->setStatusCode(400, 'Delegation failed! Server belongs to a domain already delegated to this user.');
-                            } else {                                
-                                $newDelegation = new ServerDelegation();
-                                $newDelegation->user_id = $user->id;
-                                $newDelegation->server_id = $delegation['ditem'];
-                                $newDelegation->save();
-                                $created[] = $newDelegation;
-                            }
-                            break;
-                    }
-                }                           
+                        // If the user has been delegated servers under this domain, remove these server delegations
+                        $descendantDomains = array_flatten($domain->descendantsAndSelf()->select('id')->get()->ToArray());                                
+                        ServerDelegation::removeUserDelegationsInDomains($user->id,$descendantDomains);                                          
+                        $newDelegation = new DomainDelegation();
+                        $newDelegation->user_id = $user->id;
+                        $newDelegation->domain_id = $domain->id;
+                        $newDelegation->save();
+                        $created[] = $newDelegation;
+                        break;
+                    case 'server':                                
+                        $user = User::findByEmail($delegation['duser']); 
+
+                        // If the server belongs to a domain delegated to the user, cancel the delegation                                                                                                                       
+                        $server = Server::find($delegation['ditem']);                                                        
+                        if($this->canManageDomain($user->id,$server->domain)){   
+                            DB::rollBack();
+                            return response()->json(['errors' => $errors])->setStatusCode(400, 'Delegation failed! Server belongs to a domain already delegated to this user.');
+                        } 
+                        
+                        // Save the delegation
+                        $newDelegation = new ServerDelegation();
+                        $newDelegation->user_id = $user->id;
+                        $newDelegation->server_id = $delegation['ditem'];
+                        $newDelegation->save();
+                        $created[] = $newDelegation;                        
+                        break;
+                }
             
             } catch (Exception $ex) {
                 DB::rollBack();                

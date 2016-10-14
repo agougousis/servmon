@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use Auth;
-use Config;
 use DateTime;
 use Redirect;
 use App\User;
@@ -160,20 +159,23 @@ class WebController extends RootController {
     public function set_password_page($code){
         $linkInfo = PasswordResetLink::where('code','=',$code)->first();
 
-        if(!empty($linkInfo)){
-            $now = new DateTime();
-            $valid_until = new DateTime($linkInfo->valid_until);
-            if($now > $valid_until){
-                $this->log_event("Expired reset link.",'authnetication');
-                return $this->load_view('errors.expired_link','Invalid link');
-            } else {
-                $data = ['code' => $code];
-                return $this->load_view('set_password_page','Password reset page',$data);
-            }
-        } else {
+        // Check for invalid link
+        if(empty($linkInfo)){
             $this->log_event("Illegal reset link.",'authentication');
             return $this->load_view('errors.illegal','');
-        }                
+        }               
+        
+        // Check for expired link
+        $now = new DateTime();
+        $valid_until = new DateTime($linkInfo->valid_until);
+        if($now > $valid_until){
+            $this->log_event("Expired reset link.",'authnetication');
+            return $this->load_view('errors.expired_link','Invalid link');
+        } 
+        
+        // Load the password setting page
+        $data = ['code' => $code];
+        return $this->load_view('set_password_page','Password reset page',$data);
     }
     
 }

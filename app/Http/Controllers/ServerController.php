@@ -6,13 +6,11 @@ use DB;
 use Auth;
 use Input;
 use Config;
-use Validator;
 use App\Models\Server;
 use App\Models\Service;
 use App\Models\Webapp;
 use App\Models\Database;
 use App\Models\ServerDelegation;
-use App\Models\DomainDelegation;
 use App\Models\Domain;
 use Illuminate\Http\Request;
 use App\Packages\Gougousis\Net\Monitor;
@@ -65,41 +63,40 @@ class ServerController extends RootController {
     public function delete($server_id){
         
         $server = Server::find($server_id);
+        
         // Check if domain exists
         if(empty($server)){
             return response()->json(['errors'=>[]])->setStatusCode(404, 'The specified server was not found!');
-        } else {      
-            
-            // Access control
-            if(!$this->hasPermission('server',$server->domain,'delete',$server->id)){
-                return response()->json(['errors' => []])->setStatusCode(403, 'You are not allowed to delete this server!');
-            }
-            
-            DB::beginTransaction();
-            try {
-                // Delete databases on this server
-                Database::deleteByServerId($server_id);
-
-                // Delete webapps on this server
-                Webapp::deleteByServerId($server_id);
-
-                // Delete services on this server
-                Service::deleteByServerId($server_id);
-
-                // Delete server delegations
-                ServerDelegation::deleteByServerId($server_id);;
-
-                // Delete the server
-                $server->delete();
-            } catch (Exception $ex) {
-                DB::rollBack();
-                return response()->json(['errors'=>[]])->setStatusCode(500, 'Unexpected error happened!');
-            }
-            
-            DB::commit();
-            return response()->json([])->setStatusCode(200, 'Server(s) deleted successfully');
-
+        } 
+        
+        // Access control
+        if(!$this->hasPermission('server',$server->domain,'delete',$server->id)){
+            return response()->json(['errors' => []])->setStatusCode(403, 'You are not allowed to delete this server!');
         }
+
+        DB::beginTransaction();
+        try {
+            // Delete databases on this server
+            Database::deleteByServerId($server_id);
+
+            // Delete webapps on this server
+            Webapp::deleteByServerId($server_id);
+
+            // Delete services on this server
+            Service::deleteByServerId($server_id);
+
+            // Delete server delegations
+            ServerDelegation::deleteByServerId($server_id);;
+
+            // Delete the server
+            $server->delete();
+        } catch (Exception $ex) {
+            DB::rollBack();
+            return response()->json(['errors'=>[]])->setStatusCode(500, 'Unexpected error happened!');
+        }
+
+        DB::commit();
+        return response()->json([])->setStatusCode(200, 'Server(s) deleted successfully');
                 
     }
     
@@ -123,36 +120,27 @@ class ServerController extends RootController {
         foreach($servers as $server){
             try {
             
-                $rules = config('validation.server_update');
-                $validator = Validator::make($server,$rules);
-                if ($validator->fails()){
-                    foreach($validator->errors()->getMessages() as $key => $errorMessages){
-                        foreach($errorMessages as $msg){
-                            $errors[] = array(
-                                'index'     =>  $index,
-                                'field'     =>  $key,
-                                'message'   =>  $msg
-                            );
-                        }                    
-                    }
+                // Form validation
+                $errors = $this->loadValidationErrors('validation.server_update',$server,$errors,$index);
+                if(!empty($errors)){
                     DB::rollBack();
                     return response()->json(['errors' => $errors])->setStatusCode(400, 'Server validation failed');
-                } else {
-                    $updatedServer = Server::find($server['serverId']);
+                }                               
+                
+                $updatedServer = Server::find($server['serverId']);
                     
-                    // Access control
-                    if(!$this->hasPermission('server',$updatedServer->domain,'update',$updatedServer->id)){
-                        DB::rollBack();
-                        return response()->json(['errors' => []])->setStatusCode(403, 'You are not allowed to update this server!');
-                    }
-                    
-                    // Try to store each node                                    
-                    $updatedServer->hostname = $server['hostname'];                    
-                    $updatedServer->ip = $server['ip'];
-                    $updatedServer->os = $server['os'] ;                                    
-                    $updatedServer->save(); 
-                    $updated[] = $updatedServer;
-                }                                          
+                // Access control
+                if(!$this->hasPermission('server',$updatedServer->domain,'update',$updatedServer->id)){
+                    DB::rollBack();
+                    return response()->json(['errors' => []])->setStatusCode(403, 'You are not allowed to update this server!');
+                }
+
+                // Try to store each node                                    
+                $updatedServer->hostname = $server['hostname'];                    
+                $updatedServer->ip = $server['ip'];
+                $updatedServer->os = $server['os'] ;                                    
+                $updatedServer->save(); 
+                $updated[] = $updatedServer;
             
             } catch (Exception $ex) {
                 DB::rollBack();
@@ -193,39 +181,30 @@ class ServerController extends RootController {
             
             try {
             
-                $rules = config('validation.server_create');
-                $validator = Validator::make($server,$rules);
-                if ($validator->fails()){
-                    foreach($validator->errors()->getMessages() as $key => $errorMessages){
-                        foreach($errorMessages as $msg){
-                            $errors[] = array(
-                                'index'     =>  $index,
-                                'field'     =>  $key,
-                                'message'   =>  $msg
-                            );
-                        }                    
-                    }
+                // Form validation
+                $errors = $this->loadValidationErrors('validation.server_create',$server,$errors,$index);
+                if(!empty($errors)){
                     DB::rollBack();
                     return response()->json(['errors' => $errors])->setStatusCode(400, 'Server validation failed');
-                } else {
-                    $domain = Domain::findByFullname($server['domain']); 
+                }                                 
+                
+                $domain = Domain::findByFullname($server['domain']); 
                     
-                    // Access control
-                    if(!$this->hasPermission('server',$domain->id,'create',null)){
-                        DB::rollBack();
-                        return response()->json(['errors' => []])->setStatusCode(403, 'You are not allowed to create servers on this domain!');
-                    }
-                    
-                    // Try to store each node                
-                    $newServer = new Server();
-                    $newServer->hostname = $server['hostname'];                        
-                    $newServer->domain = $domain->id;
-                    $newServer->ip = $server['ip'];
-                    $newServer->os = $server['os'] ;                                    
-                    $newServer->save();  
-                    
-                    $created[] = $newServer;
-                }            
+                // Access control
+                if(!$this->hasPermission('server',$domain->id,'create',null)){
+                    DB::rollBack();
+                    return response()->json(['errors' => []])->setStatusCode(403, 'You are not allowed to create servers on this domain!');
+                }
+
+                // Try to store each node                
+                $newServer = new Server();
+                $newServer->hostname = $server['hostname'];                        
+                $newServer->domain = $domain->id;
+                $newServer->ip = $server['ip'];
+                $newServer->os = $server['os'] ;                                    
+                $newServer->save();  
+
+                $created[] = $newServer;
             
             } catch (Exception $ex) {
                 DB::rollBack();

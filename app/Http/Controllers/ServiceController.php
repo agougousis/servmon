@@ -3,8 +3,6 @@
 namespace App\Http\Controllers;
 
 use DB;
-use Config;
-use Validator;
 use App\Models\Service;
 use Illuminate\Http\Request;
 use App\Http\Controllers\RootController;
@@ -35,32 +33,24 @@ class ServiceController extends RootController {
         DB::beginTransaction();
         foreach($services as $service){
             try {
-                $rules = Config::get('validation.create_service');
-                $validator = Validator::make($service,$rules);
-                if ($validator->fails()){         
-                    foreach($validator->errors()->getMessages() as $key => $errorMessages){
-                        foreach($errorMessages as $msg){
-                            $errors[] = array(
-                                'index'     =>  $index,
-                                'field'     =>  $key,
-                                'message'   =>  $msg
-                            );
-                        }                    
-                    }
+                
+                // Form validation
+                $errors = $this->loadValidationErrors('validation.create_service',$service,$errors,$index);
+                if(!empty($errors)){
                     DB::rollBack();
                     return response()->json(['errors' => $errors])->setStatusCode(400, 'Service validation failed');
-                } else {
-                    
-                    // Access control
-                    if(!$this->hasPermission('service',$service['server'],'create',null)){
-                        DB::rollBack();
-                        return response()->json(['errors' => []])->setStatusCode(403, 'You are not allowed to create services on this server!');
-                    }
-                    
-                    $serv = new Service();
-                    $serv->fill($service)->save(); 
-                    $created[] = $serv;
+                }                                 
+                
+                // Access control
+                if(!$this->hasPermission('service',$service['server'],'create',null)){
+                    DB::rollBack();
+                    return response()->json(['errors' => []])->setStatusCode(403, 'You are not allowed to create services on this server!');
                 }
+
+                $serv = new Service();
+                $serv->fill($service)->save(); 
+                $created[] = $serv;
+                
             } catch (Exception $ex) {
                 DB::rollBack();
                 $errors[] = array(
@@ -132,32 +122,25 @@ class ServiceController extends RootController {
         DB::beginTransaction();
         foreach($services as $service){
             try {
-                $rules = Config::get('validation.update_service');
-                $validator = Validator::make($service,$rules);
-                if ($validator->fails()){         
-                    foreach($validator->errors()->getMessages() as $key => $errorMessages){
-                        foreach($errorMessages as $msg){
-                            $errors[] = array(
-                                'index'     =>  $index,
-                                'field'     =>  $key,
-                                'message'   =>  $msg
-                            );
-                        }                    
-                    }
+                
+                // Form validation
+                $errors = $this->loadValidationErrors('validation.update_service',$service,$errors,$index);
+                if(!empty($errors)){
                     DB::rollBack();
                     return response()->json(['errors' => $errors])->setStatusCode(400, 'Service validation failed');
-                } else {
-                    $serv = Service::find($service['id']);
+                }                                  
+                
+                $serv = Service::find($service['id']);
                     
-                    // Access control
-                    if(!$this->hasPermission('service',$serv->server,'create',$service['id'])){
-                        DB::rollBack();
-                        return response()->json(['errors' => []])->setStatusCode(403, 'You are not allowed to update services on this server!');
-                    }
-                    
-                    $serv->fill($service)->save();
-                    $updated[] = $serv;
+                // Access control
+                if(!$this->hasPermission('service',$serv->server,'create',$service['id'])){
+                    DB::rollBack();
+                    return response()->json(['errors' => []])->setStatusCode(403, 'You are not allowed to update services on this server!');
                 }
+
+                $serv->fill($service)->save();
+                $updated[] = $serv;
+                
             } catch (Exception $ex) {
                 DB::rollBack();
                 $errors[] = array(

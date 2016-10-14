@@ -91,24 +91,23 @@ class BackupController extends RootController {
      */
     public function restore($filename){
         $filepath = storage_path('backup')."/".$filename;
-        if(file_exists($filepath)){            
-            
-            try {
-                Artisan::call('db:restore',[
-                    '--source'      =>  'local',
-                    '--sourcePath'  =>  $filename,
-                    '--database'    =>  'mysql',
-                    '--compression' =>  'gzip'                
-                ]);
-            } catch (Exception $ex) {
-                $this->log_event("Database restoration failed! ".$ex->getMessage(),"error");
-                return response()->json(['errors' => array()])->setStatusCode(400, 'Backup restoration failed! Please, check the error logs!');
-            }                        
+        if(!file_exists($filepath)){            
+            return response()->json(['errors' => array()])->setStatusCode(400, 'Backup file were not found!');            
+        } 
+        
+        try {
+            Artisan::call('db:restore',[
+                '--source'      =>  'local',
+                '--sourcePath'  =>  $filename,
+                '--database'    =>  'mysql',
+                '--compression' =>  'gzip'                
+            ]);
+        } catch (Exception $ex) {
+            $this->log_event("Database restoration failed! ".$ex->getMessage(),"error");
+            return response()->json(['errors' => array()])->setStatusCode(400, 'Backup restoration failed! Please, check the error logs!');
+        }                        
 
-            return response()->json([])->setStatusCode(200, 'Backup restored successfully!'); 
-        } else {
-            return response()->json(['errors' => array()])->setStatusCode(400, 'Backup file were not found!');      
-        }
+        return response()->json([])->setStatusCode(200, 'Backup restored successfully!'); 
     }
     
     /**
@@ -120,13 +119,11 @@ class BackupController extends RootController {
     public function delete($filename){
         
         $filepath = storage_path('backup')."/".$filename;
-        if(file_exists($filepath)){            
-            unlink($filepath);            
-            return response()->json([])->setStatusCode(200, 'Backup deleted!');
-        } else {
-            return response()->json([])->setStatusCode(400, 'Backup file were not found');          
-        }
-        
+        if(!file_exists($filepath)){            
+            return response()->json([])->setStatusCode(400, 'Backup file were not found'); 
+        }         
+        unlink($filepath);            
+        return response()->json([])->setStatusCode(200, 'Backup deleted!');
     }
     
 }

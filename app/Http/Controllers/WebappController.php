@@ -3,8 +3,6 @@
 namespace App\Http\Controllers;
 
 use DB;
-use Config;
-use Validator;
 use App\Models\Webapp;
 use App\Models\Server;
 use App\Models\Database;
@@ -49,32 +47,24 @@ class WebappController extends RootController {
         DB::beginTransaction();
         foreach($webapps as $webapp){
             try {
-                $rules = Config::get('validation.create_webapp');
-                $validator = Validator::make($webapp,$rules);
-                if ($validator->fails()){         
-                    foreach($validator->errors()->getMessages() as $key => $errorMessages){
-                        foreach($errorMessages as $msg){
-                            $errors[] = array(
-                                'index'     =>  $index,
-                                'field'     =>  $key,
-                                'message'   =>  $msg
-                            );
-                        }                    
-                    }
+                
+                // Form validation
+                $errors = $this->loadValidationErrors('validation.create_webapp',$webapp,$errors,$index);
+                if(!empty($errors)){
                     DB::rollBack();
-                    return response()->json(['errors' => $errors])->setStatusCode(400, 'Webapp validation failed');
-                } else {
-                    
-                    // Access control
-                    if(!$this->hasPermission('webapp',$webapp['server'],'create',null)){
-                        DB::rollBack();
-                        return response()->json(['errors' => []])->setStatusCode(403, 'You are not allowed to create webapps on this server!');
-                    }
-                    
-                    $wp = new Webapp();
-                    $wp->fill($webapp)->save();
-                    $created[] = $wp;
+                    return response()->json(['errors' => $errors])->setStatusCode(400, 'Webapp validation failed!');
+                }                                 
+                
+                // Access control
+                if(!$this->hasPermission('webapp',$webapp['server'],'create',null)){
+                    DB::rollBack();
+                    return response()->json(['errors' => []])->setStatusCode(403, 'You are not allowed to create webapps on this server!');
                 }
+
+                $wp = new Webapp();
+                $wp->fill($webapp)->save();
+                $created[] = $wp;
+                
             } catch (Exception $ex) {
                 DB::rollBack();
                 $errors[] = array(
@@ -146,32 +136,25 @@ class WebappController extends RootController {
         DB::beginTransaction();
         foreach($webapps as $webapp){
             try {
-                $rules = Config::get('validation.update_webapp');
-                $validator = Validator::make($webapp,$rules);
-                if ($validator->fails()){         
-                    foreach($validator->errors()->getMessages() as $key => $errorMessages){
-                        foreach($errorMessages as $msg){
-                            $errors[] = array(
-                                'index'     =>  $index,
-                                'field'     =>  $key,
-                                'message'   =>  $msg
-                            );
-                        }                    
-                    }
+                
+                // Form validation
+                $errors = $this->loadValidationErrors('validation.update_webapp',$webapp,$errors,$index);
+                if(!empty($errors)){
                     DB::rollBack();
-                    return response()->json(['errors' => $errors])->setStatusCode(400, 'Webapp validation failed');
-                } else {
-                    $wp = Webapp::find($webapp['id']);
+                    return response()->json(['errors' => $errors])->setStatusCode(400, 'Webapp validation failed!');
+                }                                 
+                
+                $wp = Webapp::find($webapp['id']);
                     
-                    // Access control
-                    if(!$this->hasPermission('webapp',$webapp['server'],'update',$wp->id)){
-                        DB::rollBack();
-                        return response()->json(['errors' => []])->setStatusCode(403, 'You are not allowed to update webapps on this server!');
-                    }
-                                        
-                    $wp->fill($webapp)->save();                    
-                    $updated[] = $wp;
+                // Access control
+                if(!$this->hasPermission('webapp',$webapp['server'],'update',$wp->id)){
+                    DB::rollBack();
+                    return response()->json(['errors' => []])->setStatusCode(403, 'You are not allowed to update webapps on this server!');
                 }
+
+                $wp->fill($webapp)->save();                    
+                $updated[] = $wp;
+                
             } catch (Exception $ex) {
                 DB::rollBack();
                 $errors[] = array(

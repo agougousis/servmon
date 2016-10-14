@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use Auth;
+use Config;
+use Validator;
 use Response;
 use App\Models\Server;
 use App\Models\Domain;
@@ -73,6 +75,39 @@ class RootController extends Controller {
 	$log->message 	=   $message;
         $log->category   =   $category;
 	$log->save();
+    }
+    
+    /**
+     * Validates a form against a rules set and adds any validation errors it
+     * finds to the error list
+     * 
+     * @param string $rulesKey  Array key that is used to retrieved the rules from config/validation.php
+     * @param array $form       The form items that are going to be validated
+     * @param array $errors     List of errors
+     * @param int $index        Used when multiple items are validated by a function.
+     * @return array
+     */
+    protected function loadValidationErrors($rulesKey,$form,$errors=null,$index=null){
+        if(empty($errors)){
+            $errors = [];
+        }
+	$rules = Config::get($rulesKey);
+        $validator = Validator::make($form,$rules);
+        if ($validator->fails()){         
+            foreach($validator->errors()->getMessages() as $key => $errorMessages){
+                foreach($errorMessages as $msg){
+                    $errorItem = array(
+                        'field'     =>  $key,
+                        'message'   =>  $msg
+                    );
+                    if(!empty($index)){
+                        $errorItem['index'] = $index;
+                    }
+                    $errors[] = $errorItem;
+                }                    
+            }                    
+        }
+	return $errors; 
     }
     
     /**
@@ -151,78 +186,117 @@ class RootController extends Controller {
      */
     protected function hasPermission($itemType,$context,$actionType,$itemId){
         
-        $userId = Auth::user()->id;
+        $user = Auth::user();
         
         switch($itemType){            
             case 'service':                
             case 'webapp':
-            case 'database':
-                
-                if($this->canManageServer($userId, $context)){
-                    return true;
-                } else {
-                    return false;
-                }
-                
+            case 'database':                
+                return $this->hasItemPermission($user, $context);                    
                 break;
             case 'server':                
-                switch($actionType){
-                    case 'read':
-                        if(empty($itemId)){ // we want to read all servers in a domain
-                            if(($this->canManageDomain($userId, $context))||(Auth::user()->superuser == 1)){
-                                return true;
-                            } else {
-                                return false;
-                            }
- 
-                        } else { // we want to read info about a specific server
-                            if(($this->canManageServer($userId, $itemId))||(Auth::user()->superuser == 1)){
-                                return true;
-                            } else {
-                                return false;
-                            }
-                        }                        
-                        break;
-                    case 'create':
-                        if($this->canManageDomain($userId, $context)){
-                            return true;
-                        } else {
-                            return false;
-                        }
-                        break;
-                    case 'update':
-                    case 'delete':
-                        if($this->canManageServer($userId, $itemId)){
-                            return true;
-                        } else {
-                            return false;
-                        }
-                        break;
-                }                
+                return $this->hasServerPermission($actionType, $user, $context, $itemId);
                 break;
-            case 'domain':
-                
-                switch($actionType){
-                    case 'create':                        
-                        if(($context == null)||($this->canManageDomain($userId, $context))){
-                            return true;
-                        } else {
-                            return false;
-                        }
-                        break;
-                    case 'update':
-                    case 'delete':
-                        if($this->canManageDomain($userId, $itemId)){
-                            return true;
-                        } else {
-                            return false;
-                        }
-                        break;
-                }
+            case 'domain':                
+                return $this->hasDomainPermission($actionType,$user,$context);
                 break;            
         }
         
     }
     
+    /**
+     * Checks if a specific user has a specific permission on a server item (service,webapp,database)
+     * 
+     * @param User $user
+     * @param int $context
+     * @return boolean
+     */
+    private function hasItemPermission($user,$context){
+        if($this->canManageServer($user->id, $context)){
+            return true;
+        } else {
+            return false;
+        }
+    }
+    
+    /**
+     * Checks if a user has a specific permission on a specific server
+     * 
+     * @param string $actionType
+     * @param User $user
+     * @param int $context
+     * @param int $itemId
+     * @return boolean
+     * @throws Exception
+     */
+    private function hasServerPermission($actionType,$user,$context,$itemId){
+        switch($actionType){
+            case 'read':
+                if(empty($itemId)){ // we want to read all servers in a domain
+                    if(($this->canManageDomain($user->id, $context))||($user->superuser == 1)){
+                        return true;
+                    } else {
+                        return false;
+                    }
+
+                } else { // we want to read info about a specific server
+                    if(($this->canManageServer($user->id, $itemId))||($user->superuser == 1)){
+                        return true;
+                    } else {
+                        return false;
+                    }
+                }                        
+                break;
+            case 'create':
+                if($this->canManageDomain($user->id, $context)){
+                    return true;
+                } else {
+                    return false;
+                }
+                break;
+            case 'update':
+            case 'delete':
+                if($this->canManageServer($user->id, $itemId)){
+                    return true;
+                } else {
+                    return false;
+                }
+                break;
+            default:
+                throw Exception('Could not resolve domain permission. No valid action type found.');
+        }
+    }
+    
+    /**
+     * Checks if a user has a specific permission on a specific domain
+     * 
+     * @param string $actionType
+     * @param User $user
+     * @param int $context
+     * @return boolean
+     * @throws Exception
+     */
+    private function hasDomainPermission($actionType,$user,$context){
+        switch($actionType){
+            case 'create':                        
+                if(($context == null)||($this->canManageDomain($user->id, $context))){
+                    return true;
+                } else {
+                    return false;
+                }
+                break;
+            case 'update':
+            case 'delete':
+                if($this->canManageDomain($user->id, $itemId)){
+                    return true;
+                } else {
+                    return false;
+                }
+                break;
+            default:
+            throw Exception('Could not resolve domain permission. No valid action type found.');
+        }
+                
+    }
     
 }

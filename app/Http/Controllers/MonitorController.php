@@ -3,9 +3,6 @@
 namespace App\Http\Controllers;
 
 use DB;
-use Input;
-use Config;
-use Validator;
 use App\Models\Domain;
 use App\Models\Server;
 use App\Models\Service;
@@ -68,38 +65,29 @@ class MonitorController extends RootController {
      */
     public function change_status(Request $request){
         
-        $form = $request->input('config');        
-        $rules = Config::get('validation.config_monitor');
-        $validator = Validator::make($form,$rules);
+        $form = $request->input('config');                
 
-        if ($validator->fails()){         
-            foreach($validator->errors()->getMessages() as $key => $errorMessages){
-                foreach($errorMessages as $msg){
-                    $errors[] = array(
-                        'field'     =>  $key,
-                        'message'   =>  $msg
-                    );
-                }                    
-            }
+        // Form validation
+        $errors = $this->loadValidationErrors('validation.config_monitor',$server,null,null);
+        if(!empty($errors)){
             return response()->json(['errors' => $errors])->setStatusCode(400, 'Monitoring parameters could not be validated!');
-        } else {
-            
-            // Update status
-            $status = Setting::find('monitoring_status');
-            if(!empty($form['monitoring_status'])){                
-                $status->value = 1;                
-            } else {
-                $status->value = 0;
-            }
-            $status->save();
-
-            // Update period
-            $period = Setting::find('monitoring_period');
-            $period->value = $form['monitoring_period'];
-            $period->save();
-            
-            return response()->json([])->setStatusCode(200, 'Monitoring status updated!');
         }                
+        
+        // Update status
+        $status = Setting::find('monitoring_status');
+        if(!empty($form['monitoring_status'])){                
+            $status->value = 1;                
+        } else {
+            $status->value = 0;
+        }
+        $status->save();
+
+        // Update period
+        $period = Setting::find('monitoring_period');
+        $period->value = $form['monitoring_period'];
+        $period->save();
+
+        return response()->json([])->setStatusCode(200, 'Monitoring status updated!');
         
     }        
     

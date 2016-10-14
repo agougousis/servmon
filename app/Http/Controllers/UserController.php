@@ -6,8 +6,6 @@ use DB;
 use Auth;
 use Hash;
 use Input;
-use Config;
-use Validator;
 use App\User;
 use App\Models\DomainDelegation;
 use App\Models\ServerDelegation;
@@ -32,10 +30,10 @@ class UserController extends RootController {
         
         $user = User::where('id',$user_id)->select('id','email','firstname','lastname','activated','superuser','last_login')->first();
         if(!empty($user)){
-            return response()->json($user)->setStatusCode(200,''); 
-        } else {
             return response()->json(['errors' => []])->setStatusCode(400, 'Invalid user ID.');
-        }        
+        }       
+        
+        return response()->json($user)->setStatusCode(200,''); 
         
     }
     
@@ -90,33 +88,26 @@ class UserController extends RootController {
         DB::beginTransaction();
         foreach($users as $user){
             try {
-                $rules = Config::get('validation.add_user');
-                $validator = Validator::make($user,$rules);
-                if ($validator->fails()){         
-                    foreach($validator->errors()->getMessages() as $key => $errorMessages){
-                        foreach($errorMessages as $msg){
-                            $errors[] = array(
-                                'index'     =>  $index,
-                                'field'     =>  $key,
-                                'message'   =>  $msg
-                            );
-                        }                    
-                    }
+                
+                // Form validation
+                $errors = $this->loadValidationErrors('validation.add_user',$user,$errors,$index);
+                if(!empty($errors)){
                     DB::rollBack();
-                    return response()->json(['errors' => $errors])->setStatusCode(400, 'User validation failed');
-                } else {
-                    // Create the user in the database
-                    $new_user = new User();
-                    $new_user->firstname = $user['firstname'];
-                    $new_user->lastname = $user['lastname'];
-                    $new_user->email = $user['email'];
-                    $new_user->password = Hash::make($user['password']);            
-                    $new_user->activated = 0;
-                    $new_user->save();    
-                    
-                    $new_user->password = '';
-                    $created[] = $new_user;
-                }
+                    return response()->json(['errors' => $errors])->setStatusCode(400, 'User validation failed!');
+                }                                  
+                
+                // Create the user in the database
+                $new_user = new User();
+                $new_user->firstname = $user['firstname'];
+                $new_user->lastname = $user['lastname'];
+                $new_user->email = $user['email'];
+                $new_user->password = Hash::make($user['password']);            
+                $new_user->activated = 0;
+                $new_user->save();    
+
+                $new_user->password = '';
+                $created[] = $new_user;
+                
             } catch (Exception $ex) {
                 DB::rollBack();
                 $errors[] = array(
@@ -182,15 +173,16 @@ class UserController extends RootController {
         if(Auth::user()->id == $user_id){
             return response()->json(['errors' => []])->setStatusCode(400, 'A user cannot deactivate himself!');
         }
+        
         $user = User::find($user_id);
         if(empty($user)){
             return response()->json(['errors' => []])->setStatusCode(400, 'Illegal user ID.');
-        } else {
-            $user->activated = 0;
-            $user->save();
-            $user->password = '';
-            return response()->json($user)->setStatusCode(200, 'User deactivated!'); 
-        }
+        } 
+        
+        $user->activated = 0;
+        $user->save();
+        $user->password = '';
+        return response()->json($user)->setStatusCode(200, 'User deactivated!'); 
 
     }
     
@@ -202,15 +194,15 @@ class UserController extends RootController {
      */
     public function enable_user($user_id){
 
-            $user = User::find($user_id);
-            if(empty($user)){
-                return response()->json(['errors' => array()])->setStatusCode(400, 'Illegal user ID.');
-            } else {
-                $user->activated = 1;
-                $user->save();
-                $user->password = '';
-                return response()->json($user)->setStatusCode(200, 'User activated!'); 
-            }
+        $user = User::find($user_id);
+        if(empty($user)){
+            return response()->json(['errors' => array()])->setStatusCode(400, 'Illegal user ID.');
+        } 
+        
+        $user->activated = 1;
+        $user->save();
+        $user->password = '';
+        return response()->json($user)->setStatusCode(200, 'User activated!');
 
     }    
     
@@ -220,16 +212,17 @@ class UserController extends RootController {
      * @param int $user_id
      * @return Response
      */
-    public function make_superuser($user_id){        
+    public function make_superuser($user_id){  
+        
         $user = User::find($user_id);
         if(empty($user)){
             return response()->json(['errors' => array()])->setStatusCode(400, 'Illegal user ID.');
-        } else {
-            $user->superuser = 1;
-            $user->save();
-            $user->password = '';
-            return response()->json($user)->setStatusCode(200, 'User activated!'); 
-        }
+        } 
+        
+        $user->superuser = 1;
+        $user->save();
+        $user->password = '';
+        return response()->json($user)->setStatusCode(200, 'User activated!'); 
     }
     
     /**
@@ -239,18 +232,20 @@ class UserController extends RootController {
      * @return Response
      */
     public function unmake_superuser($user_id){
+        
         if(Auth::user()->id == $user_id){
             return response()->json(['errors' => array()])->setStatusCode(400, 'You cannot revoke superuser privilege from yourself!');
         }
+        
         $user = User::find($user_id);
         if(empty($user)){
             return response()->json(['errors' => array()])->setStatusCode(400, 'Illegal user ID.');
-        } else {
-            $user->superuser = 0;
-            $user->save();
-            $user->password = '';
-            return response()->json($user)->setStatusCode(200, 'User activated!'); 
-        }
+        } 
+        
+        $user->superuser = 0;
+        $user->save();
+        $user->password = '';
+        return response()->json($user)->setStatusCode(200, 'User activated!'); 
     }
     
     

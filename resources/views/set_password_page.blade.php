@@ -1,6 +1,6 @@
 <script type="text/javascript" src="{{ asset('js/per_page/reminder.js') }}"></script>
 
-{{ Form::open(array('class'=>'form-horizontal','style'=>'color:white')) }}
+{{ Form::open(array('id'=>'password_reset_form','class'=>'form-horizontal','style'=>'color:white')) }}
 
 <div class="panel panel-default" id="password-reset-panel" style="color: black; width: 400px">
     <div class="panel-body">

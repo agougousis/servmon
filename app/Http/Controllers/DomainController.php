@@ -6,7 +6,6 @@ use DB;
 use Auth;
 use Config;
 use Input;
-use Validator;
 use App\Models\Domain;
 use App\Models\Server;
 use App\Models\Service;
@@ -87,53 +86,46 @@ class DomainController extends RootController {
             
             try {
             
-                $rules = config('validation.domain_create');
-                $validator = Validator::make($domain,$rules);
-                if ($validator->fails()){
-                    foreach($validator->errors()->getMessages() as $key => $errorMessages){
-                        foreach($errorMessages as $msg){
-                            $errors[] = array(
-                                'index'     =>  $index,
-                                'field'     =>  $key,
-                                'message'   =>  $msg
-                            );
-                        }                    
-                    }
+                // Form validation
+                $errors = $this->loadValidationErrors('validation.domain_create',$domain,$errors,$index);
+                if(!empty($errors)){
                     DB::rollBack();
                     return response()->json(['errors' => $errors])->setStatusCode(400, 'Domain validation failed');
+                }                                 
+                
+                // Locate the parent domain
+                $parent = Domain::findByFullname($domain['parent_domain']);       
+                
+                // Access control
+                if(empty($parent)){
+                    $allowed = $this->hasPermission('domain',null,'create',null);
                 } else {
-                    // Locate the parent domain
-                    $parent = Domain::findByFullname($domain['parent_domain']);                      
-                    // Access control
-                    if(empty($parent)){
-                        $allowed = $this->hasPermission('domain',null,'create',null);
-                    } else {
-                        $allowed = $this->hasPermission('domain',$parent->id,'create',null);
-                    }                 
-                    if(!$allowed){
-                        DB::rollBack();
-                        return response()->json(['errors' => []])->setStatusCode(403, 'You are not allowed to create subdomains in this domain!');
-                    }
-                    // Create the new node
-                    $newDomain = new Domain();
-                    $newDomain->parent_id = null;
-                    $newDomain->node_name = $domain['node_name'];
-                    $newDomain->full_name = (empty($parent)) ? $domain['node_name'] : $domain['node_name'].".".$domain['parent_domain'];
-                    $newDomain->fake = (!empty($domain['fake_domain'])) ? 1 : 0 ;                                    
-                    $newDomain->save();
+                    $allowed = $this->hasPermission('domain',$parent->id,'create',null);
+                }                 
+                if(!$allowed){
+                    DB::rollBack();
+                    return response()->json(['errors' => []])->setStatusCode(403, 'You are not allowed to create subdomains in this domain!');
+                }
+                
+                // Create the new node
+                $newDomain = new Domain();
+                $newDomain->parent_id = null;
+                $newDomain->node_name = $domain['node_name'];
+                $newDomain->full_name = (empty($parent)) ? $domain['node_name'] : $domain['node_name'].".".$domain['parent_domain'];
+                $newDomain->fake = (!empty($domain['fake_domain'])) ? 1 : 0 ;                                    
+                $newDomain->save();
 
-                    if(!empty($parent)){
-                        $newDomain->makeChildOf($parent);
-                    } else {
-                        // In case we create a root domain, we should be able to manage it
-                        $newDelegation = new DomainDelegation();
-                        $newDelegation->user_id = Auth::user()->id;
-                        $newDelegation->domain_id = $newDomain->id;
-                        $newDelegation->save();
-                    }
-                    
-                    $created[] = $newDomain;
-                }                
+                if(!empty($parent)){
+                    $newDomain->makeChildOf($parent);
+                } else {
+                    // In case we create a root domain, we should be able to manage it
+                    $newDelegation = new DomainDelegation();
+                    $newDelegation->user_id = Auth::user()->id;
+                    $newDelegation->domain_id = $newDomain->id;
+                    $newDelegation->save();
+                }
+
+                $created[] = $newDomain;
             
             } catch (Exception $ex) {
                 DB::rollBack();
@@ -168,29 +160,29 @@ class DomainController extends RootController {
         // Check if domain exists
         if(empty($domain)){
             return response()->json(['errors'=>[]])->setStatusCode(404, 'The specified domain was not found!');
-        } else {            
-            // Access control
-            if(!$this->hasPermission('domain',$domain->parent_id,'delete',$domain->id)){
-                return response()->json(['errors' => []])->setStatusCode(403, 'You are not allowed to delete this domain!');
-            }
-
-            // Check if domain contains servers
-            $count_servers = Server::where('domain',$domain->id)->get()->count();
-            if($count_servers > 0){
-                return response()->json(['errors'=>[]])->setStatusCode(409, 'This domain cannot be deleted before it contains servers!');
-            } else {
-                // Check if domain contains other domains
-                $count_subdomains = Domain::countByParentId($domain->id); 
-                if($count_subdomains > 0){
-                    return response()->json(['errors'=>[]])->setStatusCode(409, 'This domain cannot be deleted before it contains subdomains!');
-                } else {
-                    // Remove any delegations
-                    DomainDelegation::deleteByDomainId($domain->id);
-                    Domain::deleteByFullname($domname); 
-                    return response()->json([])->setStatusCode(200, 'Domain deleted successfully!');
-                }                                
-            }
+        } 
+        
+        // Access control
+        if(!$this->hasPermission('domain',$domain->parent_id,'delete',$domain->id)){
+            return response()->json(['errors' => []])->setStatusCode(403, 'You are not allowed to delete this domain!');
         }
+
+        // Check if domain contains servers
+        $count_servers = Server::where('domain',$domain->id)->get()->count();
+        if($count_servers > 0){
+            return response()->json(['errors'=>[]])->setStatusCode(409, 'This domain cannot be deleted before it contains servers!');
+        }
+        
+        // Check if domain contains other domains
+        $count_subdomains = Domain::countByParentId($domain->id); 
+        if($count_subdomains > 0){
+            return response()->json(['errors'=>[]])->setStatusCode(409, 'This domain cannot be deleted before it contains subdomains!');
+        } 
+        
+        // Remove any delegations
+        DomainDelegation::deleteByDomainId($domain->id);
+        Domain::deleteByFullname($domname); 
+        return response()->json([])->setStatusCode(200, 'Domain deleted successfully!');
                 
     }
     
