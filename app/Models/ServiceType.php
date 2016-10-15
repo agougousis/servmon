@@ -10,8 +10,9 @@ use Illuminate\Database\Eloquent\Model;
  * @license MIT
  * @author Alexandros Gougousis
  */
-class ServiceType extends Model {	
-    
+class ServiceType extends Model
+{
+
     protected $table = 'service_types';
-    
+
 }

@@ -23,17 +23,20 @@ class User extends Authenticatable
     protected $hidden = [
         'password', 'remember_token',
     ];
-    
-    public static function getList(){
+
+    public static function getList()
+    {
         return User::select('id','firstname','lastname','email','activated','superuser','last_login','created_at')->orderBy('lastname','ASC')->get();
     }
-    
-    public static function getBasicInfoList(){
+
+    public static function getBasicInfoList()
+    {
         return User::select('email','firstname','lastname')->get();
     }
-    
-    public static function findByEmail($email){
+
+    public static function findByEmail($email)
+    {
         return User::where('email',$email)->first();
     }
-    
+
 }

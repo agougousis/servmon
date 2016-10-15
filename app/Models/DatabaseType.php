@@ -10,8 +10,9 @@ use Illuminate\Database\Eloquent\Model;
  * @license MIT
  * @author Alexandros Gougousis
  */
-class DatabaseType extends Model {	
-    
+class DatabaseType extends Model
+{
+
     protected $table = 'database_types';
-    
+
 }

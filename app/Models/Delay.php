@@ -10,9 +10,10 @@ use Illuminate\Database\Eloquent\Model;
  * @license MIT
  * @author Alexandros Gougousis
  */
-class Delay extends Model {
+class Delay extends Model
+{
 
   protected $table = 'monitor_delays';
   public $timestamps = false;
-  
+
 }

@@ -17,9 +17,8 @@ class SuperuserAccess
      */
     public function handle($request, Closure $next, $guard = null)
     {
-        
-        if(Auth::guard($guard)->check()){
-            if(Auth::user()->superuser == 1){
+        if (Auth::guard($guard)->check()) {
+            if (Auth::user()->superuser == 1) {
                 return $next($request);
             } else {
                 return response('Unauthorized.', 401);
@@ -27,6 +26,5 @@ class SuperuserAccess
         } else {
             return redirect()->guest('/');
         }
-        
     }
 }

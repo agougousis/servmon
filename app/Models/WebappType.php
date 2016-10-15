@@ -10,8 +10,9 @@ use Illuminate\Database\Eloquent\Model;
  * @license MIT
  * @author Alexandros Gougousis
  */
-class WebappType extends Model {	
-    
+class WebappType extends Model
+{
+
     protected $table = 'webapp_types';
-    
+
 }

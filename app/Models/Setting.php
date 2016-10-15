@@ -10,11 +10,12 @@ use Illuminate\Database\Eloquent\Model;
  * @license MIT
  * @author Alexandros Gougousis
  */
-class Setting extends Model {
+class Setting extends Model
+{
 
   protected $primaryKey = 'sname';
   public $incrementing = false;
   protected $table = 'settings';
-  public $timestamps = false;  
-  
+  public $timestamps = false;
+
 }

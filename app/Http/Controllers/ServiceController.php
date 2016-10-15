@@ -13,44 +13,45 @@ use App\Http\Controllers\RootController;
  * @license MIT
  * @author Alexandros Gougousis
  */
-class ServiceController extends RootController {
-    
+class ServiceController extends RootController
+{
+
     /**
      * Adds new services to servers
-     * 
+     *
      * @param Request $request
      * @return Response
      */
-    public function create(Request $request){
-        
+    public function create(Request $request)
+    {
         $services = $request->input('services');
-        $services_num = count($services);                
-        
+        $services_num = count($services);
+
         // Validate the data for each node
         $errors = array();
         $index = 0;
         $created = array();
         DB::beginTransaction();
-        foreach($services as $service){
+        foreach ($services as $service) {
             try {
-                
+
                 // Form validation
-                $errors = $this->loadValidationErrors('validation.create_service',$service,$errors,$index);
-                if(!empty($errors)){
+                $errors = $this->loadValidationErrors('validation.create_service', $service, $errors, $index);
+                if (!empty($errors)) {
                     DB::rollBack();
                     return response()->json(['errors' => $errors])->setStatusCode(400, 'Service validation failed');
-                }                                 
-                
+                }
+
                 // Access control
-                if(!$this->hasPermission('service',$service['server'],'create',null)){
+                if (!$this->hasPermission('service', $service['server'], 'create', null)) {
                     DB::rollBack();
                     return response()->json(['errors' => []])->setStatusCode(403, 'You are not allowed to create services on this server!');
                 }
 
                 $serv = new Service();
-                $serv->fill($service)->save(); 
+                $serv->fill($service)->save();
                 $created[] = $serv;
-                
+
             } catch (Exception $ex) {
                 DB::rollBack();
                 $errors[] = array(
@@ -60,87 +61,85 @@ class ServiceController extends RootController {
                 );
                 return response()->json(['errors' => $errors])->setStatusCode(400, 'Service creation failed');
             }
-            
+
             $index++;
         }
-        
-        DB::commit();       
-        return response()->json($created)->setStatusCode(200,$services_num.' service(s) added.'); 
 
+        DB::commit();
+        return response()->json($created)->setStatusCode(200, $services_num.' service(s) added.');
     }
-    
+
     /**
      * Returns information about a specific service item
-     * 
+     *
      * @param int $serviceId
      * @return Response
      */
-    public function read($serviceId){                
-        
+    public function read($serviceId)
+    {
         // Check if $serviceId is a positive integer
-        if($serviceId <= 0){
+        if ($serviceId <= 0) {
             return response()->json(['errors' => array()])->setStatusCode(400, 'Invalid service ID');
         }
-        
-        // Check if a service with such an ID exists    
+
+        // Check if a service with such an ID exists
         $service = Service::find($serviceId);
-        if(empty($service)){
+        if (empty($service)) {
             return response()->json(['errors' => array()])->setStatusCode(400, 'Invalid service ID');
         }
-        
-        $service = Service::select('id','server','stype','port','version','watch')->where('id',$serviceId)->first();
-        
+
+        $service = Service::select('id', 'server', 'stype', 'port', 'version', 'watch')->where('id', $serviceId)->first();
+
         // Access control
-        if(!$this->hasPermission('service',$service->server,'read',$serviceId)){
+        if (!$this->hasPermission('service', $service->server, 'read', $serviceId)) {
             DB::rollBack();
             return response()->json(['errors' => []])->setStatusCode(403, 'You are not allowed to read services on this server!');
         }
-        
+
         $result = new \stdClass();
         $result->data = $service;
-        
+
         // Send back the node info
         return response()->json($result)->setStatusCode(200, '');
-        
     }
-    
+
     /**
      * Updates service items
-     * 
+     *
      * @param Request $request
      * @return Response
      */
-    public function update(Request $request){
-        
+    public function update(Request $request)
+    {
         $services = $request->input('services');
-        $services_num = count($services);                
-        
+        $services_num = count($services);
+
         // Validate the data for each node
         $errors = array();
         $index = 0;
         $updated = array();
         DB::beginTransaction();
-        foreach($services as $service){
+        foreach ($services as $service) {
             try {
-                
+
                 // Form validation
-                $errors = $this->loadValidationErrors('validation.update_service',$service,$errors,$index);
-                if(!empty($errors)){
+                $errors = $this->loadValidationErrors('validation.update_service', $service, $errors, $index);
+                if (!empty($errors)) {
                     DB::rollBack();
                     return response()->json(['errors' => $errors])->setStatusCode(400, 'Service validation failed');
-                }                                  
-                
+                }
+
                 $serv = Service::find($service['id']);
-                    
+
                 // Access control
-                if(!$this->hasPermission('service',$serv->server,'create',$service['id'])){
+                if (!$this->hasPermission('service', $serv->server, 'create', $service['id'])) {
                     DB::rollBack();
                     return response()->json(['errors' => []])->setStatusCode(403, 'You are not allowed to update services on this server!');
                 }
 
                 $serv->fill($service)->save();
                 $updated[] = $serv;
-                
+
             } catch (Exception $ex) {
                 DB::rollBack();
                 $errors[] = array(
@@ -150,42 +149,40 @@ class ServiceController extends RootController {
                 );
                 return response()->json(['errors' => $errors])->setStatusCode(400, 'Service update failed');
             }
-            
+
             $index++;
         }
-        
-        DB::commit();       
-        return response()->json($updated)->setStatusCode(200,$services_num.' service(s) updated.');         
-        
+
+        DB::commit();
+        return response()->json($updated)->setStatusCode(200, $services_num.' service(s) updated.');
     }
-    
+
     /**
      * Deletes a specific service item
-     * 
+     *
      * @param int $serviceId
      * @return Response
      */
-    public function delete($serviceId){
-        
+    public function delete($serviceId)
+    {
         // Check if $appId is a positive integer
-        if($serviceId <= 0){
+        if ($serviceId <= 0) {
             return response()->json(['errors' => array()])->setStatusCode(400, 'Invalid service ID');
         }
-        
+
         // Check if a node with ID equal to $nid exists
         $service = Service::find($serviceId);
-        if(empty($service)){
+        if (empty($service)) {
             return response()->json(['errors' => array()])->setStatusCode(400, 'Invalid service ID');
         }
-        
+
         // Access control
-        if(!$this->hasPermission('service',$service->server,'delete',$service->id)){
+        if (!$this->hasPermission('service', $service->server, 'delete', $service->id)) {
             DB::rollBack();
             return response()->json(['errors' => []])->setStatusCode(403, 'You are not allowed to delete services on this server!');
         }
-        
+
         $service->delete();
-        
     }
-    
+
 }

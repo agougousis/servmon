@@ -11,34 +11,35 @@ use DirectoryIterator;
  * @license MIT
  * @author Alexandros Gougousis
  */
-class BackupController extends RootController {
-    
+class BackupController extends RootController
+{
+
     /**
      * Returns a list of exiting backups
-     * 
+     *
      * @return Response
      */
-    public function search(){
-        
+    public function search()
+    {
         $backup_list = array();
         $dir = new DirectoryIterator(storage_path('backup'));
         foreach ($dir as $fileinfo) {
-            if (!$fileinfo->isDot()) {                                
+            if (!$fileinfo->isDot()) {
                 $basename = $fileinfo->getBasename('.gz');
                 $filename = $fileinfo->getFilename();
                 $filesize = $fileinfo->getSize();
-                
-                $fparts = explode('_',$basename);
-                $date_parts = explode('-',$fparts[1]);
-                $time_parts = explode('-',$fparts[2]);
-                $dt_string = $fparts[1]." ".implode(':',$time_parts);
-                
+
+                $fparts = explode('_', $basename);
+                $date_parts = explode('-', $fparts[1]);
+                $time_parts = explode('-', $fparts[2]);
+                $dt_string = $fparts[1]." ".implode(':', $time_parts);
+
                 $backup_list[] = array(
                     'when'  =>  $dt_string,
                     'size'  =>  $filesize,
                     'filename'  =>  $filename
                 );
-                
+
                 // Sort backups from newest to oldest
                 usort($backup_list, function($a,$b){
                     $date_a = strtotime($a['when']);
@@ -48,20 +49,19 @@ class BackupController extends RootController {
                     }
                     return ($date_a < $date_b) ? -1 : 1;
                 });
-                
+
             }
         }
         return response()->json($backup_list)->setStatusCode(200, '');
-        
-    }        
-    
+    }
+
     /**
      * Creates a new database backup of monitorable items
-     * 
+     *
      * @return Response
      */
-    public function create(){
-        
+    public function create()
+    {
         $filename = 'backup_'.date("d-m-Y_H-i-s");
         try {
             Artisan::call('db:backup',[
@@ -72,58 +72,58 @@ class BackupController extends RootController {
             ]);
         } catch (Exception $ex) {
             $filepath = storage_path('backup')."/".$filename;
-            if(file_exists()){
+            if (file_exists()) {
                 unlink($filepath);
             }
-            $this->log_event("Backup failed! ".$ex->getMessage(),"error");
-            return response()->json(['errors' => array()])->setStatusCode(400, 'Backup failed! Please, check the error logs!');      
-        }                
-            
-        return response()->json([])->setStatusCode(200, 'Backup created successfully!'); 
-        
+            $this->logEvent("Backup failed! ".$ex->getMessage(), "error");
+            return response()->json(['errors' => array()])->setStatusCode(400, 'Backup failed! Please, check the error logs!');
+        }
+
+        return response()->json([])->setStatusCode(200, 'Backup created successfully!');
     }
-    
+
     /**
      * Restores a backup
-     * 
+     *
      * @param String $filename The backup file name
      * @return Response
      */
-    public function restore($filename){
+    public function restore($filename)
+    {
         $filepath = storage_path('backup')."/".$filename;
-        if(!file_exists($filepath)){            
-            return response()->json(['errors' => array()])->setStatusCode(400, 'Backup file were not found!');            
-        } 
-        
+        if (!file_exists($filepath)) {
+            return response()->json(['errors' => array()])->setStatusCode(400, 'Backup file were not found!');
+        }
+
         try {
             Artisan::call('db:restore',[
                 '--source'      =>  'local',
                 '--sourcePath'  =>  $filename,
                 '--database'    =>  'mysql',
-                '--compression' =>  'gzip'                
+                '--compression' =>  'gzip'
             ]);
         } catch (Exception $ex) {
-            $this->log_event("Database restoration failed! ".$ex->getMessage(),"error");
+            $this->logEvent("Database restoration failed! ".$ex->getMessage(), "error");
             return response()->json(['errors' => array()])->setStatusCode(400, 'Backup restoration failed! Please, check the error logs!');
-        }                        
+        }
 
-        return response()->json([])->setStatusCode(200, 'Backup restored successfully!'); 
+        return response()->json([])->setStatusCode(200, 'Backup restored successfully!');
     }
-    
+
     /**
      * Deletes an existing backup
-     * 
+     *
      * @param String $filename The backup file name
      * @return Response
      */
-    public function delete($filename){
-        
+    public function delete($filename)
+    {
         $filepath = storage_path('backup')."/".$filename;
-        if(!file_exists($filepath)){            
-            return response()->json([])->setStatusCode(400, 'Backup file were not found'); 
-        }         
-        unlink($filepath);            
+        if (!file_exists($filepath)) {
+            return response()->json([])->setStatusCode(400, 'Backup file were not found');
+        }
+        unlink($filepath);
         return response()->json([])->setStatusCode(200, 'Backup deleted!');
     }
-    
+
 }

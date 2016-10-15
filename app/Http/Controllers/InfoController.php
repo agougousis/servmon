@@ -21,65 +21,65 @@ use App\Models\Database;
  * @license MIT
  * @author Alexandros Gougousis
  */
-class InfoController extends RootController {    
-    
+class InfoController extends RootController
+{
+
     /**
      * Returns information about the user itself
-     * 
+     *
      * @return Response
      */
-    public function myprofile(){
-        
+    public function myprofile()
+    {
         $user = User::find(Auth::user()->id);
-        return response()->json($user)->setStatusCode(200,''); 
-        
+        return response()->json($user)->setStatusCode(200, '');
     }
-    
+
     /**
      * Returns a list of all items that are included in a backup
-     * 
+     *
      * @return Response
      */
-    public function backup_items(){
-        
+    public function backupItems()
+    {
         $data['domains'] = Domain::all()->count();
         $data['servers'] = Server::all()->count();
         $data['services'] = Service::all()->count();
         $data['webapps'] = Webapp::all()->count();
-        $data['databases'] = Database::all()->count();  
+        $data['databases'] = Database::all()->count();
         return response()->json($data)->setStatusCode(200, '');
-        
     }
-    
+
     /**
      * Returns system settings from database
-     * 
+     *
      * @return Response
      */
-    public function settings(){
+    public function settings()
+    {
         $settings = Setting::get();
         $setting_list = array();
-        foreach($settings as $setting){
+        foreach ($settings as $setting) {
             $setting_list[$setting->sname] = $setting->value;
         }
         return response()->json($setting_list)->setStatusCode(200, '');
     }
-    
+
     /**
      * Returns a list with service, webapp or/and datbase supported types
-     * 
+     *
      * @uses $_GET['mode']
      * @return Response
      */
-    public function supported_types_list(){        
-
-        if(!Input::has('mode')){
+    public function supportedTypesList()
+    {
+        if (!Input::has('mode')) {
             $mode = "all";
         } else {
             $mode = Input::get('mode');
         }
-                   
-        switch($mode){
+
+        switch ($mode) {
             case 'all':
                 $types = array(
                     'service'   =>  ServiceType::all()->toArray(),
@@ -89,7 +89,7 @@ class InfoController extends RootController {
                 break;
             case 'services':
                 $types = array(
-                    'service'   =>  ServiceType::all()->toArray(),                   
+                    'service'   =>  ServiceType::all()->toArray(),
                 );
                 break;
             case 'webapps':
@@ -101,14 +101,13 @@ class InfoController extends RootController {
                 $types = array(
                     'database'  =>  DatabaseType::all()->toArray()
                 );
-                break;  
+                break;
             default:
                 return response()->json(['errors' => array()])->setStatusCode(400, 'Invalid search mode!');
                 break;
-        }        
-        
+        }
+
         return response()->json($types)->setStatusCode(200, '');
-        
     }
-    
+
 }

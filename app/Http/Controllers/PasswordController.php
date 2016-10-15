@@ -17,23 +17,25 @@ use Illuminate\Http\Request;
  * @license MIT
  * @author Alexandros Gougousis
  */
-class PasswordController extends RootController {            
-    
+class PasswordController extends RootController
+{
+
     /**
      * Sends to the user's email a password reset link
-     * 
+     *
      * @param Request $request
      * @return Response
      */
-    public function send_reset_link(Request $request){
+    public function sendResetLink(Request $request)
+    {
         $form = $request->input();
-        
+
         // Form validation
-        $errors = $this->loadValidationErrors('validation.password_reset_request',$form,null,null);
-        if(!empty($errors)){
+        $errors = $this->loadValidationErrors('validation.password_reset_request', $form, null, null);
+        if (!empty($errors)) {
             return response()->json(['errors' => $errors])->setStatusCode(400, '');
-        }                 
-        
+        }
+
         DB::beginTransaction();
         try {
             $user = User::where('email',$form['email'])->first();
@@ -49,7 +51,7 @@ class PasswordController extends RootController {
             $date->modify("+1 day");
             $valid_until = $date->format("Y-m-d H:i:s");
             $reset_link->valid_until = $valid_until;
-            $reset_link->save();    
+            $reset_link->save();
 
             // Notify the user about the reset link
             $data['link'] = $url;
@@ -60,65 +62,65 @@ class PasswordController extends RootController {
                 });
             } catch (Exception $ex) {
                 DB::rollBack();
-                $this->log_event("Mail could not be sent! Error message: ".$ex->getMessage(),'error');
-                return response()->json(['errors' => []])->setStatusCode(500, 'Something went wrong! Please contact system administrator!'); 
-            }            
+                $this->logEvent("Mail could not be sent! Error message: ".$ex->getMessage(), 'error');
+                return response()->json(['errors' => []])->setStatusCode(500, 'Something went wrong! Please contact system administrator!');
+            }
 
             DB::commit();
-            return response()->json([])->setStatusCode(200, 'A reset link was sent!');   
+            return response()->json([])->setStatusCode(200, 'A reset link was sent!');
 
         } catch (Exception $ex) {
             DB::rollBack();
-            $this->log_event("Request for reset link raised an error: ".$ex->getMessage(),'error');
-            return response()->json(['errors' => []])->setStatusCode(500, 'Something went wrong! Please contact system administrator!');                
-        } 
-        
-    }               
-    
+            $this->logEvent("Request for reset link raised an error: ".$ex->getMessage(), 'error');
+            return response()->json(['errors' => []])->setStatusCode(500, 'Something went wrong! Please contact system administrator!');
+        }
+    }
+
     /**
      * Sets the user password to a new value selected by the user
-     * 
+     *
      * @param string $code
      * @return Response
      */
-    public function set_password($code){
+    public function setPassword($code)
+    {
         $linkInfo = PasswordResetLink::where('code','=',$code)->first();
 
         // Check for invalid link
-        if(empty($linkInfo)){
-            $this->log_event("Illegal reset link.",'authentication');
+        if (empty($linkInfo)) {
+            $this->logEvent("Illegal reset link.", 'authentication');
             return view('errors.illegal');
         }
-        
+
         // Check for expired link
         $now = new DateTime();
         $valid_until = new DateTime($linkInfo->valid_until);
-        if($now > $valid_until){
-            $this->log_event("Expired reset link.",'authnetication');
+        if ($now > $valid_until) {
+            $this->logEvent("Expired reset link.", 'authnetication');
             return response()->json(['errors' => $errors])->setStatusCode(400, 'Your reset link has expired!');
-        } 
-        
+        }
+
         // Validate new password
-        $form = Input::all();     
-        
-        $errors = $this->loadValidationErrors('validation.password_reset',$form,null,null);
-        if(!empty($errors)){
+        $form = Input::all();
+
+        $errors = $this->loadValidationErrors('validation.password_reset', $form, null, null);
+        if (!empty($errors)) {
             return response()->json(['errors' => $errors])->setStatusCode(400, 'Monitoring parameters could not be validated!');
-        }         
-        
+        }
+
         DB::beginTransaction();
-        try {                                                
+        try {
             $user = User::find($linkInfo->uid);
-            $linkInfo->delete();                    
-            $user->password = Hash::make($form['new_password']);  
-            $user->save();                                                                         
+            $linkInfo->delete();
+            $user->password = Hash::make($form['new_password']);
+            $user->save();
         } catch (Exception $ex) {
             DB::rollBack();
-            $this->log_event("Request for reset link raised an error: ".$ex->getMessage(),'error');
-            return response()->json(['errors' => []])->setStatusCode(500, 'An unexpected error occured while trying to reset your password. Please contact system administrator!');                                    
-        }       
+            $this->logEvent("Request for reset link raised an error: ".$ex->getMessage(), 'error');
+            return response()->json(['errors' => []])->setStatusCode(500, 'An unexpected error occured while trying to reset your password. Please contact system administrator!');
+        }
         DB::commit();
         return response()->json([])->setStatusCode(200, 'Your password was reset successfully!');
     }
-    
+
 }

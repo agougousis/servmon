@@ -2,7 +2,6 @@
 namespace App\Models;
 
 use Baum\Node;
-use App\Models\UserDomain;
 
 /**
  * Model to handle database data about domains
@@ -10,7 +9,8 @@ use App\Models\UserDomain;
  * @license MIT
  * @author Alexandros Gougousis
  */
-class Domain extends Node {
+class Domain extends Node
+{
 
   /**
    * Table name.
@@ -18,60 +18,63 @@ class Domain extends Node {
    * @var string
    */
   protected $table = 'domains';
-  
-  public function descendantIds(){
+
+  public function descendantIds()
+  {
       return array_flatten($this->descendantsAndSelf()->select('id')->get()->toArray());
   }
-  
+
   /**
    * Returns information about a domain with specific full domain name
-   * 
+   *
    * @param string $fullname
    * @return Node
    */
-  public static function findByFullname($fullname){
-      return Domain::where('full_name',$fullname)->first(); 
+  public static function findByFullname($fullname)
+  {
+      return Domain::where('full_name',$fullname)->first();
   }
-  
+
   /**
    * Count the subdomains of a specific domain
-   * 
+   *
    * @param int $parent_id
    * @return int
    */
-  public static function countByParentId($parent_id){
+  public static function countByParentId($parent_id)
+  {
       return Domain::where('parent_id',$parent_id)->get()->count();
   }
-  
+
   /**
    * Deletes the domain with the specified full domain name
-   * 
+   *
    * @param string $fullname
    */
-  public static function deleteByFullname($fullname){
+  public static function deleteByFullname($fullname)
+  {
       Domain::where('full_name',$fullname)->delete();
   }
-  
+
   /**
    * Checks if a domain has been delegated to a specific user
-   * 
+   *
    * @param int $user_id
    * @return boolean
    */
-  public function isDelegatedTo($user_id){     
-      
+  public function isDelegatedTo($user_id)
+  {
     $delegations = DomainDelegation::where('user_id',$user_id)->get();
-    foreach($delegations as $delegation){
+    foreach ($delegations as $delegation) {
         $delegatedDomain = Domain::find($delegation->domain_id);
-        if($this->isSelfOrDescendantOf($delegatedDomain)){
+        if ($this->isSelfOrDescendantOf($delegatedDomain)) {
             return true;
         }
     }
-    
+
     return false;
-    
   }
-  
+
   //////////////////////////////////////////////////////////////////////////////
 
   //
