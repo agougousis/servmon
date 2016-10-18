@@ -22,7 +22,7 @@ $I->seeElement('li#domains_counter');
     // Click the backup button
     $I->click('#createBackupButton');
     $date = gmdate('d-m-Y H:i');
-    $I->wait(1);
+    $I->wait(2);
 
     // Check a very recent backup is at the end of the backups list
     $I->see($date,'#backup-list-table tbody tr:last-child');
@@ -31,7 +31,7 @@ $I->seeElement('li#domains_counter');
 
     // Click on the backup delete icon
     $I->click('#backup-list-table tbody tr:last-child .backupDeleteIcon');
-    $I->wait(1);
+    $I->wait(2);
 
     // Check the modal is there
     $I->seeElement('#deleteBackupDialog');

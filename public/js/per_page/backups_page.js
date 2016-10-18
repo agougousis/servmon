@@ -62,7 +62,7 @@ function AjaxManagerClass(){
     
     // Modal window-related actions
     
-    this.createBackupIconclicked = function(){
+    this.createBackupIconClicked = function(){
         
         $('#loading-image').center().show();
         
@@ -97,7 +97,7 @@ function AjaxManagerClass(){
         
         $('#loading-image').center().show();
         $.ajax({
-            url: this.baseUrl+"api/backup/"+$("#backup_filename_to_delete").val(),
+            url: this.baseUrl+"api/backup/"+$("#backup_filename_to_delete").text(),
             type: 'DELETE',
             dataType: 'json',
             contentType:"application/json; charset=utf-8",

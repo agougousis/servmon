@@ -16,6 +16,7 @@ class Service extends Model
 
     protected $table = 'services';
     protected $fillable = array('server','stype','port','version');
+    protected $hidden = array('created_at','updated_at');
 
     /**
      * Deletes all services hosted on a specific server

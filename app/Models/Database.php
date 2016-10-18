@@ -15,6 +15,7 @@ class Database extends Model
 
     protected $table = 'databases';
     protected $fillable = array('dbname','server','type','related_webapp');
+    protected $hidden = array('created_at','updated_at');
 
     /**
      * Deletes all databases hosted on a specific server

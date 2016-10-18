@@ -19,7 +19,7 @@
 
                     <div style="text-align: right">
                         {{ Form::open(array('id'=>'createBackupForm','name'=>'createBackupForm')) }}
-                        <button type='button' class="btn btn-primary" id="createBackupButton" onclick="ajaxManager.createBackupIconclicked()">Backup</button>
+                        <button type='button' class="btn btn-primary" id="createBackupButton" onclick="ajaxManager.createBackupIconClicked()">Backup</button>
                         {{ Form::close() }}
                     </div>
 

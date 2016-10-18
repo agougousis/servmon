@@ -18,6 +18,7 @@ class Domain extends Node
    * @var string
    */
   protected $table = 'domains';
+  protected $hidden = array('lft','rgt','depth','created_at','updated_at');
 
   public function descendantIds()
   {

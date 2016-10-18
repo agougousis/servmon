@@ -18,6 +18,7 @@ class Server extends Model
 
     protected $table = 'servers';
     protected $fillable = array('hostname','domain','ip','os');
+    protected $hidden = array('created_at','updated_at');
 
     /**
      * Returns information about specified servers

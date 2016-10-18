@@ -16,6 +16,7 @@ class Webapp extends Model
 
     protected $table = 'webapps';
     protected $fillable = array('url','server','language','developer','contact');
+    protected $hidden = array('created_at','updated_at');
 
     /**
      * Retrieves a webapp with specific URL
