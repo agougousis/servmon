@@ -105,7 +105,7 @@ class PasswordController extends RootController
 
         $errors = $this->loadValidationErrors('validation.password_reset', $form, null, null);
         if (!empty($errors)) {
-            return response()->json(['errors' => $errors])->setStatusCode(400, 'Monitoring parameters could not be validated!');
+            return response()->json(['errors' => $errors])->setStatusCode(400,'');
         }
 
         DB::beginTransaction();

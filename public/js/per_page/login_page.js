@@ -13,13 +13,13 @@ function AjaxManagerClass(){
         };
 
         $.ajax({
-            url: this.baseUrl+"/api/login",
+            url: this.baseUrl+"/api/auth/login",
             type: 'POST',
             dataType: 'json',
             data: JSON.stringify(postData),
             contentType:"application/json; charset=utf-8",
             headers:{'X-CSRF-Token': $('#page_token').val()},
-            success: function( data ) {                
+            success: function( data ) {
                 window.location = window.location.protocol + "//" + window.location.host+"/home";  
             },
             error: ajaxFailure

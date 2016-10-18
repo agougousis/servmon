@@ -15,7 +15,7 @@ function AjaxManagerClass(){
         };
         
         $.ajax({
-            url : this.baseUrl+"install",
+            url : this.baseUrl+"api/system/install",
             type: "POST",            
             dataType : 'json',
             data: JSON.stringify(postData),

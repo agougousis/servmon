@@ -15,7 +15,7 @@ extensions:
 modules:
     config:
         Db:
-            dsn: ''
-            user: ''
-            password: ''
+            dsn: "mysql:host=localhost;dbname=servmon_testing"
+            user: 'servmon'
+            password: 'lalakis34'
             dump: tests/_data/dump.sql

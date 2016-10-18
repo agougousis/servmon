@@ -48,7 +48,7 @@ function AjaxManagerClass(){
     this.logout = function(){
         $('#loading-image').center().show();
         $.ajax({
-            url: window.location.protocol + "//" + window.location.host+"/api/logout",
+            url: window.location.protocol + "//" + window.location.host+"/api/auth/logout",
             type: 'POST',
             dataType: 'json',
             contentType:"application/json; charset=utf-8",
@@ -82,12 +82,12 @@ function AjaxManagerClass(){
     }
     
     this.deleteBackupIconClicked = function(filename){
-        $("#deleteBackupForm input[name='delete_backup_filename']").val(filename);
+        $("#backup_filename_to_delete").html(filename);
         $('#deleteBackupDialog').modal('show');
     }
     
     this.restoreBackupIconClicked = function(filename){
-        $("#restoreBackupForm input[name='restore_backup_filename']").val(filename);
+        $("#backup_filename_to_restore").html(filename);
         $('#restoreBackupDialog').modal('show');
     }
    
@@ -97,7 +97,7 @@ function AjaxManagerClass(){
         
         $('#loading-image').center().show();
         $.ajax({
-            url: this.baseUrl+"api/backup/"+$("#deleteBackupForm input[name='delete_backup_filename']").val(),
+            url: this.baseUrl+"api/backup/"+$("#backup_filename_to_delete").val(),
             type: 'DELETE',
             dataType: 'json',
             contentType:"application/json; charset=utf-8",
@@ -114,7 +114,7 @@ function AjaxManagerClass(){
         
         $('#loading-image').center().show();
         $.ajax({
-            url: this.baseUrl+"api/backup/"+$('#restore_backup_filename').val()+"/restore",
+            url: this.baseUrl+"api/backup/"+$('#backup_filename_to_restore').val()+"/restore",
             type: 'POST',
             dataType: 'json',
             contentType:"application/json; charset=utf-8",

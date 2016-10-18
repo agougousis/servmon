@@ -30,7 +30,7 @@ class UserController extends RootController
     public function read($user_id)
     {
         $user = User::where('id', $user_id)->select('id', 'email', 'firstname', 'lastname', 'activated', 'superuser', 'last_login')->first();
-        if (!empty($user)) {
+        if (empty($user)) {
             return response()->json(['errors' => []])->setStatusCode(400, 'Invalid user ID.');
         }
 

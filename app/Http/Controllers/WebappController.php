@@ -197,11 +197,11 @@ class WebappController extends RootController
 
         // Access control
         if (!$this->hasPermission('webapp', $webapp->server, 'delete', $appId)) {
-            DB::rollBack();
             return response()->json(['errors' => []])->setStatusCode(403, 'You are not allowed to delete webapps on this server!');
         }
 
         $webapp->delete();
+        return response()->json([])->setStatusCode(200, 'Webapp deleted successfully');
     }
 
 }

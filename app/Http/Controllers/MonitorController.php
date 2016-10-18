@@ -68,7 +68,7 @@ class MonitorController extends RootController
         $form = $request->input('config');
 
         // Form validation
-        $errors = $this->loadValidationErrors('validation.config_monitor', $server, null, null);
+        $errors = $this->loadValidationErrors('validation.config_monitor', $form, null, null);
         if (!empty($errors)) {
             return response()->json(['errors' => $errors])->setStatusCode(400, 'Monitoring parameters could not be validated!');
         }

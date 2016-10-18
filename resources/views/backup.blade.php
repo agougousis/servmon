@@ -23,7 +23,7 @@
                         {{ Form::close() }}
                     </div>
 
-                </div>        
+                </div>
             </div>
         </div>
         <div class="col-md-6">
@@ -43,24 +43,24 @@
                  </div>
             </div>
         </div>
-    </div>       
-    
+    </div>
+
 </div>
 
 <!-- Delete backup Modal -->
 <div class="modal fade" id="deleteBackupDialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
-      <div class="modal-header" style="background-color: salmon">        
+      <div class="modal-header" style="background-color: salmon">
         <h4 class="modal-title" id="myModalLabel">Backup deletion</h4>
       </div>
       <div class="modal-body">
         {{ Form::open(array('id'=>'deleteBackupForm','name'=>'deleteBackupForm')) }}
 
-        <span class="label label-danger">Warning!</span> The backup file <span id="backup_filename" style="font-weight: bold"></span> will be completely deleted!
-        <input type="hidden" name="delete_backup_filename" value="">        
+        <span class="label label-danger">Warning!</span> The backup file <span id="backup_filename_to_delete" style="font-weight: bold"></span> will be completely deleted!
+        <input type="hidden" name="delete_backup_filename" value="">
 
-        {{ Form::close() }}        
+        {{ Form::close() }}
       </div>
       <div class="modal-footer" style="margin-top:0px">
         <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
@@ -74,16 +74,16 @@
 <div class="modal fade" id="restoreBackupDialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
-      <div class="modal-header" style="background-color: salmon">        
+      <div class="modal-header" style="background-color: salmon">
         <h4 class="modal-title" id="myModalLabel">Backup restore</h4>
       </div>
       <div class="modal-body">
         {{ Form::open(array('id'=>'restoreBackupForm','name'=>'restoreBackupForm')) }}
 
-        <span class="label label-danger">Warning!</span> The backup file <span id="backup_filename" style="font-weight: bold"></span> will be restored and the current database contents will be replaced deleted!
-        <input type="hidden" name="restore_backup_filename" value="">        
+        <span class="label label-danger">Warning!</span> The backup file <span id="backup_filename_to_restore" style="font-weight: bold"></span> will be restored and the current database contents will be replaced deleted!
+        <input type="hidden" name="restore_backup_filename" value="">
 
-        {{ Form::close() }}        
+        {{ Form::close() }}
       </div>
       <div class="modal-footer" style="margin-top:0px">
         <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>

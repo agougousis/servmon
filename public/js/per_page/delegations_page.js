@@ -120,7 +120,7 @@ function AjaxManagerClass(){
     this.logout = function(){
         $('#loading-image').center().show();
         $.ajax({
-            url: window.location.protocol + "//" + window.location.host+"/api/logout",
+            url: window.location.protocol + "//" + window.location.host+"/api/auth/logout",
             type: 'POST',
             dataType: 'json',
             contentType:"application/json; charset=utf-8",

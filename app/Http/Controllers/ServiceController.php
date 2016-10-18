@@ -178,11 +178,11 @@ class ServiceController extends RootController
 
         // Access control
         if (!$this->hasPermission('service', $service->server, 'delete', $service->id)) {
-            DB::rollBack();
             return response()->json(['errors' => []])->setStatusCode(403, 'You are not allowed to delete services on this server!');
         }
 
         $service->delete();
+        return response()->json([])->setStatusCode(200, 'Service deleted successfully');
     }
 
 }

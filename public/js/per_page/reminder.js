@@ -13,7 +13,7 @@ function AjaxManagerClass(){
         };
         
         $.ajax({
-            url: this.baseUrl+"api/password_reset_request",
+            url: this.baseUrl+"api/auth/request_reset_link",
             type: 'POST',
             data: JSON.stringify(postData),            
             dataType: 'json',
@@ -35,7 +35,7 @@ function AjaxManagerClass(){
         };
         
         $.ajax({
-            url: this.baseUrl+"api/password_reset/"+code,
+            url: this.baseUrl+"api/auth/set_new_password/"+code,
             type: 'POST',
             data: JSON.stringify(postData),            
             dataType: 'json',

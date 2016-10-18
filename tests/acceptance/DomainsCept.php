@@ -1,8 +1,9 @@
-<?php 
+<?php
 $I = new AcceptanceTester($scenario);
 
 // Load the landing page
 $I->amOnPage('/');
+$I->maximizeWindow();
 
 // Login
 $I->fillField('inputEmail','user1@gmail.com');
@@ -14,14 +15,14 @@ $I->wait(2);
 
     // Check if the "add domain" icon is there
     $I->seeElement('#addDomainButton');
-    
+
     // Click the "add domain" icon
     $I->click('#addDomainButton');
     $I->wait(1);
-    
+
     // Check if the modal is there
     $I->seeElement("#addDomainDialog");
-    
+
     // Fill in the fields
     $I->fillField("node_name","mydom.gr");
 
@@ -31,25 +32,25 @@ $I->wait(2);
 
     // Check if the new root domain is there
     $I->seeElement("a[id='treeItem-mydom.gr_anchor']");
-	
+
 // Add a new subdomain
 
     // Click on the new root domain
-    $I->click("a[id='treeItem-mydom.gr_anchor']");    
-    
+    $I->click("a[id='treeItem-mydom.gr_anchor']");
+
     // Check if the domain css has changed
     $I->seeElement(['id'=>'treeItem-mydom.gr_anchor','class'=>'jstree-clicked']);
 
     // Click the "add domain" icon
     $I->click('#addDomainButton');
     $I->wait(1);
-    
+
     // Check if the parent domain field has the right value
     $I->seeInField(['name'=>'parent_domain'],'mydom.gr');
-    
+
     // Fill in the fields
     $I->fillField("node_name","mysubdom");
-    
+
     // Click the submit button
     $I->click("#add_domain_confirm_button");
     $I->wait(1);
@@ -59,7 +60,7 @@ $I->wait(2);
 
     // Check if the new subdomain is there
     $I->seeElement("a[id='treeItem-mysubdom.mydom.gr_anchor']");
-    
+
 // Delete a subdomain
 
     // Click on the new subdomain
@@ -71,20 +72,36 @@ $I->wait(2);
 
     // Check if the warning modal has been appeared
     $I->seeElement('#deleteDomainDialog');
-    
+
     // Click on the OK button
     $I->click('#delete_domain_confirm_button');
     $I->wait(1);
-        
-    // Unfold the new root domain
+
+    // Unfold the new root domain (it should not be unfold,of course)
     $I->click("#treeItem-mydom\.gr i");
 
-    // Check if the subdomain has been removed from the tree   
+    // Check if the new subdomain is there
     $I->dontSeeElement("a[id='treeItem-mysubdom.mydom.gr_anchor']");
-            
+
     // Click on the new root domain
     $I->click("a[id='treeItem-mydom.gr_anchor']");
     $I->wait(1);
-    
-    // Click on the OK button
+
+    // Click on the delete domain icon
+    $I->click('#deleteDomainButton');
+    $I->wait(1);
+
+    // Click on the delete confirmation button
     $I->click('#delete_domain_confirm_button');
+    $I->wait(1);
+
+    // Check that the root domain is not there
+    $I->dontSeeElement("a[id='treeItem-mydom.gr_anchor']");
+
+// Unfold main menu
+$I->click('#fullnameMenuLink');
+$I->seeElement('#logoutMenuLink');
+
+// Logout
+$I->click('#logoutMenuLink');
+$I->wait(1);

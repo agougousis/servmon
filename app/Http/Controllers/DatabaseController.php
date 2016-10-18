@@ -207,12 +207,11 @@ class DatabaseController extends RootController
 
         // Access control
         if (!$this->hasPermission('database', $database->server, 'delete', null)) {
-            DB::rollBack();
             return response()->json(['errors' => []])->setStatusCode(403, 'You are not allowed to delete databases on this server!');
         }
 
         $database->delete();
-        return response()->json([])->setStatusCode(200, '');
+        return response()->json([])->setStatusCode(200, 'Database deleted successfully!');
     }
 
 }

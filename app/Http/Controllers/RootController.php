@@ -197,7 +197,7 @@ class RootController extends Controller
                 return $this->hasServerPermission($actionType, $user, $context, $itemId);
                 break;
             case 'domain':
-                return $this->hasDomainPermission($actionType, $user, $context);
+                return $this->hasDomainPermission($actionType, $user, $context, $itemId);
                 break;
         }
     }
@@ -276,7 +276,7 @@ class RootController extends Controller
      * @return boolean
      * @throws Exception
      */
-    private function hasDomainPermission($actionType, $user, $context)
+    private function hasDomainPermission($actionType, $user, $context, $itemId)
     {
         switch ($actionType) {
             case 'create':
