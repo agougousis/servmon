@@ -101,7 +101,7 @@ class RootController extends Controller
                         'field'     =>  $key,
                         'message'   =>  $msg
                     );
-                    if (!empty($index)) {
+                    if (!is_null($index)) {
                         $errorItem['index'] = $index;
                     }
                     $errors[] = $errorItem;

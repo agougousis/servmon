@@ -32,6 +32,11 @@ class DomainController extends RootController
      */
     public function webappList($full_domain_name)
     {
+        $domain = Domain::findByFullname($full_domain_name);
+        if(empty($domain)){
+            return response()->json(['errors' => []])->setStatusCode(404, 'The domain was not found!');
+        }
+
         $webapps = Webapp::getAllUnderDomain($full_domain_name);
         return response()->json($webapps)->setStatusCode(200, 'ok');
     }
@@ -45,8 +50,13 @@ class DomainController extends RootController
     public function serverList($full_domain_name)
     {
         $domain = Domain::findByFullname($full_domain_name);
+
+        if(empty($domain)){
+            return response()->json(['errors' => []])->setStatusCode(404, 'The domain was not found!');
+        }
+
         if (!$domain->isDelegatedTo(Auth::user()->id)) {
-            return response()->json()->setStatusCode(401, 'Unauthorized Access');
+            return response()->json(['errors' => []])->setStatusCode(401, 'Unauthorized Access');
         }
 
         $servers = Server::where('domain',$domain->id)->get()->toArray();
@@ -135,7 +145,7 @@ class DomainController extends RootController
                     'field'     =>  $result['error']['field'],
                     'message'   =>  $result['error']['message']
                 );
-                return response()->json(['errors' => $errors])->setStatusCode(400, 'Domain creation failed');
+                return response()->json(['errors' => $errors])->setStatusCode(500, 'Domain creation failed');
             }
 
             $index++;
@@ -195,6 +205,10 @@ class DomainController extends RootController
     public function serversUnderDomain($domain_name)
     {
         $domain = Domain::findByFullname($domain_name);
+
+        if(empty($domain)){
+            return response()->json(['errors' => []])->setStatusCode(404, 'The domain was not found!');
+        }
 
         // Access control
         if (!$this->hasPermission('server', $domain->id, 'read', null)) {

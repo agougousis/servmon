@@ -231,6 +231,11 @@ class ServerController extends RootController
     {
         $server = Server::find($serverId);
 
+        // Check if server exists
+        if (empty($server)) {
+            return response()->json(['errors'=>[]])->setStatusCode(404, 'The specified server was not found!');
+        }
+
         // Access control
         if (!$this->hasPermission('server', $server->domain, 'read', $server->id)) {
             DB::rollBack();

@@ -97,7 +97,7 @@ class PasswordController extends RootController
         $valid_until = new DateTime($linkInfo->valid_until);
         if ($now > $valid_until) {
             $this->logEvent("Expired reset link.", 'authnetication');
-            return response()->json(['errors' => $errors])->setStatusCode(400, 'Your reset link has expired!');
+            return response()->json(['errors' => []])->setStatusCode(400, 'Your reset link has expired!');
         }
 
         // Validate new password

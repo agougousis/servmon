@@ -66,3 +66,6 @@ You can backup and restore the application's database.
 
 ![backup](https://cloud.githubusercontent.com/assets/5471589/18911398/8325d070-8585-11e6-9895-1b571948c512.png)
 
+## Back-end API documentation
+
+The API documentation has been written with API Blueprint and is located in /docs folder.

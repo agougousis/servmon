@@ -76,7 +76,7 @@ class BackupController extends RootController
                 unlink($filepath);
             }
             $this->logEvent("Backup failed! ".$ex->getMessage(), "error");
-            return response()->json(['errors' => array()])->setStatusCode(400, 'Backup failed! Please, check the error logs!');
+            return response()->json(['errors' => array()])->setStatusCode(500, 'Backup failed! Please, check the error logs!');
         }
 
         return response()->json([])->setStatusCode(200, 'Backup created successfully!');
@@ -92,7 +92,7 @@ class BackupController extends RootController
     {
         $filepath = storage_path('backup')."/".$filename;
         if (!file_exists($filepath)) {
-            return response()->json(['errors' => array()])->setStatusCode(400, 'Backup file were not found!');
+            return response()->json(['errors' => array()])->setStatusCode(404, 'Backup file were not found!');
         }
 
         try {
@@ -104,7 +104,7 @@ class BackupController extends RootController
             ]);
         } catch (Exception $ex) {
             $this->logEvent("Database restoration failed! ".$ex->getMessage(), "error");
-            return response()->json(['errors' => array()])->setStatusCode(400, 'Backup restoration failed! Please, check the error logs!');
+            return response()->json(['errors' => array()])->setStatusCode(500, 'Backup restoration failed! Please, check the error logs!');
         }
 
         return response()->json([])->setStatusCode(200, 'Backup restored successfully!');
@@ -120,7 +120,7 @@ class BackupController extends RootController
     {
         $filepath = storage_path('backup')."/".$filename;
         if (!file_exists($filepath)) {
-            return response()->json([])->setStatusCode(400, 'Backup file were not found');
+            return response()->json([])->setStatusCode(404, 'Backup file were not found');
         }
         unlink($filepath);
         return response()->json([])->setStatusCode(200, 'Backup deleted!');
