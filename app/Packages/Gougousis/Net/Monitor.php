@@ -8,7 +8,7 @@ class Monitor
     public static function ping($ip, $timeout)
     {
         // Ping only once with 3 sec time limit
-        exec("ping -c 1 -W $timeout $ip", $out,$status);
+        exec("ping -c 1 -W $timeout $ip", $out, $status);
 
         // In case response in empty
         $outString = implode('', $out);
@@ -49,7 +49,7 @@ class Monitor
             } else {
                 $status = 'on';
             }
-        } catch(\Exception $ex){
+        } catch (\Exception $ex) {
             $end = microtime(true);
             $status = 'off';
         }
@@ -67,16 +67,16 @@ class Monitor
         // initializes curl session
         $curl=curl_init();
         // sets the URL to fetch
-        curl_setopt ($curl, CURLOPT_URL, $url );
+        curl_setopt($curl, CURLOPT_URL, $url);
         // sets the content of the User-Agent header
         //curl_setopt($ch, CURLOPT_USERAGENT, $agent);
         // We don't really want the headers
         curl_setopt($curl, CURLOPT_HEADER, false);
         curl_setopt($curl, CURLOPT_NOBODY, true);
         // return the transfer as a string
-        curl_setopt ($curl, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
         // disable output verbose information
-        curl_setopt ($curl, CURLOPT_VERBOSE, false);
+        curl_setopt($curl, CURLOPT_VERBOSE, false);
         // max number of seconds to allow cURL function to execute
         curl_setopt($curl, CURLOPT_TIMEOUT, $timeout);
         curl_exec($curl); // if we want the returned header we can assign the result value of this command
@@ -91,11 +91,10 @@ class Monitor
             $status = 'off';
         }
 
-       return array(
+        return array(
            'status' =>  $status,
            'time'   =>  ($end-$start)   // in sec
-       );
-
+        );
     }
 
     public static function curlMulti(array $curl_sites, array $opts = [])
@@ -125,6 +124,7 @@ class Monitor
             curl_setopt_array($chs[$key], (isset($request['opts']) ? $request['opts'] + $opts : $opts));
             curl_multi_add_handle($mh, $chs[$key]);
         }
+
         do {
             // execute curl requests
             curl_multi_exec($mh, $running);
@@ -132,7 +132,8 @@ class Monitor
             // (Blocks until there is activity on any of the curl_multi connections)
             curl_multi_select($mh);
         // check flag to see if we're done
-        } while($running > 0);
+        } while ($running > 0);
+
         // cycle through requests
         foreach ($chs as $key => $ch) {
             // handle error
@@ -156,5 +157,4 @@ class Monitor
         // return respones
         return $responses;
     }
-
 }

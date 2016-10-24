@@ -28,7 +28,7 @@ class LoginController extends RootController
         $rules = config('validation.login');
         $validation = Validator::make($form, $rules);
 
-        if ($validation->fails()){
+        if ($validation->fails()) {
             $this->logEvent("Validation failed!", 'login');
             return response()->json(['errors' => []])->setStatusCode(400, 'Wrong username or password!');
         }
@@ -54,7 +54,6 @@ class LoginController extends RootController
             $user->save();
 
             return response()->json([])->setStatusCode(200, 'Logged-in successfully!');
-
         } else {
             $ip = getenv('HTTP_CLIENT_IP')?:
             getenv('HTTP_X_FORWARDED_FOR')?:
@@ -83,5 +82,4 @@ class LoginController extends RootController
             return response()->json(['errors' => []])->setStatusCode(400, 'Logout failed!');
         }
     }
-
 }

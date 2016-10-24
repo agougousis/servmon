@@ -171,7 +171,8 @@ return [
         'Baum\Providers\BaumServiceProvider',
         Collective\Html\HtmlServiceProvider::class,
         BackupManager\Laravel\Laravel5ServiceProvider::class,
-        Mews\Captcha\CaptchaServiceProvider::class
+        Mews\Captcha\CaptchaServiceProvider::class,
+        'SocialEngine\SnifferRules\ServiceProvider',
 
     ],
 

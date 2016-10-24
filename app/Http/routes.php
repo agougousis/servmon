@@ -2,20 +2,16 @@
 
 // Visitor API endpoints
 Route::group(['prefix' => 'api','middleware' => ['web']], function () {
-
-    Route::post('/system/install',array('uses'=>'SystemController@install'));
-
+    Route::post('/system/install', array('uses'=>'SystemController@install'));
     Route::post('/auth/login', array('uses'=>'LoginController@login'));
 
     // Password reset
-    Route::post('/auth/request_reset_link',array('uses'=>'PasswordController@sendResetLink'));
+    Route::post('/auth/request_reset_link', array('uses'=>'PasswordController@sendResetLink'));
     Route::post('/auth/set_new_password/{code}', array('uses' => 'PasswordController@setPassword'));
-
 });
 
 // Normal API endpoints
 Route::group(['prefix' => 'api','middleware' => ['logged']], function () {
-
     // Domain-related endpoints
     Route::get('/domains', array('uses'=>'DomainController@search'));
     Route::post('/domains', array('uses'=>'DomainController@create'));
@@ -60,20 +56,18 @@ Route::group(['prefix' => 'api','middleware' => ['logged']], function () {
     Route::get('delegations', array('uses'=>'DelegationController@search'));
 
     Route::post('/auth/logout', array('uses'=>'LoginController@logout'));
-
 });
 
 // Elevated API endpoints
 Route::group(['prefix' => 'api','middleware' => ['superuser']], function () {
-
-    Route::get('users/{userId}',array('uses'=>'UserController@read'))->where('userId', '[0-9]+');
-    Route::get('users',array('uses'=>'UserController@search'));
-    Route::post('users',array('uses'=>'UserController@addUsers'));
-    Route::put('users/{userId}/enable',array('uses'=>'UserController@enableUser'))->where('userId', '[0-9]+');
-    Route::put('users/{userId}/disable',array('uses'=>'UserController@disableUser'))->where('userId', '[0-9]+');
-    Route::put('users/{userId}/make_superuser',array('uses'=>'UserController@makeSuperuser'))->where('userId', '[0-9]+');
-    Route::put('users/{userId}/unmake_superuser',array('uses'=>'UserController@unmakeSuperuser'))->where('userId', '[0-9]+');
-    Route::delete('users/{userId}',array('uses'=>'UserController@deleteUser'))->where('userId', '[0-9]+');
+    Route::get('users/{userId}', array('uses'=>'UserController@read'))->where('userId', '[0-9]+');
+    Route::get('users', array('uses'=>'UserController@search'));
+    Route::post('users', array('uses'=>'UserController@addUsers'));
+    Route::put('users/{userId}/enable', array('uses'=>'UserController@enableUser'))->where('userId', '[0-9]+');
+    Route::put('users/{userId}/disable', array('uses'=>'UserController@disableUser'))->where('userId', '[0-9]+');
+    Route::put('users/{userId}/make_superuser', array('uses'=>'UserController@makeSuperuser'))->where('userId', '[0-9]+');
+    Route::put('users/{userId}/unmake_superuser', array('uses'=>'UserController@unmakeSuperuser'))->where('userId', '[0-9]+');
+    Route::delete('users/{userId}', array('uses'=>'UserController@deleteUser'))->where('userId', '[0-9]+');
 
     // Delegation Management
     Route::post('delegations', array('uses'=>'DelegationController@create'));
@@ -89,41 +83,33 @@ Route::group(['prefix' => 'api','middleware' => ['superuser']], function () {
     // Monitoring Scheduler Management
     Route::get('/monitor/items', array('uses'=>'MonitorController@getMonitorable'));
     Route::post('/monitor/items', array('uses'=>'MonitorController@updateConfiguration'));
-    Route::put('monitor/status',array('uses'=>'MonitorController@changeStatus'));
-
+    Route::put('monitor/status', array('uses'=>'MonitorController@changeStatus'));
 });
 
 // Elevated Web Pages
 Route::group(['middleware' => ['superuser']], function () {
-
-    Route::get('user_management',array('uses'=>'WebController@userManagement'));
-    Route::get('user_management/{userId}',array('uses'=>'WebController@userProfileManagement'))->where('userId', '[0-9]+');
+    Route::get('user_management', array('uses'=>'WebController@userManagement'));
+    Route::get('user_management/{userId}', array('uses'=>'WebController@userProfileManagement'))->where('userId', '[0-9]+');
     Route::get('/domains/delegation', array('uses'=>'WebController@delegationsPage'));
     Route::get('/backup', array('uses'=>'WebController@backupPage'));
     Route::get('/monitor/configure', array('uses'=>'WebController@configure'));
-
 });
 
 // Logged Web Pages
 Route::group(['middleware' => ['logged']], function () {
-
     Route::get('home', array('uses'=>'WebController@index'));
     Route::get('profile', array('uses'=>'WebController@profile'));
-
 });
 
 // Visitor Routes
 Route::group(['middleware' => ['web']], function () {
-
-    Route::get('installation_page',array('uses'=>'WebController@installationPage'));
+    Route::get('installation_page', array('uses'=>'WebController@installationPage'));
 
     // Authentication
     Route::get('/', array('uses'=>'WebController@landingPage'));
 
     // Password Reset
-    Route::get('password_reset_request',array('uses'=>'WebController@passwordResetRequest'));
-    Route::get('reset_link_sent',array('uses'=>'WebController@resetLinkSent'));
+    Route::get('password_reset_request', array('uses'=>'WebController@passwordResetRequest'));
+    Route::get('reset_link_sent', array('uses'=>'WebController@resetLinkSent'));
     Route::get('password_reset/{code}', array('uses' => 'WebController@setPasswordPage'));
-
 });
-

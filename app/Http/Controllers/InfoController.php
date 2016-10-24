@@ -109,5 +109,4 @@ class InfoController extends RootController
 
         return response()->json($types)->setStatusCode(200, '');
     }
-
 }

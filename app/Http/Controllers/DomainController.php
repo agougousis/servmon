@@ -33,7 +33,7 @@ class DomainController extends RootController
     public function webappList($full_domain_name)
     {
         $domain = Domain::findByFullname($full_domain_name);
-        if(empty($domain)){
+        if (empty($domain)) {
             return response()->json(['errors' => []])->setStatusCode(404, 'The domain was not found!');
         }
 
@@ -51,7 +51,7 @@ class DomainController extends RootController
     {
         $domain = Domain::findByFullname($full_domain_name);
 
-        if(empty($domain)){
+        if (empty($domain)) {
             return response()->json(['errors' => []])->setStatusCode(404, 'The domain was not found!');
         }
 
@@ -59,7 +59,7 @@ class DomainController extends RootController
             return response()->json(['errors' => []])->setStatusCode(401, 'Unauthorized Access');
         }
 
-        $servers = Server::where('domain',$domain->id)->get()->toArray();
+        $servers = Server::where('domain', $domain->id)->get()->toArray();
 
         $server_list = array();
         $ping_timeout = Config::get('network.ping_timeout');
@@ -94,9 +94,7 @@ class DomainController extends RootController
         $index = 0;
         DB::beginTransaction();
         foreach ($domains as $domain) {
-
             try {
-
                 // Form validation
                 $errors = $this->loadValidationErrors('validation.domain_create', $domain, $errors, $index);
                 if (!empty($errors)) {
@@ -137,7 +135,6 @@ class DomainController extends RootController
                 }
 
                 $created[] = $newDomain;
-
             } catch (Exception $ex) {
                 DB::rollBack();
                 $errors[] = array(
@@ -147,7 +144,6 @@ class DomainController extends RootController
                 );
                 return response()->json(['errors' => $errors])->setStatusCode(500, 'Domain creation failed');
             }
-
             $index++;
         }
 
@@ -179,7 +175,7 @@ class DomainController extends RootController
         }
 
         // Check if domain contains servers
-        $count_servers = Server::where('domain',$domain->id)->get()->count();
+        $count_servers = Server::where('domain', $domain->id)->get()->count();
         if ($count_servers > 0) {
             return response()->json(['errors'=>[]])->setStatusCode(409, 'This domain cannot be deleted before it contains servers!');
         }
@@ -206,7 +202,7 @@ class DomainController extends RootController
     {
         $domain = Domain::findByFullname($domain_name);
 
-        if(empty($domain)){
+        if (empty($domain)) {
             return response()->json(['errors' => []])->setStatusCode(404, 'The domain was not found!');
         }
 
@@ -259,17 +255,17 @@ class DomainController extends RootController
                     $phpRoot->id = "treeItem-".$root->full_name;
                     $phpRoot->nid = $root->id;
                     $phpRoot->text = $root->full_name;
-                    if (!in_array($root->id,$my_domain_ids)) {
+                    if (!in_array($root->id, $my_domain_ids)) {
                         $phpRoot->state = (object)['disabled' => true];
                     }
-                    $arrayTree[] = $this->addDescendants($phpRoot,$root,$my_domain_ids);
+                    $arrayTree[] = $this->addDescendants($phpRoot, $root, $my_domain_ids);
                 }
 
                 return response()->json($arrayTree)->setStatusCode(200, '');
                 break;
             case 'with_servers':
                 $response = array();
-                $domains = DB::table('domains')->orderBy('lft','ASC')->get();
+                $domains = DB::table('domains')->orderBy('lft', 'ASC')->get();
                 foreach ($domains as $domain) {
                     $response[$domain->full_name] = array(
                         'depth'     =>  $domain->depth,
@@ -308,7 +304,7 @@ class DomainController extends RootController
                     $newChild->icon = "glyphicon glyphicon-cloud";
                 }
 
-                $oneOfMyDomainRoots = in_array($child->id,$my_domain_ids);
+                $oneOfMyDomainRoots = in_array($child->id, $my_domain_ids);
                 $notPartOfMyDomain = (!empty($phpNode->state))&&($phpNode->state->disabled == true);
                 if ((!$oneOfMyDomainRoots)&&($notPartOfMyDomain)) {
                     $newChild->state = (object)['disabled' => true];
@@ -316,7 +312,7 @@ class DomainController extends RootController
                 if ($child->isLeaf()) {
                     $childrenArray[] = $newChild;
                 } else {
-                    $childrenArray[] = $this->addDescendants($newChild,$child,$my_domain_ids);
+                    $childrenArray[] = $this->addDescendants($newChild, $child, $my_domain_ids);
                 }
             }
             $phpNode->children = $childrenArray;
@@ -324,5 +320,4 @@ class DomainController extends RootController
 
         return $phpNode;
     }
-
 }

@@ -13,7 +13,7 @@ use App\Models\Webapp;
 use App\Models\Delay;
 use App\Packages\Gougousis\Net\Monitor;
 
-class scheduledMonitoring extends Command
+class ScheduledMonitoring extends Command
 {
     /**
      * The name and signature of the console command.
@@ -60,9 +60,9 @@ class scheduledMonitoring extends Command
                 $pingResult = Monitor::ping($server['ip'], $ping_timeout);
                 if (!$pingResult['status']) {
                     $notifications[$server->supervisor_email][] =   array(
-                                                                        'type'  =>  'server',
-                                                                        'name'  =>  $server->hostname
-                                                                    );
+                        'type'  =>  'server',
+                        'name'  =>  $server->hostname
+                    );
                 } else {
                     $services = Service::where('server', $server->id)->where('watch', 1)->get();
                     $webapps = Webapp::where('server', $server->id)->where('watch', 1)->get();
@@ -71,9 +71,9 @@ class scheduledMonitoring extends Command
                         $result = Monitor::scanPort('tcp', $service->port, $server->ip, $portscan_timeout);
                         if ($result['status'] == 'off') {
                             $notifications[$server->supervisor_email][] =   array(
-                                                                        'type'  =>  'service',
-                                                                        'name'  =>  $service->type
-                                                                    );
+                                'type'  =>  'service',
+                                'name'  =>  $service->type
+                            );
                         }
                     }
 
@@ -81,20 +81,18 @@ class scheduledMonitoring extends Command
                         $result = Monitor::checkStatus($webapp->url, $curl_timeout);
                         if ($result['status'] == 'off') {
                             $notifications[$webapp->supervisor_email][] =   array(
-                                                                        'type'  =>  'webapp',
-                                                                        'name'  =>  $webapp->url
-                                                                    );
+                                'type'  =>  'webapp',
+                                'name'  =>  $webapp->url
+                            );
                         }
                     }
-
                 }
-
             }
             $end = microtime(true);
 
             $delay = new Delay();
             $delay->category = 'scheduled';
-            $delay->duration = number_format(($end-$start),5);
+            $delay->duration = number_format(($end-$start), 5);
             $delay->when = date("Y-m-d H:i:s");
             $delay->save();
 
@@ -118,8 +116,7 @@ class scheduledMonitoring extends Command
                 // Notify the admin about the new registration
                 $data['body'] = $body;
                 try {
-                    Mail::send(['html' => 'emails.monitoring'], $data, function($message) use ($email)
-                    {
+                    Mail::send(['html' => 'emails.monitoring'], $data, function ($message) use ($email) {
                         $message->to($email)->subject('Monitoring report');
                     });
                 } catch (Exception $ex) {
@@ -129,9 +126,7 @@ class scheduledMonitoring extends Command
                     $log->when = date("Y-m-d H:i:s");
                     $log->save();
                 }
-
             }
-
         } catch (Exception $ex) {
             $log = new SystemLog();
             $log->category = 'error';

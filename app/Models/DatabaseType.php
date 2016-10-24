@@ -12,7 +12,5 @@ use Illuminate\Database\Eloquent\Model;
  */
 class DatabaseType extends Model
 {
-
     protected $table = 'database_types';
-
 }

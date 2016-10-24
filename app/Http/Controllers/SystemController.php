@@ -43,7 +43,7 @@ class SystemController extends RootController
         // Test database credentials
         try {
             $conn = new PDO("mysql:host=$server;dbname=$dbname", $dbuser, $dbpwd);
-        } catch(PDOException $e) {
+        } catch (PDOException $e) {
             return response()->json(['errors'=>[]])->setStatusCode(500, 'Invalid database credentials!');
         }
 
@@ -128,5 +128,4 @@ class SystemController extends RootController
         fwrite($handle, $new_content);
         fclose($handle);
     }
-
 }

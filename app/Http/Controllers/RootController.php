@@ -29,7 +29,7 @@ class RootController extends Controller
      * @param array $data
      * @return Response
      */
-    protected function loadView($view_name, $title, $data=array())
+    protected function loadView($view_name, $title, $data = array())
     {
         $content = view($view_name, $data);
         if (Auth::check()) {
@@ -39,9 +39,9 @@ class RootController extends Controller
         }
 
         $page = view($template)
-                ->with('title',$title)
-                ->with('content',$content)
-                ->with('isSuperuser',($this->isSuperuser() ? true : false));
+                ->with('title', $title)
+                ->with('content', $content)
+                ->with('isSuperuser', ($this->isSuperuser() ? true : false));
 
         $response = Response::make($page);
         $response->header('Cache-Control', 'no-cache, no-store, must-revalidate, max-stale=0, post-check=0, pre-check=0');
@@ -67,14 +67,14 @@ class RootController extends Controller
         $controller = class_basename($action['controller']);
         list($controller, $action) = explode('@', $controller);
 
-	$log = new SystemLog();
-	$log->when 	=   date("Y-m-d H:i:s");
-	$log->actor 	=   $user_id;
-	$log->controller =  $controller;
-	$log->method 	=   $action;
-	$log->message 	=   $message;
-        $log->category   =   $category;
-	$log->save();
+        $log = new SystemLog();
+        $log->when  = date("Y-m-d H:i:s");
+        $log->actor = $user_id;
+        $log->controller = $controller;
+        $log->method = $action;
+        $log->message = $message;
+        $log->category = $category;
+        $log->save();
     }
 
     /**
@@ -87,14 +87,14 @@ class RootController extends Controller
      * @param int $index        Used when multiple items are validated by a function.
      * @return array
      */
-    protected function loadValidationErrors($rulesKey, $form, $errors=null, $index=null)
+    protected function loadValidationErrors($rulesKey, $form, $errors = null, $index = null)
     {
         if (empty($errors)) {
             $errors = [];
         }
-	$rules = Config::get($rulesKey);
+        $rules = Config::get($rulesKey);
         $validator = Validator::make($form, $rules);
-        if ($validator->fails()){
+        if ($validator->fails()) {
             foreach ($validator->errors()->getMessages() as $key => $errorMessages) {
                 foreach ($errorMessages as $msg) {
                     $errorItem = array(
@@ -108,7 +108,7 @@ class RootController extends Controller
                 }
             }
         }
-	return $errors;
+        return $errors;
     }
 
     /**
@@ -165,7 +165,7 @@ class RootController extends Controller
         // If the user has been delegated at least one of domain's ancestors, then he can manage the domain
         $countUserRelationsToAncestors = DomainDelegation::countUserDelegationToDomains($userId, $ancestorDomains);
         if ($countUserRelationsToAncestors == 0) {
-           return false;
+            return false;
         } else {
             return true;
         }
@@ -238,7 +238,6 @@ class RootController extends Controller
                     } else {
                         return false;
                     }
-
                 } else { // we want to read info about a specific server
                     if (($this->canManageServer($user->id, $itemId))||($user->superuser == 1)) {
                         return true;
@@ -295,8 +294,7 @@ class RootController extends Controller
                 }
                 break;
             default:
-            throw Exception('Could not resolve domain permission. No valid action type found.');
+                throw Exception('Could not resolve domain permission. No valid action type found.');
         }
     }
-
 }

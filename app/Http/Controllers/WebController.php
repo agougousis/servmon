@@ -154,7 +154,7 @@ class WebController extends RootController
      */
     public function setPasswordPage($code)
     {
-        $linkInfo = PasswordResetLink::where('code','=',$code)->first();
+        $linkInfo = PasswordResetLink::where('code', '=', $code)->first();
 
         // Check for invalid link
         if (empty($linkInfo)) {
@@ -174,5 +174,4 @@ class WebController extends RootController
         $data = ['code' => $code];
         return $this->loadView('set_password_page', 'Password reset page', $data);
     }
-
 }

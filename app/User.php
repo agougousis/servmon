@@ -14,29 +14,28 @@ class User extends Authenticatable
     protected $fillable = [
         'firstname','lastname', 'email', 'password'
     ];
-    
+
     /**
      * The attributes excluded from the model's JSON form.
      *
      * @var array
      */
     protected $hidden = [
-        'password', 'remember_token','created_at','updated_at'
+        'password','remember_token','created_at','updated_at'
     ];
 
     public static function getList()
     {
-        return User::select('id','firstname','lastname','email','activated','superuser','last_login')->orderBy('lastname','ASC')->get();
+        return User::select('id', 'firstname', 'lastname', 'email', 'activated', 'superuser', 'last_login')->orderBy('lastname', 'ASC')->get();
     }
 
     public static function getBasicInfoList()
     {
-        return User::select('email','firstname','lastname')->get();
+        return User::select('email', 'firstname', 'lastname')->get();
     }
 
     public static function findByEmail($email)
     {
-        return User::where('email',$email)->first();
+        return User::where('email', $email)->first();
     }
-
 }

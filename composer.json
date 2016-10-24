@@ -11,7 +11,9 @@
         "laravelcollective/html": "5.2.*",
         "paragonie/constant_time_encoding": "^1.0",
         "backup-manager/laravel": "^1.1",
-        "mews/captcha": "~2.0"
+        "mews/captcha": "~2.0",
+        "phpmetrics/phpmetrics": "^1.10",
+        "socialengine/sniffer-rules": "^2.2"        
     },
     "require-dev": {
         "fzaninotto/faker": "~1.4",
@@ -19,7 +21,7 @@
         "phpunit/phpunit": "~5.0",
         "symfony/css-selector": "2.8.*|3.0.*",
         "symfony/dom-crawler": "2.8.*|3.0.*",
-        "codeception/codeception": "^2.2"
+        "codeception/codeception": "^2.2"        
     }, 
     "autoload": {
         "classmap": [

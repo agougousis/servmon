@@ -13,10 +13,9 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Service extends Model
 {
-
     protected $table = 'services';
-    protected $fillable = array('server','stype','port','version');
-    protected $hidden = array('created_at','updated_at');
+    protected $fillable = array('server', 'stype', 'port', 'version');
+    protected $hidden = array('created_at', 'updated_at');
 
     /**
      * Deletes all services hosted on a specific server
@@ -25,7 +24,7 @@ class Service extends Model
      */
     public static function deleteByServerId($server_id)
     {
-        Service::where('server',$server_id)->delete();
+        Service::where('server', $server_id)->delete();
     }
 
     /**
@@ -36,7 +35,7 @@ class Service extends Model
      */
     public static function getServiceTypesOnServer($server_id)
     {
-        return array_flatten(Service::select('stype')->where('server',$server_id)->get()->toArray());
+        return array_flatten(Service::select('stype')->where('server', $server_id)->get()->toArray());
     }
 
     /**
@@ -47,7 +46,6 @@ class Service extends Model
      */
     public static function getAllOnServer($serverId)
     {
-        return DB::table('services')->join('service_types','services.stype','=','service_types.codename')->select('id','server','stype','port','version','title','image','watch')->where('server',$serverId)->get();
+        return DB::table('services')->join('service_types', 'services.stype', '=', 'service_types.codename')->select('id', 'server', 'stype', 'port', 'version', 'title', 'image', 'watch')->where('server', $serverId)->get();
     }
-
 }

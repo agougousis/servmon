@@ -45,14 +45,14 @@ class Handler extends ExceptionHandler
      */
     public function render($request, Exception $e)
     {
-        if ($e instanceof TokenMismatchException){
+        if ($e instanceof TokenMismatchException) {
             return response()->json(['errors'=>[]])->setStatusCode(401, 'This page has expired! Please, refresh the page and try again!');
         }
-        
+
         if ($e instanceof \PDOException) {
             return view('errors.503');
         }
-        
+
         return parent::render($request, $e);
     }
 }

@@ -12,8 +12,6 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Delay extends Model
 {
-
-  protected $table = 'monitor_delays';
-  public $timestamps = false;
-
+    protected $table = 'monitor_delays';
+    public $timestamps = false;
 }

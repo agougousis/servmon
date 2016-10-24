@@ -34,7 +34,6 @@ class ServiceController extends RootController
         DB::beginTransaction();
         foreach ($services as $service) {
             try {
-
                 // Form validation
                 $errors = $this->loadValidationErrors('validation.create_service', $service, $errors, $index);
                 if (!empty($errors)) {
@@ -51,7 +50,6 @@ class ServiceController extends RootController
                 $serv = new Service();
                 $serv->fill($service)->save();
                 $created[] = $serv;
-
             } catch (Exception $ex) {
                 DB::rollBack();
                 $errors[] = array(
@@ -121,7 +119,6 @@ class ServiceController extends RootController
         DB::beginTransaction();
         foreach ($services as $service) {
             try {
-
                 // Form validation
                 $errors = $this->loadValidationErrors('validation.update_service', $service, $errors, $index);
                 if (!empty($errors)) {
@@ -139,7 +136,6 @@ class ServiceController extends RootController
 
                 $serv->fill($service)->save();
                 $updated[] = $serv;
-
             } catch (Exception $ex) {
                 DB::rollBack();
                 $errors[] = array(
@@ -184,5 +180,4 @@ class ServiceController extends RootController
         $service->delete();
         return response()->json([])->setStatusCode(200, 'Service deleted successfully');
     }
-
 }

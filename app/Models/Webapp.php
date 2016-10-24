@@ -13,10 +13,9 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Webapp extends Model
 {
-
     protected $table = 'webapps';
-    protected $fillable = array('url','server','language','developer','contact');
-    protected $hidden = array('created_at','updated_at');
+    protected $fillable = array('url', 'server', 'language', 'developer', 'contact');
+    protected $hidden = array('created_at', 'updated_at');
 
     /**
      * Retrieves a webapp with specific URL
@@ -26,7 +25,7 @@ class Webapp extends Model
      */
     public static function getByUrl($url)
     {
-        return Webapp::where('url',$url)->first();
+        return Webapp::where('url', $url)->first();
     }
 
     /**
@@ -36,7 +35,7 @@ class Webapp extends Model
      */
     public static function getAllAsArray()
     {
-        return Webapp::select('id','url','language','developer','server','contact')->get()->toArray();
+        return Webapp::select('id', 'url', 'language', 'developer', 'server', 'contact')->get()->toArray();
     }
 
     /**
@@ -46,7 +45,7 @@ class Webapp extends Model
      */
     public static function deleteByServerId($server_id)
     {
-        Webapp::where('server',$server_id)->delete();
+        Webapp::where('server', $server_id)->delete();
     }
 
     /**
@@ -57,7 +56,7 @@ class Webapp extends Model
      */
     public static function getAllOnServer($serverId)
     {
-        return DB::table('webapps')->join('webapp_types','webapps.language','=','webapp_types.codename')->select('id','url','language','developer','contact','image','watch')->where('server',$serverId)->get();;
+        return DB::table('webapps')->join('webapp_types', 'webapps.language', '=', 'webapp_types.codename')->select('id', 'url', 'language', 'developer', 'contact', 'image', 'watch')->where('server', $serverId)->get();
     }
 
     /**
@@ -75,8 +74,7 @@ class Webapp extends Model
             $domainMemberIds[] = $domainMember->id;
         }
 
-        $webapps = DB::table('webapps')->join('servers','servers.id','=','webapps.server')->select('webapps.id','webapps.url','webapps.language','webapps.developer','webapps.server','webapps.contact')->whereIn('servers.domain',$domainMemberIds)->get();
+        $webapps = DB::table('webapps')->join('servers', 'servers.id', '=', 'webapps.server')->select('webapps.id', 'webapps.url', 'webapps.language', 'webapps.developer', 'webapps.server', 'webapps.contact')->whereIn('servers.domain', $domainMemberIds)->get();
         return $webapps;
     }
-
 }

@@ -15,10 +15,9 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Server extends Model
 {
-
     protected $table = 'servers';
-    protected $fillable = array('hostname','domain','ip','os');
-    protected $hidden = array('created_at','updated_at');
+    protected $fillable = array('hostname', 'domain','ip','os');
+    protected $hidden = array('created_at', 'updated_at');
 
     /**
      * Returns information about specified servers
@@ -28,7 +27,7 @@ class Server extends Model
      */
     public static function getServersInfoByIds($server_ids)
     {
-        return Server::join('domains','servers.domain','=','domains.id')->select(DB::raw('servers.id,ip,os,hostname,domains.full_name'))->whereIn('servers.id', $server_ids)->get()->toArray();
+        return Server::join('domains', 'servers.domain', '=', 'domains.id')->select(DB::raw('servers.id,ip,os,hostname,domains.full_name'))->whereIn('servers.id', $server_ids)->get()->toArray();
     }
 
     /**
@@ -39,7 +38,7 @@ class Server extends Model
      */
     public static function getBasicInfoByDomain($domain_id)
     {
-        return Server::select('id','hostname','watch')->where('domain',$domain_id)->get()->toArray();
+        return Server::select('id', 'hostname', 'watch')->where('domain', $domain_id)->get()->toArray();
     }
 
     /**
@@ -53,7 +52,7 @@ class Server extends Model
         // Find domain ID and all subdomain IDs
         $domain = Domain::findByFullname($domain_name);
         $descentant_ids = array_flatten($domain->descendantsAndSelf()->select('id')->get()->toArray());
-        return Server::join('domains','domains.id','=','servers.domain')->select('servers.id','hostname','ip','os','domain','servers.watch','domains.full_name')->whereIn('domain',$descentant_ids)->get()->toArray();
+        return Server::join('domains', 'domains.id', '=', 'servers.domain')->select('servers.id', 'hostname', 'ip', 'os', 'domain', 'servers.watch', 'domains.full_name')->whereIn('domain', $descentant_ids)->get()->toArray();
     }
 
     /**
@@ -71,13 +70,12 @@ class Server extends Model
         foreach ($delegated_domains_ids as $domainId) {
             $domain = Domain::find($domainId);
             $descentant_ids = array_flatten($domain->descendantIds());
-            $my_domain_ids = array_merge($my_domain_ids,$descentant_ids);
+            $my_domain_ids = array_merge($my_domain_ids, $descentant_ids);
         }
         // Find servers that have been independently delegated to me
         $independent_server_ids = array_flatten(ServerDelegation::getUserDelegatedIds(Auth::user()->id));
         // Find my servers
-        $servers = Server::join('domains','servers.domain','=','domains.id')->whereIn('domain',$my_domain_ids)->orWhereIn('servers.id',$independent_server_ids)->select('servers.id','ip','os','hostname','supervisor_email','domain','full_name AS domain_name')->get();
+        $servers = Server::join('domains', 'servers.domain', '=', 'domains.id')->whereIn('domain', $my_domain_ids)->orWhereIn('servers.id', $independent_server_ids)->select('servers.id', 'ip', 'os', 'hostname', 'supervisor_email', 'domain', 'full_name AS domain_name')->get();
         return $servers;
     }
-
 }

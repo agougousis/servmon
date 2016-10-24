@@ -12,9 +12,8 @@ use Illuminate\Database\Eloquent\Model;
  */
 class DomainDelegation extends Model
 {
-
     protected $table = 'domain_delegations';
-    protected $fillable = array('user_id','domain_id');
+    protected $fillable = array('user_id', 'domain_id');
 
     /**
      * Deletes all delegations related to a specific user
@@ -23,7 +22,7 @@ class DomainDelegation extends Model
      */
     public static function deleteUserDelegations($user_id)
     {
-        DomainDelegation::where('user_id',$user_id)->delete();
+        DomainDelegation::where('user_id', $user_id)->delete();
     }
 
     /**
@@ -33,7 +32,7 @@ class DomainDelegation extends Model
      */
     public static function deleteByDomainId($domain_id)
     {
-        DomainDelegation::where('domain_id',$domain_id)->delete();
+        DomainDelegation::where('domain_id', $domain_id)->delete();
     }
 
     /**
@@ -43,7 +42,7 @@ class DomainDelegation extends Model
      */
     public static function getAllFullInfo()
     {
-        return DomainDelegation::join('domains','domain_delegations.domain_id','=','domains.id')->join('users','users.id','=','domain_delegations.user_id')->select('domain_delegations.id','full_name','email','firstname','lastname')->get()->toArray();
+        return DomainDelegation::join('domains', 'domain_delegations.domain_id', '=', 'domains.id')->join('users', 'users.id', '=', 'domain_delegations.user_id')->select('domain_delegations.id', 'full_name', 'email', 'firstname', 'lastname')->get()->toArray();
     }
 
     /**
@@ -54,7 +53,7 @@ class DomainDelegation extends Model
      */
     public static function getUserDelegatedIds($user_id)
     {
-        return DomainDelegation::where('user_id',$user_id)->select('domain_id')->get()->toArray();
+        return DomainDelegation::where('user_id', $user_id)->select('domain_id')->get()->toArray();
     }
 
     /**
@@ -75,9 +74,8 @@ class DomainDelegation extends Model
      * @param array $domainList
      * @return DomainDelegation
      */
-    public static function countUserDelegationToDomains($userId,$domainList)
+    public static function countUserDelegationToDomains($userId, $domainList)
     {
-        return DomainDelegation::where('user_id',$userId)->whereIn('domain_id',$domainList)->count();
+        return DomainDelegation::where('user_id', $userId)->whereIn('domain_id', $domainList)->count();
     }
-
 }

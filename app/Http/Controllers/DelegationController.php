@@ -166,7 +166,7 @@ class DelegationController extends RootController
 
                         // If the user has been delegated servers under this domain, remove these server delegations
                         $descendantDomains = array_flatten($domain->descendantsAndSelf()->select('id')->get()->ToArray());
-                        ServerDelegation::removeUserDelegationsInDomains($user->id,$descendantDomains);
+                        ServerDelegation::removeUserDelegationsInDomains($user->id, $descendantDomains);
                         $newDelegation = new DomainDelegation();
                         $newDelegation->user_id = $user->id;
                         $newDelegation->domain_id = $domain->id;
@@ -202,5 +202,4 @@ class DelegationController extends RootController
         DB::commit();
         return response()->json($created)->setStatusCode(200, 'Delegation success!');
     }
-
 }

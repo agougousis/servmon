@@ -86,7 +86,7 @@ class ServerController extends RootController
             Service::deleteByServerId($server_id);
 
             // Delete server delegations
-            ServerDelegation::deleteByServerId($server_id);;
+            ServerDelegation::deleteByServerId($server_id);
 
             // Delete the server
             $server->delete();
@@ -118,7 +118,6 @@ class ServerController extends RootController
         DB::beginTransaction();
         foreach ($servers as $server) {
             try {
-
                 // Form validation
                 $errors = $this->loadValidationErrors('validation.server_update', $server, $errors, $index);
                 if (!empty($errors)) {
@@ -140,7 +139,6 @@ class ServerController extends RootController
                 $updatedServer->os = $server['os'] ;
                 $updatedServer->save();
                 $updated[] = $updatedServer;
-
             } catch (Exception $ex) {
                 DB::rollBack();
                 $errors[] = array(
@@ -176,9 +174,7 @@ class ServerController extends RootController
         $index = 0;
         DB::beginTransaction();
         foreach ($servers as $server) {
-
             try {
-
                 // Form validation
                 $errors = $this->loadValidationErrors('validation.server_create', $server, $errors, $index);
                 if (!empty($errors)) {
@@ -203,7 +199,6 @@ class ServerController extends RootController
                 $newServer->save();
 
                 $created[] = $newServer;
-
             } catch (Exception $ex) {
                 DB::rollBack();
                 $errors[] = array(
@@ -254,7 +249,7 @@ class ServerController extends RootController
         $service_list = array();
         foreach ($services as $serviceObj) {
             $service = (array) $serviceObj;
-            $result = Monitor::scanPort('tcp',$service['port'], $server->ip, $portscan_timeout);
+            $result = Monitor::scanPort('tcp', $service['port'], $server->ip, $portscan_timeout);
             $service['status'] = $result['status'];
             $service['time'] = $result['time'];
             $service_list[] = $service;
@@ -283,6 +278,4 @@ class ServerController extends RootController
 
         return response()->json($response);
     }
-
-
 }

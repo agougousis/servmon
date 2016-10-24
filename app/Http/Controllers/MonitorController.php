@@ -33,7 +33,6 @@ class MonitorController extends RootController
             $server_list = array();
             $servers = Server::getBasicInfoByDomain($domain->id);
             foreach ($servers as $server) {
-
                 // Retrieve services
                 $service_list = array();
                 $services = Service::getAllOnServer($server['id']);
@@ -103,7 +102,7 @@ class MonitorController extends RootController
         $services = array();
         $webapps = array();
         foreach ($form as $checkboxName) {
-            $parts = explode('--',$checkboxName);
+            $parts = explode('--', $checkboxName);
             if (count($parts) == 2) {
                 switch ($parts[0]) {
                     case 'server':
@@ -121,17 +120,16 @@ class MonitorController extends RootController
 
         // Update services
         DB::table('services')->update(['watch'=>0]);
-        DB::table('services')->whereIn('id',$services)->update(['watch'=>1]);
+        DB::table('services')->whereIn('id', $services)->update(['watch'=>1]);
 
         // Update servers
         DB::table('servers')->update(['watch'=>0]);
-        DB::table('servers')->whereIn('id',$servers)->update(['watch'=>1]);
+        DB::table('servers')->whereIn('id', $servers)->update(['watch'=>1]);
 
         // Update webapps
         DB::table('webapps')->update(['watch'=>0]);
-        DB::table('webapps')->whereIn('id',$webapps)->update(['watch'=>1]);
+        DB::table('webapps')->whereIn('id', $webapps)->update(['watch'=>1]);
 
         return response()->json([])->setStatusCode(200, 'Configuration updated!');
     }
-
 }

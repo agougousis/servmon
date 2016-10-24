@@ -12,9 +12,8 @@ use Illuminate\Database\Eloquent\Model;
  */
 class ServerDelegation extends Model
 {
-
     protected $table = 'server_delegations';
-    protected $fillable = array('user_id','server_id');
+    protected $fillable = array('user_id', 'server_id');
 
     /**
      * Deletes all delegations related to a specific user
@@ -23,7 +22,7 @@ class ServerDelegation extends Model
      */
     public static function deleteUserDelegations($user_id)
     {
-        ServerDelegation::where('user_id',$user_id)->delete();
+        ServerDelegation::where('user_id', $user_id)->delete();
     }
 
     /**
@@ -33,7 +32,7 @@ class ServerDelegation extends Model
      */
     public static function getAllWithUser()
     {
-        return ServerDelegation::join('servers','server_delegations.server_id','=','servers.id')->join('users','users.id','=','server_delegations.user_id')->select('server_delegations.id','server_id','email','firstname','lastname')->get()->toArray();
+        return ServerDelegation::join('servers', 'server_delegations.server_id', '=', 'servers.id')->join('users', 'users.id', '=', 'server_delegations.user_id')->select('server_delegations.id', 'server_id', 'email', 'firstname', 'lastname')->get()->toArray();
     }
 
     /**
@@ -44,7 +43,7 @@ class ServerDelegation extends Model
      */
     public static function getUserDelegatedIds($user_id)
     {
-        return ServerDelegation::where('user_id',$user_id)->select('server_id')->get()->toArray();
+        return ServerDelegation::where('user_id', $user_id)->select('server_id')->get()->toArray();
     }
 
     /**
@@ -54,9 +53,9 @@ class ServerDelegation extends Model
      * @param int $userId
      * @return ServerDelegation
      */
-    public static function searchByUserAndServer($serverId,$userId)
+    public static function searchByUserAndServer($serverId, $userId)
     {
-        return ServerDelegation::where('server_id',$serverId)->where('user_id',$userId)->first();
+        return ServerDelegation::where('server_id', $serverId)->where('user_id', $userId)->first();
     }
 
     /**
@@ -66,7 +65,7 @@ class ServerDelegation extends Model
      */
     public static function deleteByServerId($server_id)
     {
-        ServerDelegation::where('server_id',$server_id)->delete();
+        ServerDelegation::where('server_id', $server_id)->delete();
     }
 
     /**
@@ -74,9 +73,8 @@ class ServerDelegation extends Model
      *
      * @param array $domain_list
      */
-    public static function removeUserDelegationsInDomains($user_id,$domain_list)
+    public static function removeUserDelegationsInDomains($user_id, $domain_list)
     {
-        ServerDelegation::join('servers','server_delegations.server_id','=','servers.id')->where('user_id',$user_id)->whereIn('domain',$domain_list)->delete();
+        ServerDelegation::join('servers', 'server_delegations.server_id', '=', 'servers.id')->where('user_id', $user_id)->whereIn('domain', $domain_list)->delete();
     }
-
 }

@@ -47,7 +47,6 @@ class WebappController extends RootController
         DB::beginTransaction();
         foreach ($webapps as $webapp) {
             try {
-
                 // Form validation
                 $errors = $this->loadValidationErrors('validation.create_webapp', $webapp, $errors, $index);
                 if (!empty($errors)) {
@@ -64,7 +63,6 @@ class WebappController extends RootController
                 $wp = new Webapp();
                 $wp->fill($webapp)->save();
                 $created[] = $wp;
-
             } catch (Exception $ex) {
                 DB::rollBack();
                 $errors[] = array(
@@ -134,7 +132,6 @@ class WebappController extends RootController
         DB::beginTransaction();
         foreach ($webapps as $webapp) {
             try {
-
                 // Form validation
                 $errors = $this->loadValidationErrors('validation.update_webapp', $webapp, $errors, $index);
                 if (!empty($errors)) {
@@ -152,7 +149,6 @@ class WebappController extends RootController
 
                 $wp->fill($webapp)->save();
                 $updated[] = $wp;
-
             } catch (Exception $ex) {
                 DB::rollBack();
                 $errors[] = array(
@@ -189,7 +185,7 @@ class WebappController extends RootController
             return response()->json(['errors' => array()])->setStatusCode(400, 'Invalid webapp ID');
         }
 
-        $database = Database::where('related_webapp',$appId)->first();
+        $database = Database::where('related_webapp', $appId)->first();
         if (!empty($database)) {
             $server = Server::find($database->server);
             return response()->json(['errors' => array()])->setStatusCode(403, "There is a database related to this webapp on '".$server->hostname."' server. Please detach the database from this web app first!");
@@ -203,5 +199,4 @@ class WebappController extends RootController
         $webapp->delete();
         return response()->json([])->setStatusCode(200, 'Webapp deleted successfully');
     }
-
 }

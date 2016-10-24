@@ -12,10 +12,8 @@ use Illuminate\Database\Eloquent\Model;
  */
 class SystemLog extends Model
 {
-
     protected $table = 'system_logs';
-    protected $fillable = ['message','category','when'];
+    protected $fillable = ['message', 'category', 'when'];
 
     public $timestamps = false;
-
 }

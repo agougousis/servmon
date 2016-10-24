@@ -87,7 +87,6 @@ class UserController extends RootController
         DB::beginTransaction();
         foreach ($users as $user) {
             try {
-
                 // Form validation
                 $errors = $this->loadValidationErrors('validation.add_user', $user, $errors, $index);
                 if (!empty($errors)) {
@@ -106,7 +105,6 @@ class UserController extends RootController
 
                 $new_user->password = '';
                 $created[] = $new_user;
-
             } catch (Exception $ex) {
                 DB::rollBack();
                 $errors[] = array(
@@ -242,6 +240,4 @@ class UserController extends RootController
         $user->password = '';
         return response()->json($user)->setStatusCode(200, 'User activated!');
     }
-
-
 }

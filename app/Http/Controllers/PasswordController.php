@@ -38,7 +38,7 @@ class PasswordController extends RootController
 
         DB::beginTransaction();
         try {
-            $user = User::where('email',$form['email'])->first();
+            $user = User::where('email', $form['email'])->first();
             $uid = $user->id;
 
              // Create and send a reset link
@@ -56,9 +56,8 @@ class PasswordController extends RootController
             // Notify the user about the reset link
             $data['link'] = $url;
             try {
-                Mail::send('emails.password_reset_link', $data, function($message) use ($user)
-                {
-                  $message->to($user->email)->subject('ServMon: Password reset request');
+                Mail::send('emails.password_reset_link', $data, function ($message) use ($user) {
+                    $message->to($user->email)->subject('ServMon: Password reset request');
                 });
             } catch (Exception $ex) {
                 DB::rollBack();
@@ -68,7 +67,6 @@ class PasswordController extends RootController
 
             DB::commit();
             return response()->json([])->setStatusCode(200, 'A reset link was sent!');
-
         } catch (Exception $ex) {
             DB::rollBack();
             $this->logEvent("Request for reset link raised an error: ".$ex->getMessage(), 'error');
@@ -84,7 +82,7 @@ class PasswordController extends RootController
      */
     public function setPassword($code)
     {
-        $linkInfo = PasswordResetLink::where('code','=',$code)->first();
+        $linkInfo = PasswordResetLink::where('code', '=', $code)->first();
 
         // Check for invalid link
         if (empty($linkInfo)) {
@@ -105,7 +103,7 @@ class PasswordController extends RootController
 
         $errors = $this->loadValidationErrors('validation.password_reset', $form, null, null);
         if (!empty($errors)) {
-            return response()->json(['errors' => $errors])->setStatusCode(400,'');
+            return response()->json(['errors' => $errors])->setStatusCode(400, '');
         }
 
         DB::beginTransaction();
@@ -122,5 +120,4 @@ class PasswordController extends RootController
         DB::commit();
         return response()->json([])->setStatusCode(200, 'Your password was reset successfully!');
     }
-
 }

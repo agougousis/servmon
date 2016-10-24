@@ -12,7 +12,5 @@ use Illuminate\Database\Eloquent\Model;
  */
 class WebappType extends Model
 {
-
     protected $table = 'webapp_types';
-
 }

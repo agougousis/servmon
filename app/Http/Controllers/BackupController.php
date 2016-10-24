@@ -41,7 +41,7 @@ class BackupController extends RootController
                 );
 
                 // Sort backups from newest to oldest
-                usort($backup_list, function($a,$b){
+                usort($backup_list, function ($a, $b) {
                     $date_a = strtotime($a['when']);
                     $date_b = strtotime($b['when']);
                     if ($date_a == $date_b) {
@@ -49,7 +49,6 @@ class BackupController extends RootController
                     }
                     return ($date_a < $date_b) ? -1 : 1;
                 });
-
             }
         }
         return response()->json($backup_list)->setStatusCode(200, '');
@@ -64,7 +63,7 @@ class BackupController extends RootController
     {
         $filename = 'backup_'.date("d-m-Y_H-i-s");
         try {
-            Artisan::call('db:backup',[
+            Artisan::call('db:backup', [
                 '--database'    =>'mysql',
                 '--destination' =>'local',
                 '--compression' =>'gzip',
@@ -96,7 +95,7 @@ class BackupController extends RootController
         }
 
         try {
-            Artisan::call('db:restore',[
+            Artisan::call('db:restore', [
                 '--source'      =>  'local',
                 '--sourcePath'  =>  $filename,
                 '--database'    =>  'mysql',
@@ -125,5 +124,4 @@ class BackupController extends RootController
         unlink($filepath);
         return response()->json([])->setStatusCode(200, 'Backup deleted!');
     }
-
 }

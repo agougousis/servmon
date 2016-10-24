@@ -36,7 +36,6 @@ class DatabaseController extends RootController
         $created = array();
         foreach ($databases as $database) {
             try {
-
                 // Form validation
                 $errors = $this->loadValidationErrors('validation.create_database', $database, $errors, $index);
                 if (!empty($errors)) {
@@ -61,10 +60,9 @@ class DatabaseController extends RootController
 
                 // Save the database info
                 $db = new Database();
-                $db->owner = Auth::user()->id;;
+                $db->owner = Auth::user()->id;
                 $db->fill($database)->save();
                 $created[] = $db;
-
             } catch (Exception $ex) {
                 DB::rollBack();
                 $errors[] = array(
@@ -137,7 +135,6 @@ class DatabaseController extends RootController
         DB::beginTransaction();
         foreach ($databases as $database) {
             try {
-
                 // Form validation
                 $errors = $this->loadValidationErrors('validation.update_database', $database, $errors, $index);
                 if (!empty($errors)) {
@@ -168,7 +165,6 @@ class DatabaseController extends RootController
                     }
                 }
                 $updated[] = $db;
-
             } catch (Exception $ex) {
                 DB::rollBack();
                 $errors[] = array(
@@ -213,5 +209,4 @@ class DatabaseController extends RootController
         $database->delete();
         return response()->json([])->setStatusCode(200, 'Database deleted successfully!');
     }
-
 }
