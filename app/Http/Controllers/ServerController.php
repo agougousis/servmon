@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use DB;
 use Auth;
 use Input;
-use Config;
+use Monitor;
 use App\Models\Server;
 use App\Models\Service;
 use App\Models\Webapp;
@@ -13,7 +13,6 @@ use App\Models\Database;
 use App\Models\ServerDelegation;
 use App\Models\Domain;
 use Illuminate\Http\Request;
-use App\Packages\Gougousis\Net\Monitor;
 use App\Http\Controllers\RootController;
 
 /**
@@ -237,10 +236,6 @@ class ServerController extends RootController
             return response()->json(['errors' => []])->setStatusCode(403, 'You are not allowed to access information about this server!');
         }
 
-        $curl_timeout = Config::get('network.curl_timeout');
-        $portscan_timeout = Config::get('network.portscan_timeout');
-        $ping_timeout = Config::get('network.ping_timeout');
-
         $services = Service::getAllOnServer($serverId);
         $webapps = Webapp::getAllOnServer($serverId);
         $databases = Database::getAllOnServer($serverId);
@@ -249,7 +244,7 @@ class ServerController extends RootController
         $service_list = array();
         foreach ($services as $serviceObj) {
             $service = (array) $serviceObj;
-            $result = Monitor::scanPort('tcp', $service['port'], $server->ip, $portscan_timeout);
+            $result = Monitor::scanPort('tcp', $service['port'], $server->ip);
             $service['status'] = $result['status'];
             $service['time'] = $result['time'];
             $service_list[] = $service;
@@ -258,7 +253,7 @@ class ServerController extends RootController
         $webapp_list = array();
         foreach ($webapps as $webappObj) {
             $webapp = (array) $webappObj;
-            $result = Monitor::checkStatus($webapp['url'], $curl_timeout);
+            $result = Monitor::checkStatus($webapp['url']);
             $webapp['status'] = $result['status'];
             $webapp['time'] = $result['time'];
             $webapp_list[] = $webapp;

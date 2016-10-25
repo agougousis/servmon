@@ -24,7 +24,7 @@ return [
     |
     */
     'files' => [
-        'app/Console/Kernel.php',
+        'app/',
     ],
 
     /*

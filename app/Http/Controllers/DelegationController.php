@@ -5,14 +5,13 @@ namespace App\Http\Controllers;
 use DB;
 use Auth;
 use Input;
-use Config;
+use Monitor;
 use Illuminate\Http\Request;
 use App\User;
 use App\Models\Domain;
 use App\Models\Server;
 use App\Models\DomainDelegation;
 use App\Models\ServerDelegation;
-use App\Packages\Gougousis\Net\Monitor;
 use App\Http\Controllers\RootController;
 
 /**
@@ -71,9 +70,8 @@ class DelegationController extends RootController
                 $delegated_servers = Server::getServersInfoByIds(array_flatten($server_delegations));
 
                 $data = array();
-                $ping_timeout = Config::get('network.ping_timeout');
                 foreach ($delegated_servers as $server) {
-                    $pingResult = Monitor::ping($server['ip'], $ping_timeout);
+                    $pingResult = Monitor::ping($server['ip']);
                     $server['status'] = ($pingResult['status']) ? 'on' : 'off';
                     $server['response_time'] = $pingResult['time'];
                     $data[] = $server;

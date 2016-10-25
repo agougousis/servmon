@@ -4,11 +4,24 @@ namespace App\Packages\Gougousis\Net;
 
 class Monitor
 {
+    protected $ping_timeout;
+    protected $portscan_timeout;
+    protected $curl_timeout;
 
-    public static function ping($ip, $timeout)
+    public function __construct($ping_timeout = null, $portscan_timeout = null, $curl_timeout = null)
     {
+        $this->ping_timeout = (empty($ping_timeout))? 2 : $ping_timeout;
+        $this->portscan_timeout = (empty($portscan_timeout))? 3 : $portscan_timeout;
+        $this->curl_timeout = (empty($curl_timeout))? 3 : $curl_timeout;
+    }
+
+    public function ping($ip, $timeout = null)
+    {
+        // Check if we need to override the default timeout
+        $useTimeout = (empty($timeout))? $this->ping_timeout : $timeout ;
+
         // Ping only once with 3 sec time limit
-        exec("ping -c 1 -W $timeout $ip", $out, $status);
+        exec("ping -c 1 -W $useTimeout $ip", $out, $status);
 
         // In case response in empty
         $outString = implode('', $out);
@@ -37,11 +50,14 @@ class Monitor
         );
     }
 
-    public static function scanPort($protocol, $port, $ip, $timeout)
+    public function scanPort($protocol, $port, $ip, $timeout = null)
     {
+        // Check if we need to override the default timeout
+        $useTimeout = (empty($timeout))? $this->portscan_timeout : $timeout ;
+
         $start = microtime(true);
         try {
-            $client = stream_socket_client("$protocol://$ip:$port", $errno, $errorMessage, $timeout);
+            $client = stream_socket_client("$protocol://$ip:$port", $errno, $errorMessage, $useTimeout);
 
             $end = microtime(true);
             if ($client === false) {
@@ -60,8 +76,11 @@ class Monitor
         );
     }
 
-    public static function checkStatus($url, $timeout)
+    public function checkStatus($url, $timeout = null)
     {
+        // Check if we need to override the default timeout
+        $useTimeout = (empty($timeout))? $this->curl_timeout : $timeout ;
+
         $start = microtime(true);
 
         // initializes curl session
@@ -78,7 +97,7 @@ class Monitor
         // disable output verbose information
         curl_setopt($curl, CURLOPT_VERBOSE, false);
         // max number of seconds to allow cURL function to execute
-        curl_setopt($curl, CURLOPT_TIMEOUT, $timeout);
+        curl_setopt($curl, CURLOPT_TIMEOUT, $useTimeout);
         curl_exec($curl); // if we want the returned header we can assign the result value of this command
         // get HTTP response code
         $httpcode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
@@ -92,12 +111,12 @@ class Monitor
         }
 
         return array(
-           'status' =>  $status,
-           'time'   =>  ($end-$start)   // in sec
+            'status' =>  $status,
+            'time'   =>  ($end-$start)   // in sec
         );
     }
 
-    public static function curlMulti(array $curl_sites, array $opts = [])
+    public function curlMulti(array $curl_sites, array $opts = [])
     {
         // create array for curl handles
         $chs = [];
@@ -109,6 +128,7 @@ class Monitor
         $mh = curl_multi_init();
         // create running flag
         $running = null;
+
         // cycle through requests and set up
         foreach ($curl_sites as $key => $request) {
             // init individual curl handle

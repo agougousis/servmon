@@ -11,9 +11,9 @@ return [
     | initialized yet or not. If it is, then the user should be redirected
     | to the installation page.
     */
-       
-    'installation'  =>  env('APP_INSTALLATION', 'pending'),  
-     
+
+    'installation'  =>  env('APP_INSTALLATION', 'pending'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Environment
@@ -167,11 +167,12 @@ return [
         App\Providers\AuthServiceProvider::class,
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
-        
+
         'Baum\Providers\BaumServiceProvider',
         Collective\Html\HtmlServiceProvider::class,
         BackupManager\Laravel\Laravel5ServiceProvider::class,
         Mews\Captcha\CaptchaServiceProvider::class,
+        App\Packages\Gougousis\Net\NetServiceProvider::class,
         'SocialEngine\SnifferRules\ServiceProvider',
 
     ],
@@ -223,7 +224,8 @@ return [
         'Form' => Collective\Html\FormFacade::class,
         'Html' => Collective\Html\HtmlFacade::class,
         'Input' => Illuminate\Support\Facades\Input::class,
-        'Captcha' => Mews\Captcha\Facades\Captcha::class
+        'Captcha' => Mews\Captcha\Facades\Captcha::class,
+        'Monitor' => App\Packages\Gougousis\Net\Facades\MonitorFacade::class
     ],
 
 ];

@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use DB;
 use Auth;
-use Config;
 use Input;
+use Monitor;
 use App\Models\Domain;
 use App\Models\Server;
 use App\Models\Service;
@@ -13,7 +13,6 @@ use App\Models\Webapp;
 use Illuminate\Http\Request;
 use App\Models\DomainDelegation;
 use App\Http\Controllers\RootController;
-use App\Packages\Gougousis\Net\Monitor;
 
 /**
  * Implements functionality related to domains
@@ -62,9 +61,8 @@ class DomainController extends RootController
         $servers = Server::where('domain', $domain->id)->get()->toArray();
 
         $server_list = array();
-        $ping_timeout = Config::get('network.ping_timeout');
         foreach ($servers as $server) {
-            $pingResult = Monitor::ping($server['ip'], $ping_timeout);
+            $pingResult = Monitor::ping($server['ip']);
             $server['services'] = Service::getServiceTypesOnServer($server['id']);
             $server['status'] = ($pingResult['status']) ? 'on' : 'off';
             $server['response_time'] = $pingResult['time'];
@@ -144,6 +142,7 @@ class DomainController extends RootController
                 );
                 return response()->json(['errors' => $errors])->setStatusCode(500, 'Domain creation failed');
             }
+
             $index++;
         }
 
@@ -215,9 +214,8 @@ class DomainController extends RootController
         $servers = Server::getAllUnderDomain($domain_name);
 
         $server_list = array();
-        $ping_timeout = Config::get('network.ping_timeout');
         foreach ($servers as $server) {
-            $pingResult = Monitor::ping($server['ip'], $ping_timeout);
+            $pingResult = Monitor::ping($server['ip']);
             $server['services'] = Service::getServiceTypesOnServer($server['id']);
             $server['status'] = ($pingResult['status']) ? 'on' : 'off';
             $server['response_time'] = $pingResult['time'];

@@ -6,12 +6,12 @@ use Illuminate\Console\Command;
 
 use Mail;
 use Config;
+use Monitor;
 use App\Models\SystemLog;
 use App\Models\Server;
 use App\Models\Service;
 use App\Models\Webapp;
 use App\Models\Delay;
-use App\Packages\Gougousis\Net\Monitor;
 
 class ScheduledMonitoring extends Command
 {
@@ -49,15 +49,11 @@ class ScheduledMonitoring extends Command
         try {
             $notifications = array();
 
-            $ping_timeout = Config::get('network.ping_timeout');
-            $portscan_timeout = Config::get('network.portscan_timeout');
-            $curl_timeout = Config::get('network.curl_timeout');
-
             $servers = Server::where('watch', 1)->get();
 
             $start = microtime(true);
             foreach ($servers as $server) {
-                $pingResult = Monitor::ping($server['ip'], $ping_timeout);
+                $pingResult = Monitor::ping($server['ip']);
                 if (!$pingResult['status']) {
                     $notifications[$server->supervisor_email][] =   array(
                         'type'  =>  'server',
@@ -68,7 +64,7 @@ class ScheduledMonitoring extends Command
                     $webapps = Webapp::where('server', $server->id)->where('watch', 1)->get();
 
                     foreach ($services as $service) {
-                        $result = Monitor::scanPort('tcp', $service->port, $server->ip, $portscan_timeout);
+                        $result = Monitor::scanPort('tcp', $service->port, $server->ip);
                         if ($result['status'] == 'off') {
                             $notifications[$server->supervisor_email][] =   array(
                                 'type'  =>  'service',
@@ -78,7 +74,7 @@ class ScheduledMonitoring extends Command
                     }
 
                     foreach ($webapps as $webapp) {
-                        $result = Monitor::checkStatus($webapp->url, $curl_timeout);
+                        $result = Monitor::checkStatus($webapp->url);
                         if ($result['status'] == 'off') {
                             $notifications[$webapp->supervisor_email][] =   array(
                                 'type'  =>  'webapp',
