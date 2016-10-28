@@ -91,17 +91,17 @@ class DomainController extends RootController
         $created = array();
         $index = 0;
         DB::beginTransaction();
-        foreach ($domains as $domain) {
+        foreach ($domains as $domainData) {
             try {
                 // Form validation
-                $errors = $this->loadValidationErrors('validation.domain_create', $domain, $errors, $index);
+                $errors = $this->loadValidationErrors('validation.domain_create', $domainData, $errors, $index);
                 if (!empty($errors)) {
                     DB::rollBack();
                     return response()->json(['errors' => $errors])->setStatusCode(400, 'Domain validation failed');
                 }
 
                 // Locate the parent domain
-                $parent = Domain::findByFullname($domain['parent_domain']);
+                $parent = Domain::findByFullname($domainData['parent_domain']);
 
                 // Access control
                 if (empty($parent)) {
@@ -114,33 +114,12 @@ class DomainController extends RootController
                     return response()->json(['errors' => []])->setStatusCode(403, 'You are not allowed to create subdomains in this domain!');
                 }
 
-                // Create the new node
-                $newDomain = new Domain();
-                $newDomain->parent_id = null;
-                $newDomain->node_name = $domain['node_name'];
-                $newDomain->full_name = (empty($parent)) ? $domain['node_name'] : $domain['node_name'].".".$domain['parent_domain'];
-                $newDomain->fake = (!empty($domain['fake_domain'])) ? 1 : 0 ;
-                $newDomain->save();
-
-                if (!empty($parent)) {
-                    $newDomain->makeChildOf($parent);
-                } else {
-                    // In case we create a root domain, we should be able to manage it
-                    $newDelegation = new DomainDelegation();
-                    $newDelegation->user_id = Auth::user()->id;
-                    $newDelegation->domain_id = $newDomain->id;
-                    $newDelegation->save();
-                }
-
-                $created[] = $newDomain;
+                // Save the new domain
+                $created[] = $this->saveNewDomain($domainData, $parent);
             } catch (Exception $ex) {
                 DB::rollBack();
-                $errors[] = array(
-                    'index'     =>  $index,
-                    'field'     =>  $result['error']['field'],
-                    'message'   =>  $result['error']['message']
-                );
-                return response()->json(['errors' => $errors])->setStatusCode(500, 'Domain creation failed');
+                $this->logEvent('Domain creation failed! Error: '.$ex->getMessage(), 'error');
+                return response()->json(['errors' => []])->setStatusCode(500, 'Domain creation failed. Check system logs.');
             }
 
             $index++;
@@ -148,6 +127,29 @@ class DomainController extends RootController
 
         DB::commit();
         return response()->json($created)->setStatusCode(200, $domain_num.' domain(s) added.');
+    }
+
+    protected function saveNewDomain($domainData, $parent)
+    {
+        // Create the new node
+        $newDomain = new Domain();
+        $newDomain->parent_id = null;
+        $newDomain->node_name = $domainData['node_name'];
+        $newDomain->full_name = (empty($parent)) ? $domainData['node_name'] : $domainData['node_name'].".".$domainData['parent_domain'];
+        $newDomain->fake = (!empty($domainData['fake_domain'])) ? 1 : 0 ;
+        $newDomain->save();
+
+        if (!empty($parent)) {
+            $newDomain->makeChildOf($parent);
+        } else {
+            // In case we create a root domain, we should be able to manage it
+            $newDelegation = new DomainDelegation();
+            $newDelegation->user_id = Auth::user()->id;
+            $newDelegation->domain_id = $newDomain->id;
+            $newDelegation->save();
+        }
+
+        return $newDomain;
     }
 
     /**
@@ -215,15 +217,26 @@ class DomainController extends RootController
 
         $server_list = array();
         foreach ($servers as $server) {
-            $pingResult = Monitor::ping($server['ip']);
-            $server['services'] = Service::getServiceTypesOnServer($server['id']);
-            $server['status'] = ($pingResult['status']) ? 'on' : 'off';
-            $server['response_time'] = $pingResult['time'];
-            $server['domain_name'] = $server['full_name'];
-            $server_list[] = $server;
+            $server_list[] = $this->enrichServerInfo($server);
         }
 
         return response()->json($server_list)->setStatusCode(200, '');
+    }
+
+    /**
+     * Add information on a server item, especially about its current status.
+     *
+     * @param array $server
+     * @return array
+     */
+    protected function enrichServerInfo($server)
+    {
+        $pingResult = Monitor::ping($server['ip']);
+        $server['services'] = Service::getServiceTypesOnServer($server['id']);
+        $server['status'] = ($pingResult['status']) ? 'on' : 'off';
+        $server['response_time'] = $pingResult['time'];
+        $server['domain_name'] = $server['full_name'];
+        return $server;
     }
 
     /**
@@ -234,11 +247,7 @@ class DomainController extends RootController
      */
     public function search()
     {
-        if (!Input::has('mode')) {
-            $mode = "normal";
-        } else {
-            $mode = Input::get('mode');
-        }
+        $mode = (Input::has('mode'))? Input::get('mode') : 'normal';
 
         switch ($mode) {
             case 'normal':
@@ -263,8 +272,7 @@ class DomainController extends RootController
                 break;
             case 'with_servers':
                 $response = array();
-                $domains = DB::table('domains')->orderBy('lft', 'ASC')->get();
-                foreach ($domains as $domain) {
+                foreach (Domain::domainsListPreOrder() as $domain) {
                     $response[$domain->full_name] = array(
                         'depth'     =>  $domain->depth,
                         'servers'   =>  Server::getBasicInfoByDomain($domain->id)

@@ -20,6 +20,16 @@ class Server extends Model
     protected $hidden = array('created_at', 'updated_at');
 
     /**
+     * Returns a list of all servers that are being watched/monitored
+     *
+     * @return Collection
+     */
+    public static function toWatch()
+    {
+        return Server::where('watch', 1)->get();
+    }
+
+    /**
      * Returns information about specified servers
      *
      * @param array $server_ids

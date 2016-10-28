@@ -52,12 +52,8 @@ class ServiceController extends RootController
                 $created[] = $serv;
             } catch (Exception $ex) {
                 DB::rollBack();
-                $errors[] = array(
-                    'index'     =>  $index,
-                    'field'     =>  $result['error']['field'],
-                    'message'   =>  $result['error']['message']
-                );
-                return response()->json(['errors' => $errors])->setStatusCode(400, 'Service creation failed');
+                $this->logEvent('Service creation failed! Error: '.$ex->getMessage(), 'error');
+                return response()->json(['errors' => []])->setStatusCode(500, 'Service creation failed. Check system logs.');
             }
 
             $index++;
@@ -86,16 +82,13 @@ class ServiceController extends RootController
             return response()->json(['errors' => array()])->setStatusCode(400, 'Invalid service ID');
         }
 
-        $service = Service::select('id', 'server', 'stype', 'port', 'version', 'watch')->where('id', $serviceId)->first();
-
         // Access control
         if (!$this->hasPermission('service', $service->server, 'read', $serviceId)) {
             DB::rollBack();
             return response()->json(['errors' => []])->setStatusCode(403, 'You are not allowed to read services on this server!');
         }
 
-        $result = new \stdClass();
-        $result->data = $service;
+        $result = (object)['data' => $service];
 
         // Send back the node info
         return response()->json($result)->setStatusCode(200, '');
@@ -138,12 +131,8 @@ class ServiceController extends RootController
                 $updated[] = $serv;
             } catch (Exception $ex) {
                 DB::rollBack();
-                $errors[] = array(
-                    'index'     =>  $index,
-                    'field'     =>  $result['error']['field'],
-                    'message'   =>  $result['error']['message']
-                );
-                return response()->json(['errors' => $errors])->setStatusCode(400, 'Service update failed');
+                $this->logEvent('Service creation failed! Error: '.$ex->getMessage(), 'error');
+                return response()->json(['errors' => []])->setStatusCode(500, 'Service creation failed. Check system logs.');
             }
 
             $index++;

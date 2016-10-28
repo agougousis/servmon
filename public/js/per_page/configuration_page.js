@@ -24,7 +24,7 @@ function AjaxManagerClass(){
         var mTable = $('#monitor-items-table');
 
         $.ajax({
-            url: "http://servmon.gr/api/monitor/items",
+            url: this.baseUrl+"api/monitor/items",
             type: 'GET',
             dataType: 'json',
             async: false,

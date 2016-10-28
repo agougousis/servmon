@@ -91,7 +91,8 @@ class SystemController extends RootController
             return response()->json([$a])->setStatusCode(200, 'Installation completed!');
         } catch (Exception $ex) {
             DB::rollBack();
-            return response()->json(['errors'=>[]])->setStatusCode(500, 'Installation failed! Unexpected Error!');
+            $this->logEvent('Installation failed! Error: '.$ex->getMessage(), 'error');
+            return response()->json(['errors' => []])->setStatusCode(500, 'Installation failed! Unexpected Error!');
         }
     }
 

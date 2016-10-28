@@ -65,12 +65,8 @@ class WebappController extends RootController
                 $created[] = $wp;
             } catch (Exception $ex) {
                 DB::rollBack();
-                $errors[] = array(
-                    'index'     =>  $index,
-                    'field'     =>  $result['error']['field'],
-                    'message'   =>  $result['error']['message']
-                );
-                return response()->json(['errors' => $errors])->setStatusCode(400, 'Webapp creation failed');
+                $this->logEvent('Webapp creation failed! Error: '.$ex->getMessage(), 'error');
+                return response()->json(['errors' => []])->setStatusCode(500, 'Webapp creation failed. Check system logs.');
             }
 
             $index++;
@@ -99,16 +95,13 @@ class WebappController extends RootController
             return response()->json(['errors' => array()])->setStatusCode(400, 'Invalid webapp ID');
         }
 
-        $webapp = Webapp::select('id', 'url', 'server', 'language', 'developer', 'contact', 'watch')->where('id', $appId)->first();
-
         // Access control
         if (!$this->hasPermission('webapp', $webapp->server, 'read', $appId)) {
             DB::rollBack();
             return response()->json(['errors' => []])->setStatusCode(403, 'You are not allowed to read webapps on this server!');
         }
 
-        $result = new \stdClass();
-        $result->data = $webapp;
+        $result = (object)['data' => $webapp];
 
         // Send back the node info
         return response()->json($result)->setStatusCode(200, '');
@@ -151,12 +144,8 @@ class WebappController extends RootController
                 $updated[] = $wp;
             } catch (Exception $ex) {
                 DB::rollBack();
-                $errors[] = array(
-                    'index'     =>  $index,
-                    'field'     =>  $result['error']['field'],
-                    'message'   =>  $result['error']['message']
-                );
-                return response()->json(['errors' => $errors])->setStatusCode(400, 'Webapp update failed');
+                $this->logEvent('Webapp update failed! Error: '.$ex->getMessage(), 'error');
+                return response()->json(['errors' => []])->setStatusCode(500, 'Webapp update failed. Check system logs.');
             }
 
             $index++;

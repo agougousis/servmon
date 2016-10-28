@@ -45,12 +45,8 @@ class UserController extends RootController
      */
     public function search()
     {
-        if (!Input::has('mode')) {
-            $mode = "normal";
-        } else {
-            $mode = Input::get('mode');
-        }
-
+        $mode = (Input::has('mode'))? Input::get('mode') : 'normal';
+        
         switch ($mode) {
             case 'normal':
                 $users = User::getList();
@@ -107,12 +103,8 @@ class UserController extends RootController
                 $created[] = $new_user;
             } catch (Exception $ex) {
                 DB::rollBack();
-                $errors[] = array(
-                    'index'     =>  $index,
-                    'field'     =>  $result['error']['field'],
-                    'message'   =>  $result['error']['message']
-                );
-                return response()->json(['errors' => $errors])->setStatusCode(400, 'User creation failed');
+                $this->logEvent('User creation failed! Error: '.$ex->getMessage(), 'error');
+                return response()->json(['errors' => []])->setStatusCode(500, 'User creation failed. Check system logs.');
             }
 
             $index++;

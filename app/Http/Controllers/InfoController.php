@@ -73,11 +73,7 @@ class InfoController extends RootController
      */
     public function supportedTypesList()
     {
-        if (!Input::has('mode')) {
-            $mode = "all";
-        } else {
-            $mode = Input::get('mode');
-        }
+        $mode = (Input::has('mode'))? Input::get('mode') : 'all';
 
         switch ($mode) {
             case 'all':

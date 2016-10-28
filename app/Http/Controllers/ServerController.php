@@ -32,11 +32,7 @@ class ServerController extends RootController
      */
     public function search()
     {
-        if (!Input::has('mode')) {
-            $mode = "mine";
-        } else {
-            $mode = Input::get('mode');
-        }
+        $mode = (Input::has('mode'))? Input::get('mode') : 'mine';
 
         switch ($mode) {
             case 'mine':
@@ -91,7 +87,8 @@ class ServerController extends RootController
             $server->delete();
         } catch (Exception $ex) {
             DB::rollBack();
-            return response()->json(['errors'=>[]])->setStatusCode(500, 'Unexpected error happened!');
+                $this->logEvent('Server deletion failed! Error: '.$ex->getMessage(), 'error');
+                return response()->json(['errors' => []])->setStatusCode(500, 'Server deletion failed. Check system logs.');
         }
 
         DB::commit();
@@ -140,12 +137,8 @@ class ServerController extends RootController
                 $updated[] = $updatedServer;
             } catch (Exception $ex) {
                 DB::rollBack();
-                $errors[] = array(
-                    'index'     =>  $index,
-                    'field'     =>  $result['error']['field'],
-                    'message'   =>  $result['error']['message']
-                );
-                return response()->json(['errors' => $errors])->setStatusCode(400, 'Server update failed');
+                $this->logEvent('Server update failed! Error: '.$ex->getMessage(), 'error');
+                return response()->json(['errors' => []])->setStatusCode(500, 'Server update failed. Check system logs.');
             }
 
             $index++;
@@ -200,12 +193,8 @@ class ServerController extends RootController
                 $created[] = $newServer;
             } catch (Exception $ex) {
                 DB::rollBack();
-                $errors[] = array(
-                    'index'     =>  $index,
-                    'field'     =>  $result['error']['field'],
-                    'message'   =>  $result['error']['message']
-                );
-                return response()->json(['errors' => $errors])->setStatusCode(400, 'Server creation failed');
+                $this->logEvent('Server creation failed! Error: '.$ex->getMessage(), 'error');
+                return response()->json(['errors' => []])->setStatusCode(500, 'Server creation failed. Check system logs.');
             }
 
             $index++;

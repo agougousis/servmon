@@ -65,12 +65,8 @@ class DatabaseController extends RootController
                 $created[] = $db;
             } catch (Exception $ex) {
                 DB::rollBack();
-                $errors[] = array(
-                    'index'     =>  $index,
-                    'field'     =>  $result['error']['field'],
-                    'message'   =>  $result['error']['message']
-                );
-                return response()->json(['errors' => $errors])->setStatusCode(400, 'Database creation failed');
+                $this->logEvent('Database creation failed! Error: '.$ex->getMessage(), 'error');
+                return response()->json(['errors' => []])->setStatusCode(500, 'Database creation failed. Check system logs.');
             }
 
             $index++;
@@ -109,8 +105,7 @@ class DatabaseController extends RootController
             return response()->json(['errors' => []])->setStatusCode(403, 'You are not allowed to read databases on this server!');
         }
 
-        $result = new \stdClass();
-        $result->data = $database;
+        $result = (object)['data' => $database];
 
         // Send back the node info
         return response()->json($result)->setStatusCode(200, '');
@@ -167,12 +162,8 @@ class DatabaseController extends RootController
                 $updated[] = $db;
             } catch (Exception $ex) {
                 DB::rollBack();
-                $errors[] = array(
-                    'index'     =>  $index,
-                    'field'     =>  $result['error']['field'],
-                    'message'   =>  $result['error']['message']
-                );
-                return response()->json(['errors' => $errors])->setStatusCode(400, 'Database creation failed');
+                $this->logEvent('Database update failed! Error: '.$ex->getMessage(), 'error');
+                return response()->json(['errors' => []])->setStatusCode(500, 'Database update failed. Check system logs.');
             }
 
             $index++;

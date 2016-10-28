@@ -15,7 +15,18 @@ class Webapp extends Model
 {
     protected $table = 'webapps';
     protected $fillable = array('url', 'server', 'language', 'developer', 'contact');
-    protected $hidden = array('created_at', 'updated_at');
+    protected $hidden = array('created_at', 'updated_at','owner','supervisor_email');
+
+    /**
+     * Returns a list of all webapps that are hosted on a specific server and
+     * are being watched/monitored
+     *
+     * @return Collection
+     */
+    public static function toWatchFromServer($serverId)
+    {
+        return Webapp::where('server', $serverId)->where('watch', 1)->get();
+    }
 
     /**
      * Retrieves a webapp with specific URL

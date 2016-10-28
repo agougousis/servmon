@@ -15,7 +15,18 @@ class Service extends Model
 {
     protected $table = 'services';
     protected $fillable = array('server', 'stype', 'port', 'version');
-    protected $hidden = array('created_at', 'updated_at');
+    protected $hidden = array('created_at', 'updated_at','owner');
+
+    /**
+     * Returns a list of all services that are hosted on a specific server and
+     * are being watched/monitored
+     *
+     * @return Collection
+     */
+    public static function toWatchFromServer($serverId)
+    {
+        return Service::where('server', $serverId)->where('watch', 1)->get();
+    }
 
     /**
      * Deletes all services hosted on a specific server

@@ -34,11 +34,7 @@ class DelegationController extends RootController
      */
     public function search()
     {
-        if (!Input::has('mode')) {
-            $mode = "all";
-        } else {
-            $mode = Input::get('mode');
-        }
+        $mode = (Input::has('mode'))? Input::get('mode') : 'all';
 
         // Access Control
         if ((!$this->isSuperuser())&&($mode != 'my_servers')) {
@@ -191,7 +187,8 @@ class DelegationController extends RootController
                 }
             } catch (Exception $ex) {
                 DB::rollBack();
-                return response()->json(['errors' => $errors])->setStatusCode(400, 'Delegation creation failed');
+                $this->logEvent('Delegation creation failed! Error: '.$ex->getMessage(), 'error');
+                return response()->json(['errors' => []])->setStatusCode(500, 'Delegation creation failed. Check system logs.');
             }
 
             $index++;

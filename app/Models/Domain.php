@@ -19,6 +19,17 @@ class Domain extends Node
     protected $table = 'domains';
     protected $hidden = array('lft', 'rgt', 'depth', 'created_at', 'updated_at');
 
+    /**
+     * Returns a list of all domains as found when traversing
+     * the tree with Pre-Order method.
+     *
+     * @return Collection
+     */
+    public function domainsListPreOrder()
+    {
+        return Domain::table('domains')->orderBy('lft', 'ASC')->get();
+    }
+
     public function descendantIds()
     {
         return array_flatten($this->descendantsAndSelf()->select('id')->get()->toArray());

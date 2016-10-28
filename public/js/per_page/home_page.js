@@ -484,7 +484,7 @@ function AjaxManagerClass(){
         var eManager = this;
         
         $.ajax({
-            url: "http://servmon.gr/api/info/supported_types",
+            url: this.baseUrl+"api/info/supported_types",
             type: 'GET',
             dataType: 'json',
             async: false,
