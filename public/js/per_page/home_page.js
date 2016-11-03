@@ -382,6 +382,7 @@ function GuiManagerClass(){
             case 'serverUnselected':
                 $('#editServerButton').hide();
                 $('#deleteServerButton').hide();
+                $('#serverStatusButton').hide();
                 break;
             case 'serverSelected':
                 $('#editServerButton').show();
@@ -389,6 +390,7 @@ function GuiManagerClass(){
                 $('#add-service-icon').show();
                 $('#add-webapp-icon').show();
                 $('#add-database-icon').show();
+                $('#serverStatusButton').show();
                 break;
         }
     }
@@ -887,6 +889,12 @@ function AjaxManagerClass(){
         $('#webapp-list-div').show();
     }
     
+    this.serverStatusIconClicked = function(){
+        $serverName = $('#server-'+this.selectedServer+' td:nth-child(2)').text();
+        $('#serverStatusRequestDialog input[name="server"]').val($serverName);
+        $('#serverStatusRequestDialog').modal();
+    }
+    
     // Modal submisions - AJAX
     
     this.addDomainModalSubmit = function(){
@@ -1314,6 +1322,115 @@ function AjaxManagerClass(){
             },
             error: ajaxFailure
         });
+        
+    }
+    
+    this.serverStatusModalSubmit = function(){
+                
+        var postData = { 
+            sshuser: $('#serverStatusRequestDialog input[name="sshuser"]').val(), 
+            sshpass: $('#serverStatusRequestDialog input[name="sshpass"]').val(),
+            sshport: $('#serverStatusRequestDialog input[name="sshport"]').val()
+        };
+                
+        $('#serverStatusRequestDialog').modal('hide');
+        $('#loading-image').center().show();
+
+        // Clear the SSH credentials from the HTML
+        $('#serverStatusRequestDialog input[name="sshuser"]').val('');
+        $('#serverStatusRequestDialog input[name="sshpass"]').val('');
+        
+        var eManager = this;
+
+        $.ajax({
+            url: this.baseUrl+"api/servers/"+this.selectedServer+"/snapshot",
+            type: 'POST',
+            dataType: 'json',
+            data: JSON.stringify(postData),
+            contentType:"application/json; charset=utf-8",
+            headers:{'X-CSRF-Token': $('#page_token').val()},
+            success: function( data,textStatus,jqXHR ) {
+                console.log(data);
+                $('#loading-image').hide();                
+                // In order to draw the Gauge elements we need the modal
+                // to be in a 'shown' state. So, we wil start to put information
+                // in the modal, after it has reached a 'shown' state.
+                $('#serverStatusPanel').on('shown.bs.modal',{serverData: data},function(event){
+                    eManager.fillServerStatusPanel(event.data.serverData);
+                });
+                $('#serverStatusPanel').modal('show'); 
+            },
+            error: ajaxFailure
+        });
+    }
+    
+    this.fillServerStatusPanel = function(data){
+        
+        // Uptime
+        var uptimeData = data.uptime.split(" ");
+        $('#uptime-holder').html("<span style='font-size: 26px; font-weight: bold'>"+uptimeData[0]+"</span>\n\
+                                  <br>\n\
+                                  <span>"+uptimeData[1]+"</span>");
+        // Count processors
+        $('#cpu-count-holder').empty();
+        for(j=0; j<data.count_processors; j++){
+            $('#cpu-count-holder').append("<img class='cpuImg' src='"+this.baseUrl+"/images/cpu.png'>");
+        }                
+        
+        // Memory usage
+        $('#total-memory-holder').html(data.total_memory_text);        
+        var mem_usage = Math.round(100*(data.total_memory-data.free_memory)/data.total_memory);        
+        $('#memory-usage-holder').css('width', mem_usage+'%').attr('aria-valuenow', mem_usage).html(mem_usage+'%'); 
+        
+        // Disk usage
+        $('#disk-usage-holder').empty(); 
+        for(j=0; j<data.df_blocks.length; j++){
+            var newRow = "<tr><td>"+data.df_blocks[j].disk_name+"</td>\n\
+                                <td>"+data.df_blocks[j].mount_point+"</td>\n\
+                                <td>\n\
+                                    <table style='width:100%'>\n\
+                                        <tr>\n\
+                                            <td>\n\
+                                                <div class='progress'>\n\
+                                                    <div style='width: "+data.df_blocks[j].usage+"%' class='progress-bar' role='progressbar' aria-valuenow='"+data.df_blocks[j].usage+"' aria-valuemin='0' aria-valuemax='100' style='min-width: 2em;'>\n\
+                                                        "+data.df_blocks[j].usage+"%\n\
+                                                    </div>\n\
+                                                </div>\n\
+                                            </td>\n\
+                                        </tr>\n\
+                                        <tr>\n\
+                                            <td>\n\
+                                                <div class='progress'>\n\
+                                                    <div style='width: "+data.df_inodes[j].usage+"%' class='progress-bar progress-bar-success' role='progressbar' aria-valuenow='"+data.df_inodes[j].usage+"' aria-valuemin='0' aria-valuemax='100' style='min-width: 2em;'>\n\
+                                                        "+data.df_inodes[j].usage+"%\n\
+                                                    </div>\n\
+                                                </div>\n\
+                                            </td>\n\
+                                        </tr>\n\
+                                    </table>\n\
+                                </td>\n\
+                            </tr>";
+            $('#disk-usage-holder').append(newRow);
+        }
+        
+        // List of network services
+        $('#server-services-holder').empty();
+        for(j=0; j<data.services.length; j++){
+            var newRow = "<tr>\n\
+                            <td>"+data.services[j].command+"</td>\n\
+                            <td>"+data.services[j].user+"</td>\n\
+                            <td>"+data.services[j].ipType+"</td>\n\
+                            <td>"+data.services[j].protocol+"</td>\n\
+                            <td>"+data.services[j].port+"</td>\n\
+                            <td>"+data.services[j].address+"</td>\n\
+                        </tr>";
+                        
+            $('#server-services-holder').append(newRow);
+        }
+        
+        // CPU load
+        load5minGauge(data.last5min_load,data.count_processors);
+        load10minGauge(data.last10min_load,data.count_processors);
         
     }
     

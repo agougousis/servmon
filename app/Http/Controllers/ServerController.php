@@ -14,6 +14,7 @@ use App\Models\ServerDelegation;
 use App\Models\Domain;
 use Illuminate\Http\Request;
 use App\Http\Controllers\RootController;
+use phpseclib\Net\SSH2;
 
 /**
  * Implements functionality related to server items
@@ -23,6 +24,228 @@ use App\Http\Controllers\RootController;
  */
 class ServerController extends RootController
 {
+
+    protected function identifySshError($message){
+        if (strpos($message,'getaddrinfo failed') === false){
+            if (strpos($message,'Connection refused') === false){
+                if (strpos($message,'No route to host') === false){
+                    if (strpos($message,'Permission denied') === false){
+                        return "The cause of this error could not be identified!";
+                    }
+                    return "Please check if password authentication is enabled on the server.";
+                }
+                return "Please check if the port is correct and the server is reachable through this subnet.";
+            }
+            return "Please check the provided username and password.";
+        }
+        return "Please check the validity of the hostname.";
+    }
+
+    public function snapshot(Request $request, $server_id) {
+
+        $form = $request->input();
+
+        // Form validation
+        $errors = $this->loadValidationErrors('validation.server_snapshot', $form, [], null);
+        if (!empty($errors)) {
+            DB::rollBack();
+            return response()->json(['errors' => $errors])->setStatusCode(400, 'Invalid credentials!');
+        }
+
+        $server = Server::find($server_id);
+
+        // Check if server ID exists
+        if (empty($server)) {
+            return response()->json(['errors'=>[]])->setStatusCode(404, 'The specified server was not found!');
+        }
+
+        $domain = Domain::find($server->domain);
+        $full_server_name = $server->hostname.".".$domain->full_name;
+
+        try {
+            $port = 22;
+            $username = $form['sshuser'];
+            $password = $form['sshpass'];
+
+            $services = [];
+            $errors = [];
+
+            $start = microtime(true);
+
+            $ssh = new SSH2($full_server_name);
+            if (!$ssh->login($username,$password)) {
+                return response()->json(['errors'=>[]])->setStatusCode(500,'SSH login failed! Please make sure that the server is reachable from this machine and the provided username and password are correct.');
+            }
+
+            /*******************
+             * Get disk usage  *
+             *******************/
+
+            // Block usage
+            $df_blocks_output = $ssh->exec('df -h');
+            $df_bloks_lines = preg_split('/[\n]/',$df_blocks_output);
+			$df_blocks = array();
+            foreach($df_bloks_lines as $line){
+                if(startsWithString($line,'/dev/')){
+                    $line_parts = preg_split('/\s+/',$line);
+                    $df_blocks[] = array(
+                        'disk_name' =>  $line_parts[0],
+                        'usage'     =>  trim($line_parts[4],'%'),
+                        'mount_point'   =>  $line_parts[5]
+                    );
+                }
+            }
+
+            // Inodes usage
+            $df_inodes_output = $ssh->exec('df -h -i');
+            $df_inodes_lines = preg_split('/[\n]/',$df_inodes_output);
+            $df_inodes = array();
+            foreach($df_inodes_lines as $line){
+                if(startsWithString($line,'/dev/')){
+                    $line_parts = preg_split('/\s+/',$line);
+                    $df_inodes[] = array(
+                        'disk_name' =>  $line_parts[0],
+                        'usage'     =>  trim($line_parts[4],'%'),
+                        'mount_point'   =>  $line_parts[5]
+                    );
+                }
+            }
+
+            $count_processors = trim($ssh->exec("grep 'model name' /proc/cpuinfo | wc -l"));
+
+            /**********************
+             * Get server uptime  *
+             **********************/
+            $uptime_output = $ssh->exec('uptime');
+            // Get the uptime
+            $line_parts = explode(',',$uptime_output);
+            $uptime_parts = explode('up',$line_parts[0]);
+            $uptime = trim($uptime_parts[1]);
+            // Get number of logged in users
+            $logged_in = trim($line_parts[2]);
+
+            /*****************
+             * Get CPU load  *
+             *****************/
+            $line_parts = explode('load average:',$uptime_output);
+            $cpu_load_parts = explode(',',$line_parts[1]);
+            // For load average meaning refer to: http://www.howtogeek.com/194642/understanding-the-load-average-on-linux-and-other-unix-like-systems/
+            $last5min_load = number_format(($cpu_load_parts[0]/$count_processors),2);
+            $last10min_load = number_format(($cpu_load_parts[1]/$count_processors),2);
+
+            /*********************
+             * Get memory usage  *
+             *********************/
+            $memory = $ssh->exec('free');
+            $memory_lines = preg_split('/[\n]/',$memory);
+            // Get total RAM from second line
+            $line_numbers = explode(':',$memory_lines[1]);
+            $numbers = preg_split('/\s+/',trim($line_numbers[1]));
+            $total_memory = trim($numbers[0]);
+            $total_memory_text = $this->addMemoryUnits($total_memory);
+            // Get free memory from third line
+            // For free memory calculation refer to: http://www.linuxnix.com/find-ram-size-in-linuxunix/
+            $line_numbers = explode(':',$memory_lines[2]);
+            $numbers = preg_split('/\s+/',trim($line_numbers[1]));
+            $free_memory = trim($numbers[1]);
+            $free_memory_text = $this->addMemoryUnits($free_memory);
+
+            /*********************************
+             * Get list of network services  *
+             *********************************/
+            $ssh->write("sudo lsof -i -n -P\n");
+            $template = "/password\sfor\s$username:|".$username."@".$server->hostname.":~\$/";
+            // Read until you see the password prompt or the normal prompt
+            $sudo_response = $ssh->read($template,2);
+            if(preg_match("/password\sfor/",$sudo_response)){
+                // In case of password prompt, give the password
+                $ssh->write("mhdenER0-\n");
+                // Take into account the 3 sec default delay of linux
+                // (it is there to prevent brute-force attacks)
+                $ssh->setTimeout(3);
+                // Read until you see another prompt. We expect to see a normal prompt
+                // but, if the password is wrong, it can be a password prompt.
+                $lsof_output = $ssh->read($template,2);
+                $lsof_lines = preg_split('/[\n]/',$lsof_output);
+                unset($lsof_lines[count($lsof_lines)-1]); // remove prompt line
+                unset($lsof_lines[1]); // remove header line
+                unset($lsof_lines[0]); // remove empty line
+                foreach($lsof_lines as $line){
+                        if(preg_match("/\s\(LISTEN\)/",$line)){
+                                $columns = preg_split('/\s+/',trim($line));
+                                $command = $columns[0];
+                                $user = $columns[2];
+                                $ipType = $columns[4];
+                                $protocol = $columns[7];
+                                $bind = $columns[8];
+                                if(preg_match("/([0-9\.]+|\*):([0-9]+)/",$bind,$matches)){
+                                        $address = $matches[1];
+                                        $port = $matches[2];
+                                        $services[] = compact('command','user','ipType','protocol','port','address');
+                                }
+                        }
+                }
+
+                $toJson = function($item){
+                        return json_encode($item);
+                };
+                $fromJson = function($item){
+                        return json_decode($item);
+                };
+
+                // Remove duplicates. Array items are compared as JSON strings.
+                $temp = array_unique(array_map($toJson,$services));
+                sort($temp);
+                $services = array_map($fromJson,$temp);
+            } else {
+                    $errors[] = "Password prompt not found after sudo commandn was issued!";
+            }
+
+            $end = microtime(true);
+
+            /************************
+             * Build HTTP response  *
+             ************************/
+            $response = compact('uptime',
+                                'count_processors',
+                                'last5min_load',
+                                'last10min_load',
+                                'total_memory',
+                                'total_memory_text',
+                                'free_memory',
+                                'free_memory_text',
+                                'df_blocks',
+                                'df_inodes',
+                                'services',
+                                'errors');
+
+            return response()->json($response)->setStatusCode(200, 'ok');
+
+        } catch(\RuntimeException $ex) {
+            $message = $ex->getMessage();
+            $reason = $this->identifySshError($message);
+            return response()->json(['errors'=>[]])->setStatusCode(500,"SSH login failed! ".$reason);
+        } catch (Exception $ex) {
+            return response()->json(['errors'=>[]])->setStatusCode(500,$ex->getMessage());
+        }
+    }
+
+    /**
+     * Adds units to an integer, expressing an amount of memory
+     *
+     * @param int $memoryInKilobytes
+     * @return string
+     */
+    protected function addMemoryUnits($memoryInKilobytes)
+    {
+            if ($memoryInKilobytes < 1000) {
+                    return number_format($memoryInKilobytes,2)." KB";
+            } else if (($memoryInKilobytes/1000) < 1000) {
+                    return number_format(($memoryInKilobytes/1000),2)." MB";
+            } else {
+                    return number_format(($memoryInKilobytes/1000000),2)." GB";
+            }
+    }
 
     /**
      * Returns a list of servers
@@ -59,7 +282,7 @@ class ServerController extends RootController
     {
         $server = Server::find($server_id);
 
-        // Check if domain exists
+        // Check if server ID exists
         if (empty($server)) {
             return response()->json(['errors'=>[]])->setStatusCode(404, 'The specified server was not found!');
         }

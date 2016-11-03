@@ -23,6 +23,7 @@ Route::group(['prefix' => 'api','middleware' => ['logged']], function () {
     // Server-related endpoints
     Route::get('servers', array('uses'=>'ServerController@search'));
     Route::get('/servers/{serverId}', array('uses'=>'ServerController@read'));
+    Route::post('/servers/{serverId}/snapshot', array('uses'=>'ServerController@snapshot'));
     Route::post('servers', array('uses'=>'ServerController@create'));
     Route::put('servers', array('uses'=>'ServerController@update'));
     Route::delete('servers/{serverId}', array('uses'=>'ServerController@delete'));

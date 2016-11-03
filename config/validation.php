@@ -1,13 +1,18 @@
 <?php
 
 return array(
-    'installation'  =>   array( 
+    'installation'  =>   array(
         'server'    =>  'required|max:150',
         'dbname'    =>  'required|max:100',
         'dbuser'    =>  'required|max:100',
         'dbpwd'     =>  'required|max:30',
         'url'       =>  'required|url|max:200'
-    ),    
+    ),
+    'server_snapshot'   =>  array(
+        'sshuser'   =>  'required|max:50',
+        'sshpass'   =>  'required|max:50',
+        'sshport'   =>  'required|int'
+    ),
     'password_reset_request'    =>  array(
         'email'     =>  'required|email|exists:users,email',
         'captcha'   =>  'required|captcha',
@@ -40,20 +45,20 @@ return array(
         'ip'        =>  'required|ip|max:35',
         'os'        =>  'required|string|max:50'
     ),
-    'create_service'    =>  array(     
+    'create_service'    =>  array(
         'server'    =>  'required|int|exists:servers,id',
         'stype'      =>  'required|max:50|exists:service_types,codename',
         'port'      =>  'required|integer',
-        'version'   =>  'required|max:50'        
+        'version'   =>  'required|max:50'
     ),
-    'create_webapp'    =>  array(     
+    'create_webapp'    =>  array(
         'server'    =>  'required|int|exists:servers,id',
         'url'       =>  'required|string|max:100|unique:webapps,url',
         'language'  =>  'required|string|max:15|exists:webapp_types,codename',
         'developer' =>  'required|string|max:50',
         'contact'   =>  'required|string|max:50'
     ),
-    'create_database'    =>  array(     
+    'create_database'    =>  array(
         'server'    =>  'required|int|exists:servers,id',
         'dbname'    =>  'required|string|max:30',
         'type'      =>  'required|string|max:15|exists:database_types,codename',
@@ -80,20 +85,20 @@ return array(
         'contact'   =>  'required|max:50|email',
         'server'    =>  'required|integer|exists:servers,id'
     ),
-    'update_service'    =>  array(   
+    'update_service'    =>  array(
         'id'        =>  'required|int|exists:services,id',
         'stype'     =>  'required|max:50|exists:service_types,codename',
         'port'      =>  'required|integer',
-        'version'   =>  'required|max:50'        
+        'version'   =>  'required|max:50'
     ),
-    'update_database'    =>  array(   
-        'dbname'    =>  'required|max:30',        
+    'update_database'    =>  array(
+        'dbname'    =>  'required|max:30',
         'server'    =>  'required|integer',
         'type'      =>  'required|max:15|exists:database_types,codename',
-        'related_webapp'   =>  'integer'        
+        'related_webapp'   =>  'integer'
     ),
-    'config_monitor'    =>  array(   
-        'monitoring_status'    =>  'max:10',        
-        'monitoring_period'    =>  'required|integer'     
+    'config_monitor'    =>  array(
+        'monitoring_status'    =>  'max:10',
+        'monitoring_period'    =>  'required|integer'
     ),
 );
