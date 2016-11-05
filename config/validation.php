@@ -9,9 +9,11 @@ return array(
         'url'       =>  'required|url|max:200'
     ),
     'server_snapshot'   =>  array(
-        'sshuser'   =>  'required|max:50',
-        'sshpass'   =>  'required|max:50',
-        'sshport'   =>  'required|int'
+        'authType'  =>  'required|in:password,rsa',
+        'sshuser'   =>  'required|string|max:50',
+        'sshport'   =>  'required|int',
+        'sshpass'   =>  'string|max:50|required_if:authType,password',
+        'sshkey'    =>  'string|max:250|required_if:authType,rsa'
     ),
     'password_reset_request'    =>  array(
         'email'     =>  'required|email|exists:users,email',

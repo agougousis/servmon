@@ -224,3 +224,7 @@ mq {
 .clicked-icon {
     
 }
+
+.no-top-border tr td {
+    border-top: 0px !important;
+}

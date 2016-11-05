@@ -10,7 +10,7 @@ class NetServiceProvider extends ServiceProvider
     public function register()
     {
         $this->app->singleton('monitor', function ($app) {
-            
+
             // Use the timeout defined in the /config/network.php for default values
             $ping_timeout = Config::get('network.ping_timeout');
             $portscan_timeout = Config::get('network.portscan_timeout');

@@ -46,7 +46,7 @@ class UserController extends RootController
     public function search()
     {
         $mode = (Input::has('mode'))? Input::get('mode') : 'normal';
-        
+
         switch ($mode) {
             case 'normal':
                 $users = User::getList();

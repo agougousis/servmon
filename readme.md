@@ -2,6 +2,9 @@
 
 ## Requirements
 
+* Linux
+    * OpenSSL
+    * libssh2 (see: http://php.net/manual/en/ssh2.requirements.php)
 * PHP >= 5.6.4
     * OpenSSL PHP Extension
     * PDO PHP Extension
@@ -27,30 +30,44 @@ Javascript
 * jQuery 1.11.2 (https://jquery.com/)
 * toastr - non-blocking notifications library (https://github.com/CodeSeven/toastr)
 * jsTree - jQuery plugin for tree structures (https://www.jstree.com/)
+* JustGage - javascript plugin for gauge animation (http://justgage.com/)
+* Raphaël - javascript library for vector graphics (https://dmitrybaranovskiy.github.io/raphael/)
 * Bootstrap CSS Framework (http://getbootstrap.com/)
 * Bootstrap Toggle - Bootstrap plugin for toggle buttons (http://www.bootstraptoggle.com/)
 
 ## Features
 
 ### Embedded Installer
-A basic installer is included in order to automate the task of buidling the database schema and filling in some vital information.
+A basic installer is included in order to automate the task of buidling the database schema and filling in some 
+vital information.
 
-### User roles
-Normal users can add their own domains and servers, add items to them and check their current status. When they are delegated a domain or server created by another user, they are allowed the same tasks on them.
-			
-Superusers can manage delegations, backups, users, and configure monitoring of every item. They can modify items as long they are delegated (by someone else or by themselves) the relevant domain or server that item belongs to. 
+### Basic user roles
+Normal users can add their own domains and servers, add items to them and check their current status. 
+When they are delegated a domain or server created by another user, they are allowed the same tasks on them. 
+Superusers are allowed to delegate domain or server management to other users, access the user management 
+functionality, backup and restore the system database, enable or disable monitoring of specific items and 
+make changes to system-wide configuration. 
 			
 ### Multi-level monitoring
-You can monitor the status of servers, services and web applications. For server monitoring the "ping" tool is used. For services, we try to establish a tcp connection on the relevant port. For web applications, an HTTP HEADER request is used.
+ServMon allows monitoring in three levels. First of all, you can check the status of servers. Server status is tested
+with 'ping' command so, make sure there is not any firewall blocking ping access to the servers you want to monitor.
+Secondly, you can monitor services running on a server. Service status is tested by establishing a TCP/UDP connection to 
+the service. Lastly, you can monitor the status of web applications. The status of a web application is tested by making
+an HTTP HEADER request to that web application.
 
-### Task Delegation
-You can delegate the task of maintaining the correct structure of some domains and servers to other users.
+### Management Delegation
+You can delegate the task of maintaining the correct structure of some domains and servers to other users without
+hesitation since ServMon does not affect in any way your real servers and domains. The ServMon items are just a 
+representation of your real network items. 
 
 ### Scheduled Monitoring with Email notifications
-You can select which items you want to monitor periodically and how often. When an item status is found "OFF" or "DOWN", an email will be sent to the address that has been designated for this item.
+Apart from monitoring the current status of your network items (servers, services, web apps) you can schedule 
+a number of items to monitor periodically in fixed time intervals selected by you. When an item status is found 
+"OFF" or "DOWN", an email will be sent to the address that has been designated for this item. If notifications 
+for multiple items need to be sent to the same email address, they are all sent through a single email.
 
 ### Backup/Restore		
-You can backup and restore the application's database. 
+You can take multiple backups of the application's database and restore the database using any of these backus.
 
 ## Screenshots
 
@@ -65,6 +82,10 @@ You can backup and restore the application's database.
 ![monitor](https://cloud.githubusercontent.com/assets/5471589/18911365/5014a9a4-8585-11e6-9a22-0f904812e04e.png)
 
 ![backup](https://cloud.githubusercontent.com/assets/5471589/18911398/8325d070-8585-11e6-9895-1b571948c512.png)
+
+![ssh-credentials](https://cloud.githubusercontent.com/assets/5471589/20030805/08e07ad2-a375-11e6-9ae5-96c5d3b5a2e6.png)
+
+![ssh-status](https://cloud.githubusercontent.com/assets/5471589/20030808/16c1893e-a375-11e6-8f29-6b4bc759f091.png)
 
 ## Back-end API documentation
 

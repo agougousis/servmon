@@ -393,6 +393,119 @@ Returns information about a server
             "errors":[]
         }
 
+### Snapshot [POST /servers/{serverId}/snapshot]
+
++ Request (application/json)
+
+    + Headers
+
+            X-CSRF-Token: 3p3KXxl6JQ1fVREVv9by1T81qPDehAa7yCbOW3g
+
+    + Body
+
+            {
+                "authType": "password",
+                "sshuser": "myusername",
+                "sshpass": "mysecretpass",
+                "sshport": 22
+            }
+
++ Response 200 (application/json)
+
+        {
+             "uptime":"279 days",
+             "count_processors":"4",
+             "last5min_load":"0.10",
+             "last10min_load":"0.09",
+             "total_memory":"4048036",
+             "total_memory_text":"4.05 GB",
+             "free_memory":"820344",
+             "free_memory_text":"820.34 MB",
+             "df_blocks":[  
+                  {  
+                       "disk_name":"\/dev\/vda1",
+                       "usage":"48",
+                       "mount_point":"\/"
+                  }
+             ],
+             "df_inodes":[  
+                  {  
+                       "disk_name":"\/dev\/vda1",
+                       "usage":"40",
+                       "mount_point":"\/"
+                  }
+             ],
+             "services":[  
+                  {  
+                       "command":"java",
+                       "user":"alexandros",
+                       "ipType":"IPv6",
+                       "protocol":"TCP",
+                       "port":"10216",
+                       "address":"\*"
+                  },
+                  {  
+                       "command":"java",
+                       "user":"root",
+                       "ipType":"IPv6",
+                       "protocol":"TCP",
+                       "port":"80",
+                       "address":"\*"
+                  },
+                  {  
+                       "command":"java",
+                       "user":"root",
+                       "ipType":"IPv6",
+                       "protocol":"TCP",
+                       "port":"8181",
+                       "address":"\*"
+                  },
+                  {  
+                       "command":"postgres",
+                       "user":"postgres",
+                       "ipType":"IPv4",
+                       "protocol":"TCP",
+                       "port":"5432",
+                       "address":"\*"
+                  },
+                  {  
+                       "command":"postgres",
+                       "user":"postgres",
+                       "ipType":"IPv6",
+                       "protocol":"TCP",
+                       "port":"5432",
+                       "address":"\*"
+                  },
+                  {  
+                       "command":"sshd",
+                       "user":"root",
+                       "ipType":"IPv4",
+                       "protocol":"TCP",
+                       "port":"22",
+                       "address":"\*"
+                  },
+                  {  
+                       "command":"sshd",
+                       "user":"root",
+                       "ipType":"IPv6",
+                       "protocol":"TCP",
+                       "port":"22",
+                       "address":"\*"
+                  }
+             ]
+        }
+
++ Response 400 (application/json)
+
+        {
+            "errors":[
+                {
+                    "field":  "sshuser",
+                    "message":  "The sshuser field is required."
+                }
+            ]
+        }
+
 ### Update [PUT]
 
 + Request (application/json)

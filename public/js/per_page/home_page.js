@@ -1326,12 +1326,24 @@ function AjaxManagerClass(){
     }
     
     this.serverStatusModalSubmit = function(){
-                
-        var postData = { 
-            sshuser: $('#serverStatusRequestDialog input[name="sshuser"]').val(), 
-            sshpass: $('#serverStatusRequestDialog input[name="sshpass"]').val(),
-            sshport: $('#serverStatusRequestDialog input[name="sshport"]').val()
-        };
+           
+        var postData;
+        
+        if($("#passwordAuth").is(':checked')){
+            postData = { 
+                authType: 'password',
+                sshuser: $('#serverStatusRequestDialog input[name="sshuser"]').val(), 
+                sshpass: $('#serverStatusRequestDialog input[name="sshpass"]').val(),
+                sshport: $('#serverStatusRequestDialog input[name="sshport"]').val()
+            };
+        } else {
+            postData = { 
+                authType: 'rsa',
+                sshuser: $('#serverStatusRequestDialog input[name="sshuser"]').val(),
+                sshkey: $('#serverStatusRequestDialog input[name="sshkey"]').val(),
+                sshport: $('#serverStatusRequestDialog input[name="sshport"]').val()
+            };
+        }                        
                 
         $('#serverStatusRequestDialog').modal('hide');
         $('#loading-image').center().show();
