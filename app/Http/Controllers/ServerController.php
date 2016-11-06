@@ -14,7 +14,8 @@ use App\Models\ServerDelegation;
 use App\Models\Domain;
 use Illuminate\Http\Request;
 use App\Http\Controllers\RootController;
-use App\Packages\Gougousis\SSH\SSH2Client;
+use phpseclib\Net\SSH2;
+use phpseclib\Crypt\RSA;
 
 /**
  * Implements functionality related to server items
@@ -24,6 +25,22 @@ use App\Packages\Gougousis\SSH\SSH2Client;
  */
 class ServerController extends RootController
 {
+    protected function identifySshError($message)
+    {
+        if (strpos($message, 'getaddrinfo failed') === false) {
+            if (strpos($message, 'Connection refused') === false) {
+                if (strpos($message, 'No route to host') === false) {
+                    if (strpos($message, 'Permission denied') === false) {
+                        return $message;
+                    }
+                    return "Please check if password authentication is enabled on the server.";
+                }
+                return "Please check if the port is correct and the server is reachable through this subnet.";
+            }
+            return "Please check the provided username, password and port.";
+        }
+        return "Please check the validity of the hostname.";
+    }
 
     public function snapshot(Request $request, $server_id)
     {
@@ -47,7 +64,7 @@ class ServerController extends RootController
         $full_server_name = $server->hostname.".".$domain->full_name;
 
         try {
-            $port = 22;
+            $port = $form['sshport'];
             $username = $form['sshuser'];
             $services = [];
 
@@ -58,18 +75,18 @@ class ServerController extends RootController
              **********/
             if ($form['authType'] == 'password') {    // Password authentication
                 $password = $form['sshpass'];
-                $ssh = new SSH2Client();
-                $ssh->setTargetServer($full_server_name, $port);
-                if (!$ssh->connectWithPassword($username, $password)) {
+                $ssh = new SSH2($full_server_name, $port);
+                if (!$ssh->login($username, $password)) {
                     return response()->json(['errors'=>[]])->setStatusCode(500, 'SSH login failed! Please make sure that the server is reachable from this web server and the provided username and password are correct.');
                 }
             } else { // RSA authentication
                 if (!file_exists($form['sshkey'])) {
                     return response()->json(['errors'=>[]])->setStatusCode(400, "The provided file path '".$form['sshkey']."' for the SSH key does not exist or is not accessible!");
                 }
-                $ssh = new SSH2Client();
-                $ssh->setTargetServer($full_server_name, $port);
-                if (!$ssh->connectWithRsaKey($username, $form['sshkey'].".pub", $form['sshkey'])) {
+                $ssh = new SSH2($full_server_name, $port);
+                $key = new RSA();
+                $key->loadKey(file_get_contents($form['sshkey']));
+                if (!$ssh->login('root', $key)) {
                     return response()->json(['errors'=>[]])->setStatusCode(500, 'SSH login failed! Please make sure that you provided a valid SSH key file path.');
                 }
             }
@@ -79,10 +96,7 @@ class ServerController extends RootController
              *******************/
 
             // Block usage
-            if (!$ssh->execWithOutput('df -h')) {
-                return response()->json(['errors'=>[]])->setStatusCode(500, 'Retrieving disk usage failed! ');
-            }
-            $df_blocks_output = $ssh->getOutout();
+            $df_blocks_output = $ssh->exec('df -h');
             $df_bloks_lines = preg_split('/[\n]/', $df_blocks_output);
             $df_blocks = array();
             // Go through all output lines
@@ -100,10 +114,7 @@ class ServerController extends RootController
             }
 
             // Inodes usage
-            if (!$ssh->execWithOutput('df -h -i')) {
-                return response()->json(['errors'=>[]])->setStatusCode(500, 'Retrieving disk usage failed!');
-            }
-            $df_inodes_output = $ssh->getOutout();
+            $df_inodes_output = $ssh->exec('df -h -i');
             $df_inodes_lines = preg_split('/[\n]/', $df_inodes_output);
             $df_inodes = array();
             // Go through all output lines
@@ -123,19 +134,12 @@ class ServerController extends RootController
             /*********************
              * Count processors  *
              *********************/
-            if (!$ssh->execWithOutput("grep 'model name' /proc/cpuinfo | wc -l")) {
-                return response()->json(['errors'=>[]])->setStatusCode(500, 'Counting processors failed!');
-            }
-            $count_processors = trim($ssh->getOutout());
+            $count_processors = trim($ssh->exec("grep 'model name' /proc/cpuinfo | wc -l"));
 
             /**********************
              * Get server uptime  *
              **********************/
-            if (!$ssh->execWithOutput('uptime')) {
-                return response()->json(['errors'=>[]])->setStatusCode(500, 'Retrieving server uptime failed!');
-            }
-            $uptime_output = $ssh->getOutout();
-            // Get the uptime
+            $uptime_output = $ssh->exec('uptime');
             $line_parts = explode(',', $uptime_output);
             $uptime_parts = explode('up', $line_parts[0]);
             $uptime = trim($uptime_parts[1]);
@@ -153,10 +157,7 @@ class ServerController extends RootController
             /*********************
              * Get memory usage  *
              *********************/
-            if (!$ssh->execWithOutput('free')) {
-                return response()->json(['errors'=>[]])->setStatusCode(500, 'Retrieving memory usage failed!');
-            }
-            $memory = $ssh->getOutout();
+            $memory = $ssh->exec('free');
             $memory_lines = preg_split('/[\n]/', $memory);
             // Get total RAM from second line
             $line_numbers = explode(':', $memory_lines[1]);
@@ -172,19 +173,26 @@ class ServerController extends RootController
             /*********************************
              * Get list of network services  *
              *********************************/
+            if (isset($form['sshpass'])&&($username != 'root')) {
+                $ssh->write("sudo lsof -i -n -P\n");
+                $template = "/password\sfor\s$username:|".$username."@".$server->hostname.":~\$/";
+                // Read until you see the password prompt or the normal prompt
+                $sudo_response = $ssh->read($template, 2);
+                if (preg_match("/password\sfor/", $sudo_response)) {
+                    // In case of password prompt, give the password
+                    $ssh->write("$password\n");
+                    // Take into account the 3 sec default delay of linux
+                    // (it is there to prevent brute-force attacks)
+                    $ssh->setTimeout(3);
+                }
 
-            // If password is provided, try to execute lsof using sudo
-            if (isset($password)) {
-                if (!$ssh->execWithOutput("lsof -i -n -P", $password)) {
-                    return response()->json(['errors'=>[]])->setStatusCode(500, ' Retrieving network services failed!');
-                }
+                // Read until you see another prompt. We expect to see a normal prompt
+                // but, if the password is wrong, it can be a password prompt.
+                $lsof_output = $ssh->read($template, 2);
             } else {
-                if (!$ssh->execWithOutput("lsof -i -n -P")) {
-                    return response()->json(['errors'=>[]])->setStatusCode(500, 'Retrieving network services failed!');
-                }
+                $lsof_output = $ssh->exec('lsof -i -n -P');
             }
 
-            $lsof_output = $ssh->getOutout();
             $lsof_lines = preg_split('/[\n]/', $lsof_output);
             unset($lsof_lines[count($lsof_lines)-1]); // remove prompt line
             unset($lsof_lines[1]); // remove header line
@@ -204,7 +212,6 @@ class ServerController extends RootController
                     }
                 }
             }
-
             $toJson = function ($item) {
                 return json_encode($item);
             };
@@ -215,7 +222,7 @@ class ServerController extends RootController
             // Remove duplicates in case a service has many processes
             // Service items are compared as JSON strings.
             $temp = array_unique(array_map($toJson, $services));
-            // The first column is 'command', so we are sorting with service name
+            // The first column is 'command', so we are first sorting by service name
             sort($temp);
             // Back from JSON to array
             $services = array_map($fromJson, $temp);
@@ -241,9 +248,14 @@ class ServerController extends RootController
 
             return response()->json($response)->setStatusCode(200, 'ok');
         } catch (\RuntimeException $ex) {
-            return response()->json(['errors'=>[]])->setStatusCode(500, $ex->getMessage());
+            $reason = $this->identifySshError($ex->getMessage());
+            return response()->json(['errors'=>[]])->setStatusCode(500, "SSH login failed! ".$reason);
+        } catch (\ErrorException $ex) {
+            $reason = $this->identifySshError($ex->getMessage());
+            return response()->json(['errors'=>[]])->setStatusCode(500, "SSH login failed! ".$reason);
         } catch (Exception $ex) {
-            return response()->json(['errors'=>[]])->setStatusCode(500, $ex->getMessage());
+            $reason = $this->identifySshError($ex->getMessage());
+            return response()->json(['errors'=>[]])->setStatusCode(500, "SSH login failed! ".$reason);
         }
     }
 

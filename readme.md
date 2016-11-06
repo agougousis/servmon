@@ -24,8 +24,9 @@ PHP
 * Framework-agnostic backup manager (https://github.com/backup-manager/backup-manager)
 * Laravel driver for Backup Manager (https://github.com/backup-manager/laravel)
 * Constant-Time character encoding (https://github.com/paragonie/constant_time_encoding)
+* PHP Secure Communications Library (https://github.com/terrafrost/phpseclib/tree/send-identifier-first)
 
-Javascript
+Javascript/CSS
 
 * jQuery 1.11.2 (https://jquery.com/)
 * toastr - non-blocking notifications library (https://github.com/CodeSeven/toastr)
@@ -65,6 +66,13 @@ Apart from monitoring the current status of your network items (servers, service
 a number of items to monitor periodically in fixed time intervals selected by you. When an item status is found 
 "OFF" or "DOWN", an email will be sent to the address that has been designated for this item. If notifications 
 for multiple items need to be sent to the same email address, they are all sent through a single email.
+
+### Server Health Snapshot
+With a single button the user can retrieve a more detailed status of the server including the uptime, the number 
+of processors, the CPU load, the memory usage, the disk usage (for both blocks and Inodes) and the list of 
+network services that are running on the server. This information is presented in a graphical way so that it 
+can be easily evaluated even by inexperienced users. Retrieving detailed information about the server status 
+requires that appropriate SSH credentials are provided by the user.
 
 ### Backup/Restore		
 You can take multiple backups of the application's database and restore the database using any of these backus.
