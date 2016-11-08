@@ -2,10 +2,34 @@
 
 namespace App\Packages\Gougousis\Net;
 
+/**
+ * Implements monitoring functionality
+ *
+ * Extracts information about the status of servers, services or web applications.
+ *
+ * @author Alexandros Gougousis
+ */
 class Monitor
 {
+    /**
+     * Timeout (is seconds) to be used with 'ping' command
+     *
+     * @var int
+     */
     protected $ping_timeout;
+
+    /**
+     * Timeout (in seconds) to be used when opening a socket connection
+     *
+     * @var int
+     */
     protected $portscan_timeout;
+
+    /**
+     * Timeout (in seconds) to be used when making an HTTP request with cURL
+     *
+     * @var int
+     */
     protected $curl_timeout;
 
     public function __construct($ping_timeout = null, $portscan_timeout = null, $curl_timeout = null)
@@ -15,6 +39,13 @@ class Monitor
         $this->curl_timeout = (empty($curl_timeout))? 3 : $curl_timeout;
     }
 
+    /**
+     * Ping an IP
+     *
+     * @param string $ip
+     * @param int $timeout
+     * @return array
+     */
     public function ping($ip, $timeout = null)
     {
         // Check if we need to override the default timeout
@@ -50,6 +81,15 @@ class Monitor
         );
     }
 
+    /**
+     * Tries to open a socket connection
+     *
+     * @param string $protocol
+     * @param int $port
+     * @param string $ip
+     * @param int $timeout
+     * @return array
+     */
     public function scanPort($protocol, $port, $ip, $timeout = null)
     {
         // Check if we need to override the default timeout
@@ -76,6 +116,13 @@ class Monitor
         );
     }
 
+    /**
+     * Checks the status of a URL by making a HEAD request
+     *
+     * @param string $url
+     * @param int $timeout
+     * @return array
+     */
     public function checkStatus($url, $timeout = null)
     {
         // Check if we need to override the default timeout
@@ -116,6 +163,12 @@ class Monitor
         );
     }
 
+    /**
+     *
+     * @param array $curl_sites
+     * @param array $opts
+     * @return string
+     */
     public function curlMulti(array $curl_sites, array $opts = [])
     {
         // create array for curl handles

@@ -5,7 +5,7 @@ namespace App\Packages\Gougousis\Net;
 use Config;
 use Illuminate\Support\ServiceProvider;
 
-class NetServiceProvider extends ServiceProvider
+class MonitorServiceProvider extends ServiceProvider
 {
     public function register()
     {

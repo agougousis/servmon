@@ -172,7 +172,8 @@ return [
         Collective\Html\HtmlServiceProvider::class,
         BackupManager\Laravel\Laravel5ServiceProvider::class,
         Mews\Captcha\CaptchaServiceProvider::class,
-        App\Packages\Gougousis\Net\NetServiceProvider::class,
+        App\Packages\Gougousis\Net\MonitorServiceProvider::class,
+        App\Packages\Gougousis\SSH\SshHelperServiceProvider::class,
         'SocialEngine\SnifferRules\ServiceProvider',
 
     ],
@@ -225,7 +226,8 @@ return [
         'Html' => Collective\Html\HtmlFacade::class,
         'Input' => Illuminate\Support\Facades\Input::class,
         'Captcha' => Mews\Captcha\Facades\Captcha::class,
-        'Monitor' => App\Packages\Gougousis\Net\Facades\MonitorFacade::class
+        'Monitor' => App\Packages\Gougousis\Net\Facades\MonitorFacade::class,
+        'SshHelper' => App\Packages\Gougousis\SSH\Facades\SshHelperFacade::class
     ],
 
 ];
