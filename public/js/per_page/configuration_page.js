@@ -10,11 +10,11 @@ function AjaxManagerClass(){
             type: 'GET',
             dataType: 'json',
             async: false,
-            success: function( data ) {                                
-                if(data.monitoring_status == 1){
+            success: function( json ) {                                
+                if(json.data.monitoring_status == 1){
                     $('#monitoringButton').prop('checked',true);
                 } 
-                $("#changeStatusForm select[name='monitoring_period'] option[value='"+data.monitoring_period+"']").attr('selected','selected');
+                $("#changeStatusForm select[name='monitoring_period'] option[value='"+json.data.monitoring_period+"']").attr('selected','selected');
             },
             error: function(jqXHR, textStatus, errorThrown) {
                 alert('Settings loading failed!!');                        
@@ -28,9 +28,9 @@ function AjaxManagerClass(){
             type: 'GET',
             dataType: 'json',
             async: false,
-            success: function( data ) {                                
-                for(var domainName in data) {
-                    var domainData = data[domainName];
+            success: function( json ) {    
+                for(var domainName in json.data) {
+                    var domainData = json.data[domainName];
                     mTable.append("<tr><td style='padding-left: 20px'><img class='conf-img' src='/images/domain.png' title='domain'>"+domainName+"</td></td></tr>");
                     for(var j=0; j<domainData.length; j++){
                         var serverData = domainData[j];

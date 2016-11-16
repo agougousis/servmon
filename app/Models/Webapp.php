@@ -40,16 +40,6 @@ class Webapp extends Model
     }
 
     /**
-     * Returns a list with all the webapps
-     *
-     * @return array
-     */
-    public static function getAllAsArray()
-    {
-        return Webapp::select('id', 'url', 'language', 'developer', 'server', 'contact')->get()->toArray();
-    }
-
-    /**
      * Deletes all the webapps that are hosted on a specific server
      *
      * @param int $server_id
@@ -67,7 +57,7 @@ class Webapp extends Model
      */
     public static function getAllOnServer($serverId)
     {
-        return DB::table('webapps')->join('webapp_types', 'webapps.language', '=', 'webapp_types.codename')->select('id', 'url', 'language', 'developer', 'contact', 'image', 'watch')->where('server', $serverId)->get();
+        return DB::table('webapps')->join('webapp_types', 'webapps.language', '=', 'webapp_types.codename')->where('server', $serverId)->get();
     }
 
     /**
@@ -85,7 +75,7 @@ class Webapp extends Model
             $domainMemberIds[] = $domainMember->id;
         }
 
-        $webapps = DB::table('webapps')->join('servers', 'servers.id', '=', 'webapps.server')->select('webapps.id', 'webapps.url', 'webapps.language', 'webapps.developer', 'webapps.server', 'webapps.contact')->whereIn('servers.domain', $domainMemberIds)->get();
+        $webapps = DB::table('webapps')->join('servers', 'servers.id', '=', 'webapps.server')->whereIn('servers.domain', $domainMemberIds)->get();
         return $webapps;
     }
 }

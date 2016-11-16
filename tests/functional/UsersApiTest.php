@@ -109,7 +109,8 @@ class UsersApiTest extends TestCase
     public function search_users(){
         $this->be($this->admin);
         $this->call('GET','api/users');
-        $users = json_decode($this->response->getContent());
+        $responseArray = json_decode($this->response->getContent());
+        $users = $responseArray->data;
         $this->assertEquals(4,count($users));
     }
 
@@ -120,13 +121,15 @@ class UsersApiTest extends TestCase
     public function read_user_info(){
         $this->be($this->admin);
         $this->visit('api/users/'.$this->admin->id)->seeJsonEquals([
-            'id'        =>  $this->admin->id,
-            'email'     =>  $this->admin->email,
-            'firstname' =>  $this->admin->firstname,
-            'lastname'  =>  $this->admin->lastname,
-            'activated' =>  $this->admin->activated,
-            'superuser' =>  $this->admin->superuser,
-            'last_login'=>  $this->admin->last_login
+            'data'  =>  [
+                'id'        =>  $this->admin->id,
+                'email'     =>  $this->admin->email,
+                'firstname' =>  $this->admin->firstname,
+                'lastname'  =>  $this->admin->lastname,
+                'activated' =>  $this->admin->activated,
+                'superuser' =>  $this->admin->superuser,
+                'last_login'=>  $this->admin->last_login
+            ]
         ]);
 
     }
@@ -160,7 +163,8 @@ class UsersApiTest extends TestCase
 
         $this->call('POST', '/api/users',$post_data,[],[],['HTTP_X-CSRF-Token'=>csrf_token(),'contentType'=>'application/json; charset=utf-8'],[]);
         $this->assertEquals(200,$this->response->getStatusCode(),'A superuser should be able to add new users!');
-        $users_added = json_decode($this->response->getContent());
+        $responseArray = json_decode($this->response->getContent());
+        $users_added = $responseArray->data;
         $this->assertEquals(2,count($users_added),'Two users should be included in the response!');
         $this->assertEquals(0,$users_added[0]->activated,'A new user should be de-activated by default!');
 

@@ -14,6 +14,7 @@ use App\Models\Server;
 use App\Models\Service;
 use App\Models\Webapp;
 use App\Models\Database;
+use App\Packages\Gougousis\Transformers\Transformer;
 
 /**
  * Implements generic functionality
@@ -23,6 +24,12 @@ use App\Models\Database;
  */
 class InfoController extends RootController
 {
+    protected $transformer;
+
+    public function __construct()
+    {
+        $this->transformer = new Transformer('InfoTransformer');
+    }
 
     /**
      * Returns information about the user itself
@@ -62,7 +69,7 @@ class InfoController extends RootController
         foreach ($settings as $setting) {
             $setting_list[$setting->sname] = $setting->value;
         }
-        return response()->json($setting_list)->setStatusCode(200, '');
+        return response()->json(['data' => $setting_list])->setStatusCode(200, '');
     }
 
     /**
@@ -75,34 +82,28 @@ class InfoController extends RootController
     {
         $mode = (Input::has('mode'))? Input::get('mode') : 'all';
 
+        $types = new \stdClass();
         switch ($mode) {
             case 'all':
-                $types = array(
-                    'service'   =>  ServiceType::all()->toArray(),
-                    'webapp'    =>  WebappType::all()->toArray(),
-                    'database'  =>  DatabaseType::all()->toArray()
-                );
+                $types->service = ServiceType::all();
+                $types->webapp = WebappType::all();
+                $types->database = DatabaseType::all();
                 break;
             case 'services':
-                $types = array(
-                    'service'   =>  ServiceType::all()->toArray(),
-                );
+                $types->service = ServiceType::all();
                 break;
             case 'webapps':
-                $types = array(
-                    'webapp'    =>  WebappType::all()->toArray()
-                );
+                $types->webapp = WebappType::all();
                 break;
             case 'databases':
-                $types = array(
-                    'database'  =>  DatabaseType::all()->toArray()
-                );
+                $types->database = DatabaseType::all();
                 break;
             default:
                 return response()->json(['errors' => array()])->setStatusCode(400, 'Invalid search mode!');
                 break;
         }
 
-        return response()->json($types)->setStatusCode(200, '');
+        $responseArray = $this->transformer->transform($types);
+        return response()->json($responseArray)->setStatusCode(200, '');
     }
 }

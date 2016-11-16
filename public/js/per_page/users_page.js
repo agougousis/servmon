@@ -8,11 +8,11 @@ function AjaxManagerClass(){
     this.initializeUserManagementPage = function(){
         $('#loading-image').center().show();
         $.ajax({
-            url: ajaxManager.baseUrl+"api/users/",
+            url: ajaxManager.baseUrl+"api/users",
             type: 'GET',
-            success: function( data,textStatus,jqXHR ) {                
-                for(var j=0; j<data.length; j++){
-                    var user = data[j];
+            success: function( json,textStatus,jqXHR ) {                
+                for(var j=0; j<json.data.length; j++){
+                    var user = json.data[j];
                     var light = "" , status = "";
                     if(user.superuser == 1){
                         superuserIcon = "<img class='imgLink superuserIcon' src='"+ajaxManager.baseUrl+"images/super.png' onmouseover='this.src=\""+ajaxManager.baseUrl+"images/edit.png\"' onmouseout='this.src=\""+ajaxManager.baseUrl+"images/super.png\"' onclick='ajaxManager.superuserIconClicked("+user.id+",0)'>";
@@ -57,18 +57,18 @@ function AjaxManagerClass(){
         $.ajax({
             url: ajaxManager.baseUrl+"api/users/"+userId,
             type: 'GET',
-            success: function( data,textStatus,jqXHR ) {                
-                $('#user_profile_form input[name="email"]').val(data.email);
-                $('#user_profile_form input[name="firstname"]').val(data.firstname);
-                $('#user_profile_form input[name="lastname"]').val(data.lastname);
-                $('#user_profile_form input[name="registration_date"]').val(data.registration_date);
-                $('#user_profile_form input[name="last_login"]').val(data.last_login);
-                if(data.activated == 1){
+            success: function( json,textStatus,jqXHR ) {                
+                $('#user_profile_form input[name="email"]').val(json.data.email);
+                $('#user_profile_form input[name="firstname"]').val(json.data.firstname);
+                $('#user_profile_form input[name="lastname"]').val(json.data.lastname);
+                $('#user_profile_form input[name="registration_date"]').val(json.data.registration_date);
+                $('#user_profile_form input[name="last_login"]').val(json.data.last_login);
+                if(json.data.activated == 1){
                     $('#user_status_div').append("<span class='btn btn-sm btn-success'>Enabled</span>");
                 } else {
                     $('#user_status_div').append("<span class='btn btn-sm btn-danger'>Disabled</span>");
                 }
-                if(data.superuser == 1){
+                if(json.data.superuser == 1){
                     $('#user_status_div').append('<img class="imgLink" style="float:right" src="'+ajaxManager.baseUrl+'images/super.png" title="Super user">');
                 } else {
                     $('#user_status_div').append('<img class="imgLink" style="float:right" src="'+ajaxManager.baseUrl+'images/super_black.png" title="Normal User">');
@@ -84,18 +84,18 @@ function AjaxManagerClass(){
         $.ajax({
             url: ajaxManager.baseUrl+"api/info/myprofile",
             type: 'GET',
-            success: function( data,textStatus,jqXHR ) {                
-                $('#user_profile_form input[name="email"]').val(data.email);
-                $('#user_profile_form input[name="firstname"]').val(data.firstname);
-                $('#user_profile_form input[name="lastname"]').val(data.lastname);
-                $('#user_profile_form input[name="registration_date"]').val(data.registration_date);
-                $('#user_profile_form input[name="last_login"]').val(data.last_login);
-                if(data.activated == 1){
+            success: function( json,textStatus,jqXHR ) {                
+                $('#user_profile_form input[name="email"]').val(json.data.email);
+                $('#user_profile_form input[name="firstname"]').val(json.data.firstname);
+                $('#user_profile_form input[name="lastname"]').val(json.data.lastname);
+                $('#user_profile_form input[name="registration_date"]').val(json.data.registration_date);
+                $('#user_profile_form input[name="last_login"]').val(json.data.last_login);
+                if(json.data.activated == 1){
                     $('#user_status_div').append("<span class='btn btn-sm btn-success'>Enabled</span>");
                 } else {
                     $('#user_status_div').append("<span class='btn btn-sm btn-danger'>Disabled</span>");
                 }
-                if(data.superuser == 1){
+                if(json.data.superuser == 1){
                     $('#user_status_div').append('<img class="imgLink" style="float:right" src="'+ajaxManager.baseUrl+'images/super.png" title="Super user">');
                 } else {
                     $('#user_status_div').append('<img class="imgLink" style="float:right" src="'+ajaxManager.baseUrl+'images/super_black.png" title="Normal User">');

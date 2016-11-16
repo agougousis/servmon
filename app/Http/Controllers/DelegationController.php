@@ -13,6 +13,7 @@ use App\Models\Server;
 use App\Models\DomainDelegation;
 use App\Models\ServerDelegation;
 use App\Http\Controllers\RootController;
+use App\Packages\Gougousis\Transformers\Transformer;
 
 /**
  * Implements functionality related to administration delegations
@@ -22,6 +23,12 @@ use App\Http\Controllers\RootController;
  */
 class DelegationController extends RootController
 {
+    protected $transformer;
+
+    public function __construct()
+    {
+        $this->transformer = new Transformer('DelegationTransformer');
+    }
 
     /**
      * Returns information delegations
@@ -44,41 +51,29 @@ class DelegationController extends RootController
         switch ($mode) {
             case 'all':
                 $domain_delegations = DomainDelegation::getAllFullInfo();
-
-                $ddelegations = array();
-                foreach ($domain_delegations as $delegation) {
-                    $ddelegations[$delegation['full_name']][] = $delegation;
-                }
-
                 $server_delegations = ServerDelegation::getAllWithUser();
-
-                $sdelegations = array();
-                foreach ($server_delegations as $delegation) {
-                    $sdelegations[$delegation['server_id']][] = $delegation;
-                }
-
-                $data['domain_delegations'] = $ddelegations;
-                $data['server_delegations'] = $sdelegations;
-
+                $responseArray['domain_delegations'] = turnToAssoc('full_name',$domain_delegations);
+                $responseArray['server_delegations'] = turnToAssoc('server_id',$server_delegations);
                 break;
             case 'my_servers':
                 $server_delegations = ServerDelegation::getUserDelegatedIds(Auth::user()->id);
                 $delegated_servers = Server::getServersInfoByIds(array_flatten($server_delegations));
-
-                $data = array();
-                foreach ($delegated_servers as $server) {
-                    $pingResult = Monitor::ping($server['ip']);
-                    $server['status'] = ($pingResult['status']) ? 'on' : 'off';
-                    $server['response_time'] = $pingResult['time'];
-                    $data[] = $server;
-                }
+                $server_list = array_map($this->enrichServerInfo,$delegated_servers);
+                $responseArray = $this->transformer->transform($server_list, 'ServerTransformer');
                 break;
             default:
                 return response()->json(['errors' => array()])->setStatusCode(400, 'Invalid search mode!');
                 break;
         }
 
-        return response()->json($data)->setStatusCode(200, '');
+        return response()->json($responseArray)->setStatusCode(200, '');
+    }
+
+    protected function enrichServerInfo($server){
+        $pingResult = Monitor::ping($server['ip']);
+        $server->status = ($pingResult['status']) ? 'on' : 'off';
+        $server->response_time = $pingResult['time'];
+        return $server;
     }
 
     /**
@@ -195,6 +190,7 @@ class DelegationController extends RootController
         }
 
         DB::commit();
-        return response()->json($created)->setStatusCode(200, 'Delegation success!');
+        $responseArray = $this->transformer->transform($created);
+        return response()->json($responseArray)->setStatusCode(200, 'Delegation success!');
     }
 }

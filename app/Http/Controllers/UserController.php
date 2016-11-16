@@ -11,6 +11,7 @@ use App\Models\DomainDelegation;
 use App\Models\ServerDelegation;
 use Illuminate\Http\Request;
 use App\Http\Controllers\RootController;
+use App\Packages\Gougousis\Transformers\Transformer;
 
 /**
  * Implements functionality related to user management
@@ -20,6 +21,12 @@ use App\Http\Controllers\RootController;
  */
 class UserController extends RootController
 {
+    protected $transformer;
+
+    public function __construct()
+    {
+        $this->transformer = new Transformer('UserTransformer');
+    }
 
     /**
      * Returns information about a specific user
@@ -29,12 +36,13 @@ class UserController extends RootController
      */
     public function read($user_id)
     {
-        $user = User::where('id', $user_id)->select('id', 'email', 'firstname', 'lastname', 'activated', 'superuser', 'last_login')->first();
+        $user = User::find($user_id);
         if (empty($user)) {
             return response()->json(['errors' => []])->setStatusCode(400, 'Invalid user ID.');
         }
 
-        return response()->json($user)->setStatusCode(200, '');
+        $responseArray = $this->transformer->transform($user);
+        return response()->json($responseArray)->setStatusCode(200, '');
     }
 
     /**
@@ -49,21 +57,19 @@ class UserController extends RootController
 
         switch ($mode) {
             case 'normal':
-                $users = User::getList();
+                $users = User::allOrderedByLastname();
+                $responseArray = $this->transformer->transform($users);
                 break;
             case 'basic':
-                $user_list = User::getBasicInfoList();
-                $users = array();
-                foreach ($user_list as $user) {
-                    $users[$user->email] = $user->firstname." ".$user->lastname;
-                }
+                $user_list = User::allOrderedByLastname();
+                $responseArray = $this->transformer->transform($user_list, 'UserBasicTransformer');
                 break;
             default:
                 return response()->json(['errors' => array()])->setStatusCode(400, 'Invalid search mode!');
                 break;
         }
 
-        return response()->json($users)->setStatusCode(200, '');
+        return response()->json($responseArray)->setStatusCode(200, '');
     }
 
     /*
@@ -111,7 +117,8 @@ class UserController extends RootController
         }
 
         DB::commit();
-        return response()->json($created)->setStatusCode(200, $users_num.' user(s) added.');
+        $responseArray = $this->transformer->transform($created);
+        return response()->json($responseArray)->setStatusCode(200, $users_num.' user(s) added.');
     }
 
     /**
@@ -168,8 +175,9 @@ class UserController extends RootController
 
         $user->activated = 0;
         $user->save();
-        $user->password = '';
-        return response()->json($user)->setStatusCode(200, 'User deactivated!');
+        $responseArray = $this->transformer->transform($user);
+
+        return response()->json($responseArray)->setStatusCode(200, 'User deactivated!');
     }
 
     /**
@@ -187,8 +195,9 @@ class UserController extends RootController
 
         $user->activated = 1;
         $user->save();
-        $user->password = '';
-        return response()->json($user)->setStatusCode(200, 'User activated!');
+        $responseArray = $this->transformer->transform($user);
+
+        return response()->json($responseArray)->setStatusCode(200, 'User activated!');
     }
 
     /**
@@ -206,8 +215,9 @@ class UserController extends RootController
 
         $user->superuser = 1;
         $user->save();
-        $user->password = '';
-        return response()->json($user)->setStatusCode(200, 'User activated!');
+        $responseArray = $this->transformer->transform($user);
+
+        return response()->json($responseArray)->setStatusCode(200, 'User activated!');
     }
 
     /**
@@ -229,7 +239,8 @@ class UserController extends RootController
 
         $user->superuser = 0;
         $user->save();
-        $user->password = '';
-        return response()->json($user)->setStatusCode(200, 'User activated!');
+        $responseArray = $this->transformer->transform($user);
+
+        return response()->json($responseArray)->setStatusCode(200, 'User activated!');
     }
 }

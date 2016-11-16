@@ -6,6 +6,7 @@ use DB;
 use App\Models\Service;
 use Illuminate\Http\Request;
 use App\Http\Controllers\RootController;
+use App\Packages\Gougousis\Transformers\Transformer;
 
 /**
  * Implements functionality related to services
@@ -15,6 +16,12 @@ use App\Http\Controllers\RootController;
  */
 class ServiceController extends RootController
 {
+    protected $transformer;
+
+    public function __construct()
+    {
+        $this->transformer = new Transformer('ServiceTransformer');
+    }
 
     /**
      * Adds new services to servers
@@ -60,7 +67,8 @@ class ServiceController extends RootController
         }
 
         DB::commit();
-        return response()->json($created)->setStatusCode(200, $services_num.' service(s) added.');
+        $responseArray = $this->transformer->transform($created);
+        return response()->json($responseArray)->setStatusCode(200, $services_num.' service(s) added.');
     }
 
     /**
@@ -88,10 +96,10 @@ class ServiceController extends RootController
             return response()->json(['errors' => []])->setStatusCode(403, 'You are not allowed to read services on this server!');
         }
 
-        $result = (object)['data' => $service];
+        $responseArray = $this->transformer->transform($service);
 
         // Send back the node info
-        return response()->json($result)->setStatusCode(200, '');
+        return response()->json($responseArray)->setStatusCode(200, '');
     }
 
     /**
@@ -139,7 +147,8 @@ class ServiceController extends RootController
         }
 
         DB::commit();
-        return response()->json($updated)->setStatusCode(200, $services_num.' service(s) updated.');
+        $responseArray = $this->transformer->transform($updated);
+        return response()->json($responseArray)->setStatusCode(200, $services_num.' service(s) updated.');
     }
 
     /**

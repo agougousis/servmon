@@ -13,6 +13,7 @@ use App\Models\Webapp;
 use Illuminate\Http\Request;
 use App\Models\DomainDelegation;
 use App\Http\Controllers\RootController;
+use App\Packages\Gougousis\Transformers\Transformer;
 
 /**
  * Implements functionality related to domains
@@ -22,6 +23,12 @@ use App\Http\Controllers\RootController;
  */
 class DomainController extends RootController
 {
+    protected $transformer;
+
+    public function __construct()
+    {
+        $this->transformer = new Transformer('DomainTransformer');
+    }
 
     /**
      * Returns a list of web apps that are hosted to servers of a specific domain.
@@ -37,7 +44,8 @@ class DomainController extends RootController
         }
 
         $webapps = Webapp::getAllUnderDomain($full_domain_name);
-        return response()->json($webapps)->setStatusCode(200, 'ok');
+        $responseArray = $this->transformer->transform($webapps, 'WebappTransformer');
+        return response()->json($responseArray)->setStatusCode(200, 'ok');
     }
 
     /**
@@ -58,18 +66,20 @@ class DomainController extends RootController
             return response()->json(['errors' => []])->setStatusCode(401, 'Unauthorized Access');
         }
 
-        $servers = Server::where('domain', $domain->id)->get()->toArray();
+        $servers = Server::where('domain', $domain->id)->get();
 
         $server_list = array();
-        foreach ($servers as $server) {
-            $pingResult = Monitor::ping($server['ip']);
-            $server['services'] = Service::getServiceTypesOnServer($server['id']);
-            $server['status'] = ($pingResult['status']) ? 'on' : 'off';
-            $server['response_time'] = $pingResult['time'];
-            $server['domain_name'] = $domain->full_name;
-            $server_list[] = $server;
+        foreach ($servers as $serverObj) {
+            $pingResult = Monitor::ping($serverObj['ip']);
+            $serverObj->service_types = Service::getServiceTypesOnServer($serverObj['id']);
+            $serverObj->status = ($pingResult['status']) ? 'on' : 'off';
+            $serverObj->response_time = $pingResult['time'];
+            $serverObj->domain_name = $domain->full_name;
+            $server_list[] = $serverObj;
         }
-        return response()->json($server_list);
+
+        $responseArray = $this->transformer->transform($server_list, 'ServerTransformer');
+        return response()->json($responseArray);
     }
 
     /**
@@ -126,7 +136,8 @@ class DomainController extends RootController
         }
 
         DB::commit();
-        return response()->json($created)->setStatusCode(200, $domain_num.' domain(s) added.');
+        $responseArray = $this->transformer->transform($created);
+        return response()->json($responseArray)->setStatusCode(200, $domain_num.' domain(s) added.');
     }
 
     protected function saveNewDomain($domainData, $parent)
@@ -214,13 +225,13 @@ class DomainController extends RootController
         }
 
         $servers = Server::getAllUnderDomain($domain_name);
-
         $server_list = array();
         foreach ($servers as $server) {
             $server_list[] = $this->enrichServerInfo($server);
         }
 
-        return response()->json($server_list)->setStatusCode(200, '');
+        $responseArray = $this->transformer->transform($server_list, 'ServerTransformer');
+        return response()->json($responseArray)->setStatusCode(200, '');
     }
 
     /**
@@ -232,10 +243,10 @@ class DomainController extends RootController
     protected function enrichServerInfo($server)
     {
         $pingResult = Monitor::ping($server['ip']);
-        $server['services'] = Service::getServiceTypesOnServer($server['id']);
-        $server['status'] = ($pingResult['status']) ? 'on' : 'off';
-        $server['response_time'] = $pingResult['time'];
-        $server['domain_name'] = $server['full_name'];
+        $server->service_types = Service::getServiceTypesOnServer($server['id']);
+        $server->status = ($pingResult['status']) ? 'on' : 'off';
+        $server->response_time = $pingResult['time'];
+        $server->domain_name = $server['full_name'];
         return $server;
     }
 
@@ -255,75 +266,18 @@ class DomainController extends RootController
                 $my_domain_ids = array_flatten($my_domains);
 
                 $roots = Domain::roots()->get(); // $roots is a Collection
-                $arrayTree = array();
+                $responseArray = $this->transformer->transform($roots, 'DomainTreeItemTransformer');
 
-                foreach ($roots as $root) {  // $root is an Sname model
-                    $phpRoot = new \stdClass();
-                    $phpRoot->id = "treeItem-".$root->full_name;
-                    $phpRoot->nid = $root->id;
-                    $phpRoot->text = $root->full_name;
-                    if (!in_array($root->id, $my_domain_ids)) {
-                        $phpRoot->state = (object)['disabled' => true];
-                    }
-                    $arrayTree[] = $this->addDescendants($phpRoot, $root, $my_domain_ids);
-                }
-
-                return response()->json($arrayTree)->setStatusCode(200, '');
+                return response()->json($responseArray)->setStatusCode(200, '');
                 break;
             case 'with_servers':
-                $response = array();
-                foreach (Domain::domainsListPreOrder() as $domain) {
-                    $response[$domain->full_name] = array(
-                        'depth'     =>  $domain->depth,
-                        'servers'   =>  Server::getBasicInfoByDomain($domain->id)
-                    );
-                }
-
-                return response()->json($response)->setStatusCode(200, '');
+                $domainsPreOrder = Domain::domainsListPreOrder();
+                $responseArray = $this->transformer->transform($domainsPreOrder, 'DomainListTransformer');
+                return response()->json($responseArray)->setStatusCode(200, '');
                 break;
             default:
                 return response()->json(['errors' => array()])->setStatusCode(400, 'Invalid search mode!');
                 break;
         }
-    }
-
-    /**
-     * Builds part of the domains tree into a PHP object, recursively
-     *
-     * @param stdClass $phpNode
-     * @param Domain $baumNode
-     * @param array $my_domain_ids
-     * @return stdClass
-     */
-    private function addDescendants($phpNode, $baumNode, $my_domain_ids)
-    {
-        $children = $baumNode->children()->get();
-        if ($children->count() > 0) {
-            $childrenArray = array();
-            foreach ($children as $child) {
-                $countLeaves = $child->leaves()->get()->count();
-                $newChild = new \stdClass();
-                $newChild->id = "treeItem-".$child->full_name;  // need it for acceptance testing
-                $newChild->nid = $child->id;
-                $newChild->text = $child->full_name;
-                if ($child->fake) {
-                    $newChild->icon = "glyphicon glyphicon-cloud";
-                }
-
-                $oneOfMyDomainRoots = in_array($child->id, $my_domain_ids);
-                $notPartOfMyDomain = (!empty($phpNode->state))&&($phpNode->state->disabled == true);
-                if ((!$oneOfMyDomainRoots)&&($notPartOfMyDomain)) {
-                    $newChild->state = (object)['disabled' => true];
-                }
-                if ($child->isLeaf()) {
-                    $childrenArray[] = $newChild;
-                } else {
-                    $childrenArray[] = $this->addDescendants($newChild, $child, $my_domain_ids);
-                }
-            }
-            $phpNode->children = $childrenArray;
-        }
-
-        return $phpNode;
     }
 }

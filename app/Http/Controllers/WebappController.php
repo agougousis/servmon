@@ -8,6 +8,7 @@ use App\Models\Server;
 use App\Models\Database;
 use Illuminate\Http\Request;
 use App\Http\Controllers\RootController;
+use App\Packages\Gougousis\Transformers\Transformer;
 
 /**
  * Implements functionality related to webapps
@@ -17,6 +18,12 @@ use App\Http\Controllers\RootController;
  */
 class WebappController extends RootController
 {
+    protected $transformer;
+
+    public function __construct()
+    {
+        $this->transformer = new Transformer('WebappTransformer');
+    }
 
     /**
      * Returns a list of all the webapps that have been defined in the system
@@ -25,8 +32,8 @@ class WebappController extends RootController
      */
     public function search()
     {
-        $webapps = Webapp::getAllAsArray();
-        return response()->json($webapps)->setStatusCode(200, '');
+        $responseArray = $this->transformer->transform(Webapp::all());
+        return response()->json($responseArray)->setStatusCode(200, '');
     }
 
     /**
@@ -73,7 +80,8 @@ class WebappController extends RootController
         }
 
         DB::commit();
-        return response()->json($created)->setStatusCode(200, $webapps_num.' webapps(s) added.');
+        $responseArray = $this->transformer->transform($created);
+        return response()->json($responseArray)->setStatusCode(200, $webapps_num.' webapps(s) added.');
     }
 
     /**
@@ -101,10 +109,9 @@ class WebappController extends RootController
             return response()->json(['errors' => []])->setStatusCode(403, 'You are not allowed to read webapps on this server!');
         }
 
-        $result = (object)['data' => $webapp];
-
-        // Send back the node info
-        return response()->json($result)->setStatusCode(200, '');
+        // Transform the response data
+        $responseArray = $this->transformer->transform($webapp);
+        return response()->json($responseArray)->setStatusCode(200, '');
     }
 
     /**
@@ -152,7 +159,8 @@ class WebappController extends RootController
         }
 
         DB::commit();
-        return response()->json($updated)->setStatusCode(200, $webapps_num.' webapp(s) updated.');
+        $responseArray = $this->transformer->transform($updated);
+        return response()->json($responseArray)->setStatusCode(200, $webapps_num.' webapp(s) updated.');
     }
 
     /**

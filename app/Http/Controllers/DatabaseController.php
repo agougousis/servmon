@@ -8,6 +8,7 @@ use App\Models\Database;
 use App\Models\Webapp;
 use App\Http\Controllers\RootController;
 use Illuminate\Http\Request;
+use App\Packages\Gougousis\Transformers\Transformer;
 
 /**
  * Implements functionality related to backups
@@ -17,6 +18,12 @@ use Illuminate\Http\Request;
  */
 class DatabaseController extends RootController
 {
+    protected $transformer;
+
+    public function __construct()
+    {
+        $this->transformer = new Transformer('DatabaseTransformer');
+    }
 
     /**
      * Creates new database items
@@ -73,7 +80,8 @@ class DatabaseController extends RootController
         }
 
         DB::commit();
-        return response()->json($created)->setStatusCode(200, $databases_num.' database(s) added.');
+        $responseArray = $this->transformer->transform($created);
+        return response()->json($responseArray)->setStatusCode(200, $databases_num.' database(s) added.');
     }
 
     /**
@@ -90,13 +98,13 @@ class DatabaseController extends RootController
         }
 
         // Check if a database with such an ID exists
-        $database = Database::where('id', $databaseId)->select('id', 'dbname', 'server', 'type', 'related_webapp')->first();
+        $database = Database::find($databaseId);
         if (empty($database)) {
             return response()->json(['errors' => array()])->setStatusCode(400, 'Invalid database ID');
         }
         if (!empty($database->related_webapp)) {
             $wp = Webapp::find($database->related_webapp);
-            $database->related_webapp_name = $wp->url;
+            $database->related_webapp = $wp->url;
         }
 
         // Access control
@@ -105,10 +113,10 @@ class DatabaseController extends RootController
             return response()->json(['errors' => []])->setStatusCode(403, 'You are not allowed to read databases on this server!');
         }
 
-        $result = (object)['data' => $database];
+        $responseArray = $this->transformer->transform($database);
 
         // Send back the node info
-        return response()->json($result)->setStatusCode(200, '');
+        return response()->json($responseArray)->setStatusCode(200, '');
     }
 
     /**
@@ -170,7 +178,8 @@ class DatabaseController extends RootController
         }
 
         DB::commit();
-        return response()->json($updated)->setStatusCode(200, $databases_num.' database(s) updated.');
+        $responseArray = $this->transformer->transform($updated);
+        return response()->json($responseArray)->setStatusCode(200, $databases_num.' database(s) updated.');
     }
 
     /**

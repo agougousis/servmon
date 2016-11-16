@@ -25,20 +25,8 @@ class BackupController extends RootController
         $dir = new DirectoryIterator(storage_path('backup'));
         foreach ($dir as $fileinfo) {
             if (!$fileinfo->isDot()) {
-                $basename = $fileinfo->getBasename('.gz');
-                $filename = $fileinfo->getFilename();
-                $filesize = $fileinfo->getSize();
-
-                $fparts = explode('_', $basename);
-                $date_parts = explode('-', $fparts[1]);
-                $time_parts = explode('-', $fparts[2]);
-                $dt_string = $fparts[1]." ".implode(':', $time_parts);
-
-                $backup_list[] = array(
-                    'when'  =>  $dt_string,
-                    'size'  =>  $filesize,
-                    'filename'  =>  $filename
-                );
+                // Add this backup to the list
+                $backup_list[] = $this->extractBackupInfo($fileinfo);
 
                 // Sort backups from newest to oldest
                 usort($backup_list, function ($a, $b) {
@@ -52,6 +40,32 @@ class BackupController extends RootController
             }
         }
         return response()->json($backup_list)->setStatusCode(200, '');
+    }
+
+    /**
+     * Extracts file information from a DirectoryIterator item
+     *
+     * @param DirectoryIterator $file
+     * @return array
+     */
+    private function extractBackupInfo(DirectoryIterator $file){
+        // Get the backup filename and size
+        $basename = $file->getBasename('.gz');
+        $filename = $file->getFilename();
+        $filesize = $file->getSize();
+
+        // Extract the backup date
+        $fparts = explode('_', $basename);
+        $date_parts = explode('-', $fparts[1]);
+        $time_parts = explode('-', $fparts[2]);
+        $dt_string = $fparts[1]." ".implode(':', $time_parts);
+
+        // Add this backup to the list
+        return array(
+            'when'  =>  $dt_string,
+            'size'  =>  $filesize,
+            'filename'  =>  $filename
+        );
     }
 
     /**

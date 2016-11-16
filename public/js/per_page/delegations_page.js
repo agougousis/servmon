@@ -54,9 +54,9 @@ function AjaxManagerClass(){
             type: 'GET',
             dataType: 'json',
             async: false,
-            success: function( data ) {                                
-                for(var key in data){
-                    $('#new_delegation_form select[name="duser"]').append("<option value='"+key+"'>"+data[key]+"</option>");
+            success: function( json ) { 
+                for(j=0; j<json.data.length; j++){
+                    $('#new_delegation_form select[name="duser"]').append("<option value='"+json.data[j].email+"'>"+json.data[j].fullname+"</option>");
                 }
             },
             error: function(jqXHR, textStatus, errorThrown) {
@@ -83,11 +83,13 @@ function AjaxManagerClass(){
             type: 'GET',
             dataType: 'json',
             async: false,
-            success: function( data ) {                                
-                for(var domainName in data) {
+            success: function( json ) {    
+                for(j=0;j<json.data.length;j++){
+                    domainItem = json.data[j];
+                    domainName = domainItem.full_name;
                     var dashedDomain = domainName.replace(/\./g , "-");
-                    var domainData = data[domainName];
                     var delegatedNames = "";
+                    
                     if(domainDelegations[domainName] != null){
                         var delegations = domainDelegations[domainName];
                         for(var k=0; k<delegations.length; k++){
@@ -95,9 +97,9 @@ function AjaxManagerClass(){
                         }
                     }
 
-                    mTable.append("<tr id='domainLine-"+dashedDomain+"'><td style='padding-left: "+((parseInt(domainData.depth)+1)*25)+"px'><img class='conf-img' src='/images/domain.png' title='domain'>"+domainName+"</td><td>"+delegatedNames+"</td><td><img src='/images/add_user.png' class='imgLink' title='New delegation' onclick='ajaxManager.addDelegationIconClicked(\"domain\",\""+domainName+"\")'></td></tr>");
-                    for(var j=0; j<domainData.servers.length; j++){
-                        var serverData = domainData.servers[j];     
+                    mTable.append("<tr id='domainLine-"+dashedDomain+"'><td style='padding-left: "+((parseInt(domainItem.depth)+1)*25)+"px'><img class='conf-img' src='/images/domain.png' title='domain'>"+domainName+"</td><td>"+delegatedNames+"</td><td><img src='/images/add_user.png' class='imgLink' title='New delegation' onclick='ajaxManager.addDelegationIconClicked(\"domain\",\""+domainName+"\")'></td></tr>");
+                    for(var j=0; j<domainItem.servers.length; j++){
+                        var serverData = domainItem.servers[j];     
                         delegatedNames = "";
                         if(serverDelegations[serverData.id] != null){
                             delegations = serverDelegations[serverData.id];
@@ -105,7 +107,7 @@ function AjaxManagerClass(){
                                 delegatedNames = delegatedNames+ "<div id='serverDelegation"+delegations[k].id+"' class='alert alert-warning delegationItem' role='alert' style='padding: 5px; margin-bottom: 0px; display: inline-block'>  <button type='button' class='close' aria-label='Revoke' style='margin-left: 10px' onclick='ajaxManager.revokeDelegationIconClicked(\"server\","+delegations[k].id+")'><span aria-hidden='true'>&times;</span></button>"+delegations[k].firstname+" "+delegations[k].lastname+"</div>";
                             }
                         }                    
-                        mTable.append("<tr id='serverLine"+serverData.id+"'><td style='padding-left: "+((parseInt(domainData.depth)+2)*25)+"px'><img class='conf-img' src='/images/server.png' title='server'>"+serverData.hostname+"</td><td>"+delegatedNames+"</td><td><img src='/images/add_user.png' class='imgLink' title='New delegation' onclick='ajaxManager.addDelegationIconClicked(\"server\","+serverData.id+")'></td></tr>");                    
+                        mTable.append("<tr id='serverLine"+serverData.id+"'><td style='padding-left: "+((parseInt(domainItem.depth)+2)*25)+"px'><img class='conf-img' src='/images/server.png' title='server'>"+serverData.hostname+"</td><td>"+delegatedNames+"</td><td><img src='/images/add_user.png' class='imgLink' title='New delegation' onclick='ajaxManager.addDelegationIconClicked(\"server\","+serverData.id+")'></td></tr>");                    
                     }
                 }
             },
@@ -200,18 +202,18 @@ function AjaxManagerClass(){
             data: JSON.stringify(postData),
             contentType:"application/json; charset=utf-8",
             headers:{'X-CSRF-Token': $('#page_token').val()},
-            success: function( data,textStatus,jqXHR ) {
+            success: function( json,textStatus,jqXHR ) {
                 $('#loading-image').hide();
                 $('#newDelegationDialog').modal('hide');
-                for(var k=0; k<data.length; k++){                    
+                for(var k=0; k<json.data.length; k++){                    
                     var fullname = $('#new_delegation_form select[name="duser"] option:selected').text();
                     switch(itemType){            
                         case 'domain':
                             var dashedDomain = itemId.replace(/\./g , "-");
-                            $('#domainLine-'+dashedDomain+" td:nth-child(2)").prepend("<div id='domainDelegation"+data[k].id+"' class='alert alert-warning' role='alert' style='padding: 5px; margin-bottom: 0px; display: inline-block'>  <button type='button' class='close' aria-label='Revoke' style='margin-left: 10px' onclick='ajaxManager.revokeDelegationIconClicked(\"domain\","+data[k].id+")'><span aria-hidden='true'>&times;</span></button>"+fullname+"</div>");
+                            $('#domainLine-'+dashedDomain+" td:nth-child(2)").prepend("<div id='domainDelegation"+data[k].id+"' class='alert alert-warning' role='alert' style='padding: 5px; margin-bottom: 0px; display: inline-block'>  <button type='button' class='close' aria-label='Revoke' style='margin-left: 10px' onclick='ajaxManager.revokeDelegationIconClicked(\"domain\","+json.data[k].id+")'><span aria-hidden='true'>&times;</span></button>"+fullname+"</div>");
                             break;
                         case 'server':
-                            $('#serverLine'+itemId+" td:nth-child(2)").prepend("<div id='serverDelegation"+data[k].id+"' class='alert alert-warning' role='alert' style='padding: 5px; margin-bottom: 0px; display: inline-block'>  <button type='button' class='close' aria-label='Revoke' style='margin-left: 10px' onclick='ajaxManager.revokeDelegationIconClicked(\"server\","+data[k].id+")'><span aria-hidden='true'>&times;</span></button>"+fullname+"</div>");                        
+                            $('#serverLine'+itemId+" td:nth-child(2)").prepend("<div id='serverDelegation"+data[k].id+"' class='alert alert-warning' role='alert' style='padding: 5px; margin-bottom: 0px; display: inline-block'>  <button type='button' class='close' aria-label='Revoke' style='margin-left: 10px' onclick='ajaxManager.revokeDelegationIconClicked(\"server\","+json.data[k].id+")'><span aria-hidden='true'>&times;</span></button>"+fullname+"</div>");                        
                             break;
                     }
                 }

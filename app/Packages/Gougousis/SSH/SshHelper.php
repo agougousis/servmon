@@ -4,7 +4,7 @@ namespace App\Packages\Gougousis\SSH;
 
 /**
  * Helper functions for SSH functionality
- * 
+ *
  * @author Alexandros Gougousis
  */
 class SshHelper
@@ -38,7 +38,7 @@ class SshHelper
      * @param string $uptime_output
      * @return array
      */
-    public function extractInfoFromUptime($uptime_output,$count_processors)
+    public function extractInfoFromUptime($uptime_output, $count_processors)
     {
         $info = [];
 
@@ -198,11 +198,10 @@ class SshHelper
     {
         if ($memoryInKilobytes < 1000) {
             return number_format($memoryInKilobytes, 2)." KB";
-        } else if (($memoryInKilobytes/1000) < 1000) {
+        } elseif (($memoryInKilobytes/1000) < 1000) {
             return number_format(($memoryInKilobytes/1000), 2)." MB";
         } else {
             return number_format(($memoryInKilobytes/1000000), 2)." GB";
         }
     }
-
 }

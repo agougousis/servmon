@@ -17,6 +17,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\RootController;
 use phpseclib\Net\SSH2;
 use phpseclib\Crypt\RSA;
+use App\Packages\Gougousis\Transformers\Transformer;
 
 /**
  * Implements functionality related to server items
@@ -26,6 +27,13 @@ use phpseclib\Crypt\RSA;
  */
 class ServerController extends RootController
 {
+    protected $transformer;
+
+    public function __construct()
+    {
+        $this->transformer = new Transformer('ServerTransformer');
+    }
+
     /**
      * Retrieves system health information for a server
      *
@@ -102,7 +110,7 @@ class ServerController extends RootController
              * Get server uptime and CPU load *
              **********************/
             $uptime_output = $ssh->exec('uptime');
-            $uptime_info = SshHelper::extractInfoFromUptime($uptime_output,$count_processors);
+            $uptime_info = SshHelper::extractInfoFromUptime($uptime_output, $count_processors);
             $uptime = $uptime_info['uptime'];
             $last5min_load = $uptime_info['last5min_load'];
             $last10min_load = $uptime_info['last10min_load'];
@@ -192,7 +200,8 @@ class ServerController extends RootController
                 break;
         }
 
-        return response()->json($servers)->setStatusCode(200, '');
+        $responseArray = $this->transformer->transform($servers);
+        return response()->json($responseArray)->setStatusCode(200, '');
     }
 
     /**
@@ -294,7 +303,8 @@ class ServerController extends RootController
         }
 
         DB::commit();
-        return response()->json($updated)->setStatusCode(200, $server_num.' server(s) updated.');
+        $responseArray = $this->transformer->transform($updated);
+        return response()->json($responseArray)->setStatusCode(200, $server_num.' server(s) updated.');
     }
 
     /**
@@ -350,7 +360,8 @@ class ServerController extends RootController
         }
 
         DB::commit();
-        return response()->json($created)->setStatusCode(200, $server_num.' server(s) added.');
+        $responseArray = $this->transformer->transform($created);
+        return response()->json($responseArray)->setStatusCode(200, $server_num.' server(s) added.');
     }
 
     /**
@@ -381,34 +392,30 @@ class ServerController extends RootController
         // Ping services
         $service_list = array();
         foreach ($services as $serviceObj) {
-            $service = (array) $serviceObj;
-            $result = Monitor::scanPort('tcp', $service['port'], $server->ip);
-            $service['status'] = $result['status'];
-            $service['time'] = $result['time'];
-            $service_list[] = $service;
+            $result = Monitor::scanPort('tcp', $serviceObj->port, $server->ip);
+            $serviceObj->status = $result['status'];
+            $serviceObj->time = $result['time'];
+            $service_list[] = $serviceObj;
         }
 
         $webapp_list = array();
         foreach ($webapps as $webappObj) {
-            $webapp = (array) $webappObj;
-            $result = Monitor::checkStatus($webapp['url']);
-            $webapp['status'] = $result['status'];
-            $webapp['time'] = $result['time'];
-            $webapp_list[] = $webapp;
+            $result = Monitor::checkStatus($webappObj->url);
+            $webappObj->status = $result['status'];
+            $webappObj->time = $result['time'];
+            $webapp_list[] = $webappObj;
         }
 
         $database_list = array();
         foreach ($databases as $databaseObj) {
-            $database = (array) $databaseObj;
-            $database_list[] = $database;
+            $database_list[] = $databaseObj;
         }
 
-        $response = array(
-            'services'  =>  $service_list,
-            'webapps'   =>  $webapp_list,
-            'databases' =>  $database_list
-        );
+        $server->services = $service_list;
+        $server->webapps = $webapp_list;
+        $server->databases = $database_list;
 
-        return response()->json($response);
+        $responseArray = $this->transformer->transform($server);
+        return response()->json($responseArray);
     }
 }

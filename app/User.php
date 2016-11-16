@@ -24,14 +24,9 @@ class User extends Authenticatable
         'password','remember_token','created_at','updated_at'
     ];
 
-    public static function getList()
+    public static function allOrderedByLastname()
     {
-        return User::select('id', 'firstname', 'lastname', 'email', 'activated', 'superuser', 'last_login')->orderBy('lastname', 'ASC')->get();
-    }
-
-    public static function getBasicInfoList()
-    {
-        return User::select('email', 'firstname', 'lastname')->get();
+        return User::orderBy('lastname', 'ASC')->get();
     }
 
     public static function findByEmail($email)

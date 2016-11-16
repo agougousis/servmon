@@ -10,6 +10,7 @@ use App\Models\Webapp;
 use App\Models\Setting;
 use App\Http\Controllers\RootController;
 use Illuminate\Http\Request;
+use App\Packages\Gougousis\Transformers\Transformer;
 
 /**
  * Implements functionality related to item monitoring
@@ -19,6 +20,12 @@ use Illuminate\Http\Request;
  */
 class MonitorController extends RootController
 {
+    protected $transformer;
+
+    public function __construct()
+    {
+        $this->transformer = new Transformer('MonitorableServerTransformer');
+    }
 
     /**
      * Returns a list with all the monitorable items
@@ -31,30 +38,25 @@ class MonitorController extends RootController
         $domains = Domain::all();
         foreach ($domains as $domain) {
             $server_list = array();
-            $servers = Server::getBasicInfoByDomain($domain->id);
+            $servers = Server::getByDomain($domain->id);
             foreach ($servers as $server) {
                 // Retrieve services
                 $service_list = array();
-                $services = Service::getAllOnServer($server['id']);
-                foreach ($services as $service) {
-                    $service_list[] = (array) $service;
-                }
-                $server['services'] = $service_list;
+                $services = Service::getAllOnServer($server->id);
+                $server->services = $services;
 
                 // Retrieve webapps
                 $webapp_list = array();
-                $webapps = Webapp::getAllOnServer($server['id']);
-                foreach ($webapps as $webapp) {
-                    $webapp_list[] = (array) $webapp;
-                }
-                $server['webapps'] = $webapp_list;
+                $webapps = Webapp::getAllOnServer($server->id);
+                $server->webapps = $webapps;
 
                 $server_list[] = $server;
             }
-            $response[$domain->full_name] = $server_list;
+            $transformedList = $this->transformer->transform($server_list);
+            $response[$domain->full_name] = $transformedList['data'];
         }
 
-        return response()->json($response);
+        return response()->json(['data' => $response]);
     }
 
     /**

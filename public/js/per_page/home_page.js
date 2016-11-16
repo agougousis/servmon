@@ -47,7 +47,6 @@ function GuiManagerClass(){
     };
 
     this.loadServerInfo = function(serverInfo){         
-        
         var target = $('#services-list-table tbody');        
         target.empty();
         this.addServices(serverInfo.services);        
@@ -448,8 +447,8 @@ function AjaxManagerClass(){
             type: 'GET',
             dataType: 'json',
             async: false,
-            success: function( data,textStatus,jqXHR ) {                                
-                guiManager.loadServerInfo(data);
+            success: function( json,textStatus,jqXHR ) {                                
+                guiManager.loadServerInfo(json.data);
                 guiManager.manageDynamicIcons('serverSelected');
                 $('#loading-image').hide();
             },
@@ -467,12 +466,12 @@ function AjaxManagerClass(){
             type: 'GET',
             dataType: 'json',
             async: false,
-            success: function( data,textStatus,jqXHR ) {
+            success: function( json,textStatus,jqXHR ) {
                 thisObject.selectedDomain = fullDomainName;
-                thisObject.domainServers = data;
+                thisObject.domainServers = json.data;
                 guiManager.changeServerListDomain(fullDomainName);
                 guiManager.clearServerList();
-                guiManager.addServers(data);
+                guiManager.addServers(json.data);
             },
             error: ajaxFailure
         });
@@ -490,10 +489,10 @@ function AjaxManagerClass(){
             type: 'GET',
             dataType: 'json',
             async: false,
-            success: function( data,textStatus,jqXHR ) {  
-                var services = data.service;
-                var webapps = data.webapp;
-                var databases = data.database;
+            success: function( json,textStatus,jqXHR ) {  
+                var services = json.data.service;
+                var webapps = json.data.webapp;
+                var databases = json.data.database;
                 
                 for(var j=0; j<services.length; j++){    
                     // Store service types for future reference
@@ -554,8 +553,8 @@ function AjaxManagerClass(){
             type: 'GET',
             dataType: 'json',
             async: false,
-            success: function( data ) {
-                guiManager.reloadTree(data);
+            success: function( json ) {
+                guiManager.reloadTree(json.data);
             },
             error: function(jqXHR, textStatus, errorThrown) {
                 alert('Tree loading failed!');                        
@@ -567,9 +566,9 @@ function AjaxManagerClass(){
             type: 'GET',
             dataType: 'json',
             async: false,
-            success: function( data ) {                                
-                for(var k=0; k<data.length; k++){
-                    var server = data[k];
+            success: function( json ) {                                
+                for(var k=0; k<json.data.length; k++){
+                    var server = json.data[k];
                     if(server.status == 'on'){
                         statusImg = 'green.png';
                     } else {
@@ -649,11 +648,11 @@ function AjaxManagerClass(){
         $.ajax({
             url: this.baseUrl+"api/webapps",
             type: 'GET',
-            success: function( data,textStatus,jqXHR ) {                                
-                if (data.length > 0 ){
+            success: function( json,textStatus,jqXHR ) {                                
+                if (json.data.length > 0 ){
                     $('#databaseInfoDialog select[name="related_webapp"]').append("<option value='-1'>Noone</option>");
-                    for(var c=0; c<data.length; c++){                        
-                        $('#databaseInfoDialog select[name="related_webapp"]').append("<option value='"+data[c].id+"'>"+data[c].url+"</option>");
+                    for(var c=0; c<json.data.length; c++){                        
+                        $('#databaseInfoDialog select[name="related_webapp"]').append("<option value='"+json.data[c].id+"'>"+json.data[c].url+"</option>");
                         //eManager.webappList[data[c].id] = data[c].url; 
                     }
                 } else {
@@ -671,14 +670,14 @@ function AjaxManagerClass(){
         $.ajax({
             url: this.baseUrl+"api/servers?mode=mine",
             type: 'GET',
-            success: function( data,textStatus,jqXHR ) {                                
+            success: function( json,textStatus,jqXHR ) {                                
                 $('#webappInfoDialog select[name="server"]').empty();
-                if (data.length > 0 ){                    
+                if (json.data.length > 0 ){                    
                     //$('#webappInfoDialog select[name="server"]').append("<option value='-1'>Noone</option>");
                     //$('#serviceInfoDialog select[name="server"]').append("<option value='-1'>Noone</option>");
-                    for(var c=0; c<data.length; c++){                        
-                        $('#webappInfoDialog select[name="server"]').append("<option value='"+data[c].id+"'>"+data[c].hostname+'.'+data[c].domain_name+"</option>");
-                        $('#serviceInfoDialog select[name="server"]').append("<option value='"+data[c].id+"'>"+data[c].hostname+'.'+data[c].domain_name+"</option>");                        
+                    for(var c=0; c<json.data.length; c++){                        
+                        $('#webappInfoDialog select[name="server"]').append("<option value='"+json.data[c].id+"'>"+json.data[c].hostname+'.'+json.data[c].domain_name+"</option>");
+                        $('#serviceInfoDialog select[name="server"]').append("<option value='"+json.data[c].id+"'>"+json.data[c].hostname+'.'+json.data[c].domain_name+"</option>");                        
                         //eManager.webappList[data[c].id] = data[c].url; 
                     }
                 } else {
@@ -768,15 +767,15 @@ function AjaxManagerClass(){
         $.ajax({
             url: this.baseUrl+"api/services/"+serviceId,
             type: 'GET',
-            success: function( data,textStatus,jqXHR ) {                
+            success: function( json,textStatus,jqXHR ) {                
                 $('#serviceInfoDialog input[name="serviceId"]').val(serviceId);                
-                $('#serviceInfoDialog select[name="stype"]').val(data.data.stype);
-                $('#serviceInfoDialog input[name="port"]').val(data.data.port);
-                $('#serviceInfoDialog input[name="version"]').val(data.data.version);
+                $('#serviceInfoDialog select[name="stype"]').val(json.data.stype);
+                $('#serviceInfoDialog input[name="port"]').val(json.data.port);
+                $('#serviceInfoDialog input[name="version"]').val(json.data.version);
                 $('#loading-image').hide();
                 $('#serviceInfoDialog').modal();
                 $("#serviceInfoDialog select[name='server']").prop('disabled',false);
-                $("#serviceInfoDialog select[name='server'] option[value='"+data.data.server+"']").prop('selected',true);
+                $("#serviceInfoDialog select[name='server'] option[value='"+json.data.server+"']").prop('selected',true);
                 $("#serviceInfoDialog select[name='server']").prop('disabled',true);
             },
             error: ajaxFailure
@@ -789,16 +788,16 @@ function AjaxManagerClass(){
         $.ajax({
             url: this.baseUrl+"api/webapps/"+webappId,
             type: 'GET',
-            success: function( data,textStatus,jqXHR ) {                
+            success: function( json,textStatus,jqXHR ) {                
                 $('#webappInfoDialog input[name="appId"]').val(webappId);
-                $('#webappInfoDialog input[name="url"]').val(data.data.url);
-                $('#webappInfoDialog select[name="language"]').val(data.data.language);
-                $('#webappInfoDialog input[name="developer"]').val(data.data.developer);
-                $('#webappInfoDialog input[name="contact"]').val(data.data.contact);
-                $('#webappInfoDialog input[name="origServer"]').val(data.data.server);
+                $('#webappInfoDialog input[name="url"]').val(json.data.url);
+                $('#webappInfoDialog select[name="language"]').val(json.data.language);
+                $('#webappInfoDialog input[name="developer"]').val(json.data.developer);
+                $('#webappInfoDialog input[name="contact"]').val(json.data.contact);
+                $('#webappInfoDialog input[name="origServer"]').val(json.data.server);
                 $('#loading-image').hide();
                 $('#webappInfoDialog').modal();
-                $("#webappInfoDialog select[name='server'] option[value='"+data.data.server+"']").prop('selected',true);
+                $("#webappInfoDialog select[name='server'] option[value='"+json.data.server+"']").prop('selected',true);
             },
             error: ajaxFailure
         });
@@ -822,11 +821,11 @@ function AjaxManagerClass(){
                 url: this.baseUrl+"api/domains/"+this.selectedDomain+"/servers",
                 type: 'GET',
                 async: false,
-                success: function( data,textStatus,jqXHR ) {     
+                success: function( json,textStatus,jqXHR ) {     
                         var dropdown = $('#databaseInfoDialog select[name="server"]');
                         dropdown.empty();
-                        for(var c=0; c<data.length; c++){''                        
-                            dropdown.append("<option value='"+data[c].id+"'>"+data[c].hostname+'.'+data[c].domain_name+"</option>");
+                        for(var c=0; c<json.data.length; c++){''                        
+                            dropdown.append("<option value='"+json.data[c].id+"'>"+json.data[c].hostname+'.'+json.data[c].domain_name+"</option>");
                         }                       
                 },
                 error: ajaxFailure
@@ -837,16 +836,16 @@ function AjaxManagerClass(){
         $.ajax({
             url: this.baseUrl+"api/databases/"+databaseId,
             type: 'GET',
-            success: function( data,textStatus,jqXHR ) {                
+            success: function( json,textStatus,jqXHR ) {                
                 $('#databaseInfoDialog input[name="databaseId"]').val(databaseId);
-                $('#databaseInfoDialog input[name="dbname"]').val(data.data.dbname);
-                $('#databaseInfoDialog select[name="server"]').val(data.data.server);
-                $('#databaseInfoDialog select[name="type"]').val(data.data.type);                
-                $('#databaseInfoDialog input[name="origServer"]').val(data.data.server);
+                $('#databaseInfoDialog input[name="dbname"]').val(json.data.dbname);
+                $('#databaseInfoDialog select[name="server"]').val(json.data.server);
+                $('#databaseInfoDialog select[name="type"]').val(json.data.type);                
+                $('#databaseInfoDialog input[name="origServer"]').val(json.data.server);
                 $('#loading-image').hide();
                 $('#databaseInfoDialog').modal();
                 $("#databaseInfoDialog select[name='server']").val(ajaxManager.selectedServer);
-                $('#databaseInfoDialog select[name="related_webapp"]').val(data.data.related_webapp);
+                $('#databaseInfoDialog select[name="related_webapp"]').val(json.data.related_webapp);
             },
             error: ajaxFailure
         });
@@ -876,9 +875,9 @@ function AjaxManagerClass(){
             url: this.baseUrl+'api/webapps',
             type: 'GET',
             async: false,
-            success: function( data,textStatus,jqXHR ) {
-                for(var j=0; j < data.length; j++){
-                    $('#webapp-list-box').append('<li>'+data[j].url+'</li>');
+            success: function( json,textStatus,jqXHR ) {
+                for(var j=0; j < json.data.length; j++){
+                    $('#webapp-list-box').append('<li>'+json.data[j].url+'</li>');
                 }
                 add_webapp_selection_listener();
                 $('#loading-image').hide();                
@@ -978,11 +977,11 @@ function AjaxManagerClass(){
             data: JSON.stringify(postData),
             contentType:"application/json; charset=utf-8",
             headers:{'X-CSRF-Token': $('#page_token').val()},
-            success: function( data,textStatus,jqXHR ) {
+            success: function( json,textStatus,jqXHR ) {
                 $('#loading-image').hide();
                 $('#addDatabaseDialog').modal('hide');
                 toastr.success(jqXHR.statusText,{timeOut: 5000}); 
-                guiManager.addDatabase(data[0]); 
+                guiManager.addDatabase(json.data[0]); 
             },
             error: ajaxFailure
         });
@@ -1010,8 +1009,8 @@ function AjaxManagerClass(){
             data: JSON.stringify(postData),
             contentType:"application/json; charset=utf-8",
             headers:{'X-CSRF-Token': $('#page_token').val()},
-            success: function( data,textStatus,jqXHR ) {                                                            
-                guiManager.addWebapp(data[0]);
+            success: function( json,textStatus,jqXHR ) {
+                guiManager.addWebapp(json.data[0]);
                 $('#loading-image').hide();
                 $('#addWebappDialog').modal('hide');
                 toastr.success(jqXHR.statusText,{timeOut: 5000}); 
@@ -1041,8 +1040,8 @@ function AjaxManagerClass(){
             data: JSON.stringify(postData),
             contentType:"application/json; charset=utf-8",
             headers:{'X-CSRF-Token': $('#page_token').val()},
-            success: function( data,textStatus,jqXHR ) {
-                guiManager.addService(data[0]);
+            success: function( json,textStatus,jqXHR ) {
+                guiManager.addService(json.data[0]);
                 $('#loading-image').hide();
                 $('#addServiceDialog').modal('hide');
                 toastr.success(jqXHR.statusText,{timeOut: 5000});                   
@@ -1104,10 +1103,10 @@ function AjaxManagerClass(){
             data: JSON.stringify(postData),
             contentType:"application/json; charset=utf-8",
             headers:{'X-CSRF-Token': $('#page_token').val()},
-            success: function( data,textStatus,jqXHR ) {
+            success: function( json,textStatus,jqXHR ) {
                 $('#loading-image').hide();
                 $('#serviceInfoDialog').modal('hide');  
-                guiManager.updateService(data[0]);
+                guiManager.updateService(json.data[0]);
                 toastr.success(jqXHR.statusText,{timeOut: 5000}); 
             },
             error: ajaxFailure
@@ -1136,7 +1135,7 @@ function AjaxManagerClass(){
             data: JSON.stringify(postData),
             contentType:"application/json; charset=utf-8",
             headers:{'X-CSRF-Token': $('#page_token').val()},
-            success: function( data,textStatus,jqXHR ) {
+            success: function( json,textStatus,jqXHR ) {
                 $('#loading-image').hide();
                 $('#webappInfoDialog').modal('hide');       
                 var origServer = $('#webappInfoDialog input[name="origServer"]').val();
@@ -1144,7 +1143,7 @@ function AjaxManagerClass(){
                 if(origServer != finalServer){
                     $('#webapp-row-'+appId).remove();
                 } else {
-                    guiManager.updateWebapp(data[0]);
+                    guiManager.updateWebapp(json.data[0]);
                 }
                 toastr.success(jqXHR.statusText,{timeOut: 5000}); 
             },
@@ -1179,7 +1178,7 @@ function AjaxManagerClass(){
             data: JSON.stringify(postData),
             contentType:"application/json; charset=utf-8",
             headers:{'X-CSRF-Token': $('#page_token').val()},
-            success: function( data,textStatus,jqXHR ) {
+            success: function( json,textStatus,jqXHR ) {
                 $('#loading-image').hide();
                 $('#databaseInfoDialog').modal('hide');     
                 var origServer = $('#databaseInfoDialog input[name="origServer"]').val();
@@ -1187,7 +1186,7 @@ function AjaxManagerClass(){
                 if(origServer != finalServer){
                     $('#db-row-'+databaseInfo.id).remove();
                 } else {
-                    guiManager.updateDatabase(data[0]);                                    
+                    guiManager.updateDatabase(json.data[0]);                                    
                 }
                 toastr.success(jqXHR.statusText,{timeOut: 5000}); 
             },

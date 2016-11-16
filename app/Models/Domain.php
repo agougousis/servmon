@@ -26,9 +26,9 @@ class Domain extends Node
      *
      * @return Collection
      */
-    public function domainsListPreOrder()
+    public static function domainsListPreOrder()
     {
-        return Domain::table('domains')->orderBy('lft', 'ASC')->get();
+        return Domain::orderBy('lft', 'ASC')->get();
     }
 
     public function descendantIds()
