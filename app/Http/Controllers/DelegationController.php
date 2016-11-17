@@ -41,7 +41,7 @@ class DelegationController extends RootController
      */
     public function search()
     {
-        $mode = (Input::has('mode'))? Input::get('mode') : 'all';
+        $mode = Input::get('mode') ?: 'all';
 
         // Access Control
         if ((!$this->isSuperuser())&&($mode != 'my_servers')) {
@@ -52,13 +52,13 @@ class DelegationController extends RootController
             case 'all':
                 $domain_delegations = DomainDelegation::getAllFullInfo();
                 $server_delegations = ServerDelegation::getAllWithUser();
-                $responseArray['domain_delegations'] = turnToAssoc('full_name',$domain_delegations);
-                $responseArray['server_delegations'] = turnToAssoc('server_id',$server_delegations);
+                $responseArray['domain_delegations'] = turnToAssoc('full_name', $domain_delegations);
+                $responseArray['server_delegations'] = turnToAssoc('server_id', $server_delegations);
                 break;
             case 'my_servers':
                 $server_delegations = ServerDelegation::getUserDelegatedIds(Auth::user()->id);
                 $delegated_servers = Server::getServersInfoByIds(array_flatten($server_delegations));
-                $server_list = array_map($this->enrichServerInfo,$delegated_servers);
+                $server_list = array_map(array($this,'enrichServerInfo'), $delegated_servers);
                 $responseArray = $this->transformer->transform($server_list, 'ServerTransformer');
                 break;
             default:
@@ -69,8 +69,15 @@ class DelegationController extends RootController
         return response()->json($responseArray)->setStatusCode(200, '');
     }
 
-    protected function enrichServerInfo($server){
-        $pingResult = Monitor::ping($server['ip']);
+    /**
+     * Add information on a server item, especially about its current status.
+     *
+     * @param Server $server
+     * @return array
+     */
+    protected function enrichServerInfo($server)
+    {
+        $pingResult = Monitor::ping($server->ip);
         $server->status = ($pingResult['status']) ? 'on' : 'off';
         $server->response_time = $pingResult['time'];
         return $server;
@@ -150,34 +157,10 @@ class DelegationController extends RootController
 
                 switch ($delegation['dtype']) {
                     case 'domain':
-                        $user = User::findByEmail($delegation['duser']);
-                        $domain = Domain::findByFullname($delegation['ditem']);
-
-                        // If the user has been delegated servers under this domain, remove these server delegations
-                        $descendantDomains = array_flatten($domain->descendantsAndSelf()->select('id')->get()->ToArray());
-                        ServerDelegation::removeUserDelegationsInDomains($user->id, $descendantDomains);
-                        $newDelegation = new DomainDelegation();
-                        $newDelegation->user_id = $user->id;
-                        $newDelegation->domain_id = $domain->id;
-                        $newDelegation->save();
-                        $created[] = $newDelegation;
+                        $created[] = $this->saveDomainDelegation($delegation);
                         break;
                     case 'server':
-                        $user = User::findByEmail($delegation['duser']);
-
-                        // If the server belongs to a domain delegated to the user, cancel the delegation
-                        $server = Server::find($delegation['ditem']);
-                        if ($this->canManageDomain($user->id, $server->domain)) {
-                            DB::rollBack();
-                            return response()->json(['errors' => $errors])->setStatusCode(400, 'Delegation failed! Server belongs to a domain already delegated to this user.');
-                        }
-
-                        // Save the delegation
-                        $newDelegation = new ServerDelegation();
-                        $newDelegation->user_id = $user->id;
-                        $newDelegation->server_id = $delegation['ditem'];
-                        $newDelegation->save();
-                        $created[] = $newDelegation;
+                        $created[] = $this->saveServerDelegation($delegation);
                         break;
                 }
             } catch (Exception $ex) {
@@ -192,5 +175,53 @@ class DelegationController extends RootController
         DB::commit();
         $responseArray = $this->transformer->transform($created);
         return response()->json($responseArray)->setStatusCode(200, 'Delegation success!');
+    }
+
+    /**
+     * Saves a server delegation
+     *
+     * @param array $delegationInfo
+     * @return ServerDelegation
+     * @throws \Exception
+     */
+    private function saveServerDelegation($delegationInfo)
+    {
+        $user = User::findByEmail($delegationInfo['duser']);
+
+        // If the server belongs to a domain delegated to the user, cancel the delegation
+        $server = Server::find($delegationInfo['ditem']);
+        if ($this->canManageDomain($user->id, $server->domain)) {
+            throw new \Exception('Server with ID = '.$server->id.' belongs to a domain already delegated to this user.');
+        }
+
+        // Save the delegation
+        $newDelegation = new ServerDelegation();
+        $newDelegation->user_id = $user->id;
+        $newDelegation->server_id = $delegationInfo['ditem'];
+        $newDelegation->save();
+
+        return $newDelegation;
+    }
+
+    /**
+     * Saves a domain delegation
+     *
+     * @param array $delegationInfo
+     * @return DomainDelegation
+     */
+    private function saveDomainDelegation($delegationInfo)
+    {
+        $user = User::findByEmail($delegationInfo['duser']);
+        $domain = Domain::findByFullname($delegationInfo['ditem']);
+
+        // If the user has been delegated servers under this domain, remove these server delegations
+        $descendantDomains = array_flatten($domain->descendantsAndSelf()->select('id')->get()->ToArray());
+        ServerDelegation::removeUserDelegationsInDomains($user->id, $descendantDomains);
+        $newDelegation = new DomainDelegation();
+        $newDelegation->user_id = $user->id;
+        $newDelegation->domain_id = $domain->id;
+        $newDelegation->save();
+
+        return $newDelegation;
     }
 }

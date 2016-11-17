@@ -48,7 +48,8 @@ class BackupController extends RootController
      * @param DirectoryIterator $file
      * @return array
      */
-    private function extractBackupInfo(DirectoryIterator $file){
+    private function extractBackupInfo(DirectoryIterator $file)
+    {
         // Get the backup filename and size
         $basename = $file->getBasename('.gz');
         $filename = $file->getFilename();

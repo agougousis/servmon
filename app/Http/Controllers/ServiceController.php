@@ -79,11 +79,6 @@ class ServiceController extends RootController
      */
     public function read($serviceId)
     {
-        // Check if $serviceId is a positive integer
-        if ($serviceId <= 0) {
-            return response()->json(['errors' => array()])->setStatusCode(400, 'Invalid service ID');
-        }
-
         // Check if a service with such an ID exists
         $service = Service::find($serviceId);
         if (empty($service)) {
@@ -159,11 +154,6 @@ class ServiceController extends RootController
      */
     public function delete($serviceId)
     {
-        // Check if $appId is a positive integer
-        if ($serviceId <= 0) {
-            return response()->json(['errors' => array()])->setStatusCode(400, 'Invalid service ID');
-        }
-
         // Check if a node with ID equal to $nid exists
         $service = Service::find($serviceId);
         if (empty($service)) {

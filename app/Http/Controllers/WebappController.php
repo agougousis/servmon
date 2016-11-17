@@ -92,11 +92,6 @@ class WebappController extends RootController
      */
     public function read($appId)
     {
-        // Check if $appId is a positive integer
-        if ($appId <= 0) {
-            return response()->json(['errors' => array()])->setStatusCode(400, 'Invalid webapp ID');
-        }
-
         // Check if a node with ID equal to $nid exists
         $webapp = Webapp::find($appId);
         if (empty($webapp)) {
@@ -171,11 +166,6 @@ class WebappController extends RootController
      */
     public function delete($appId)
     {
-        // Check if $appId is a positive integer
-        if ($appId <= 0) {
-            return response()->json(['errors' => array()])->setStatusCode(400, 'Invalid webapp ID');
-        }
-
         // Check if a node with ID equal to $nid exists
         $webapp = Webapp::find($appId);
         if (empty($webapp)) {

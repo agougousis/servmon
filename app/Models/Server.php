@@ -37,7 +37,7 @@ class Server extends Model
      */
     public static function getServersInfoByIds($server_ids)
     {
-        return Server::join('domains', 'servers.domain', '=', 'domains.id')->whereIn('servers.id', $server_ids)->get();
+        return DB::table('servers')->join('domains', 'servers.domain', '=', 'domains.id')->whereIn('servers.id', $server_ids)->get();
     }
 
     /**
@@ -62,7 +62,7 @@ class Server extends Model
         // Find domain ID and all subdomain IDs
         $domain = Domain::findByFullname($domain_name);
         $descentant_ids = array_flatten($domain->descendantsAndSelf()->select('id')->get()->toArray());
-        return Server::join('domains', 'domains.id', '=', 'servers.domain')->select('servers.id', 'hostname', 'ip', 'os', 'domain', 'servers.watch', 'domains.full_name')->whereIn('domain', $descentant_ids)->get();
+        return DB::table('servers')->join('domains', 'domains.id', '=', 'servers.domain')->select('servers.id', 'hostname', 'ip', 'os', 'domain', 'domains.full_name')->whereIn('domain', $descentant_ids)->get();
     }
 
     /**

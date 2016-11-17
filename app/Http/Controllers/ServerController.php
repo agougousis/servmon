@@ -189,7 +189,7 @@ class ServerController extends RootController
      */
     public function search()
     {
-        $mode = (Input::has('mode'))? Input::get('mode') : 'mine';
+        $mode = Input::get('mode') ?: 'mine';
 
         switch ($mode) {
             case 'mine':
@@ -389,7 +389,7 @@ class ServerController extends RootController
         $webapps = Webapp::getAllOnServer($serverId);
         $databases = Database::getAllOnServer($serverId);
 
-        // Ping services
+        // Get services status
         $service_list = array();
         foreach ($services as $serviceObj) {
             $result = Monitor::scanPort('tcp', $serviceObj->port, $server->ip);
@@ -398,6 +398,7 @@ class ServerController extends RootController
             $service_list[] = $serviceObj;
         }
 
+        // Get webapps status
         $webapp_list = array();
         foreach ($webapps as $webappObj) {
             $result = Monitor::checkStatus($webappObj->url);

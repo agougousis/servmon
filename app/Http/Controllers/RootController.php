@@ -121,12 +121,10 @@ class RootController extends Controller
         if (Auth::check()) {
             if (Auth::user()->superuser == 1) {
                 return true;
-            } else {
-                return false;
             }
-        } else {
             return false;
         }
+        return false;
     }
 
     /**

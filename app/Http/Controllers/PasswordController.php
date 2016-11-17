@@ -36,21 +36,25 @@ class PasswordController extends RootController
             return response()->json(['errors' => $errors])->setStatusCode(400, '');
         }
 
+        // Create and send a reset link
         DB::beginTransaction();
         try {
             $user = User::where('email', $form['email'])->first();
             $uid = $user->id;
 
-             // Create and send a reset link
+            // Create a reset link
             $reset_link = new PasswordResetLink();
             $reset_link->uid = $uid;
+            // Add a random string to the reset link
             $random = str_random(24);
             $url = secure_url('password_reset/'.$random);
             $reset_link->code = $random;
+            // Set expiration date to the reset link
             $date = new DateTime();
             $date->modify("+1 day");
             $valid_until = $date->format("Y-m-d H:i:s");
             $reset_link->valid_until = $valid_until;
+            // Save the reset link
             $reset_link->save();
 
             // Notify the user about the reset link
@@ -106,6 +110,7 @@ class PasswordController extends RootController
             return response()->json(['errors' => $errors])->setStatusCode(400, '');
         }
 
+        // Set the new password
         DB::beginTransaction();
         try {
             $user = User::find($linkInfo->uid);

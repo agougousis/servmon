@@ -92,11 +92,6 @@ class DatabaseController extends RootController
      */
     public function read($databaseId)
     {
-        // Check if $databaseId is a positive integer
-        if ($databaseId <= 0) {
-            return response()->json(['errors' => array()])->setStatusCode(400, 'Invalid database ID');
-        }
-
         // Check if a database with such an ID exists
         $database = Database::find($databaseId);
         if (empty($database)) {
@@ -190,11 +185,6 @@ class DatabaseController extends RootController
      */
     public function delete($databaseId)
     {
-        // Check if $databaseId is a positive integer
-        if ($databaseId <= 0) {
-            return response()->json(['errors' => array()])->setStatusCode(400, 'Invalid database ID');
-        }
-
         // Check if a node with ID equal to $databaseId exists
         $database = Database::find($databaseId);
         if (empty($database)) {

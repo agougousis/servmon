@@ -22,30 +22,30 @@ Route::group(['prefix' => 'api','middleware' => ['logged']], function () {
 
     // Server-related endpoints
     Route::get('servers', array('uses'=>'ServerController@search'));
-    Route::get('/servers/{serverId}', array('uses'=>'ServerController@read'));
+    Route::get('/servers/{serverId}', array('uses'=>'ServerController@read'))->where('serverId', '[0-9]+');
     Route::post('/servers/{serverId}/snapshot', array('uses'=>'ServerController@snapshot'));
     Route::post('servers', array('uses'=>'ServerController@create'));
     Route::put('servers', array('uses'=>'ServerController@update'));
-    Route::delete('servers/{serverId}', array('uses'=>'ServerController@delete'));
+    Route::delete('servers/{serverId}', array('uses'=>'ServerController@delete'))->where('serverId', '[0-9]+');
 
     // Service-related endpoints
-    Route::get('/services/{serviceId}', array('uses'=>'ServiceController@read'));
+    Route::get('/services/{serviceId}', array('uses'=>'ServiceController@read'))->where('serviceId', '[0-9]+');
     Route::post('/services', array('uses'=>'ServiceController@create'));
     Route::put('/services', array('uses'=>'ServiceController@update'));
-    Route::delete('/services/{serviceId}', array('uses'=>'ServiceController@delete'));
+    Route::delete('/services/{serviceId}', array('uses'=>'ServiceController@delete'))->where('serviceId', '[0-9]+');
 
     // Webapp-related endpoints
     Route::get('/webapps', array('uses'=>'WebappController@search'));
-    Route::get('/webapps/{appId}', array('uses'=>'WebappController@read'));
+    Route::get('/webapps/{appId}', array('uses'=>'WebappController@read'))->where('appId', '[0-9]+');
     Route::put('/webapps', array('uses'=>'WebappController@update'));
     Route::post('/webapps', array('uses'=>'WebappController@create'));
-    Route::delete('/webapps/{appId}', array('uses'=>'WebappController@delete'));
+    Route::delete('/webapps/{appId}', array('uses'=>'WebappController@delete'))->where('appId', '[0-9]+');
 
     // Database-related endpoints
-    Route::get('/databases/{databaseId}', array('uses'=>'DatabaseController@read'));
+    Route::get('/databases/{databaseId}', array('uses'=>'DatabaseController@read'))->where('databaseId', '[0-9]+');
     Route::post('/databases', array('uses'=>'DatabaseController@create'));
     Route::put('/databases', array('uses'=>'DatabaseController@update'));
-    Route::delete('/databases/{databaseId}', array('uses'=>'DatabaseController@delete'));
+    Route::delete('/databases/{databaseId}', array('uses'=>'DatabaseController@delete'))->where('databaseId', '[0-9]+');
 
     // Generic Info endpoints
     Route::get('/info/supported_types', array('uses'=>'InfoController@supportedTypesList'));
@@ -72,8 +72,8 @@ Route::group(['prefix' => 'api','middleware' => ['superuser']], function () {
 
     // Delegation Management
     Route::post('delegations', array('uses'=>'DelegationController@create'));
-    Route::delete('/delegations/domain/{delegationId}', array('uses'=>'DelegationController@deleteDomainDelegation'));
-    Route::delete('/delegations/server/{delegationId}', array('uses'=>'DelegationController@deleteServerDelegation'));
+    Route::delete('/delegations/domain/{delegationId}', array('uses'=>'DelegationController@deleteDomainDelegation'))->where('delegationId', '[0-9]+');
+    Route::delete('/delegations/server/{delegationId}', array('uses'=>'DelegationController@deleteServerDelegation'))->where('delegationId', '[0-9]+');
 
     // Backup Management
     Route::get('backup', array('uses'=>'BackupController@search'));

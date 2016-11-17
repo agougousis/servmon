@@ -3,6 +3,7 @@ $I = new AcceptanceTester($scenario);
 
 // Load the landing page
 $I->amOnPage('/');
+$I->maximizeWindow();
 
 // Login
 $I->fillField('inputEmail','user1@gmail.com');
