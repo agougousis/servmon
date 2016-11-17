@@ -96,6 +96,11 @@ class SystemController extends RootController
         }
     }
 
+    /**
+     * Read configuration parameters from .env file
+     *
+     * @return array
+     */
     private function loadEnvParams()
     {
         $path = base_path('.env');
@@ -114,6 +119,11 @@ class SystemController extends RootController
         return $params;
     }
 
+    /**
+     * Update configuration parameters in the .env file
+     *
+     * @param array $params
+     */
     private function saveEnvParams($params)
     {
         $path = base_path('.env');

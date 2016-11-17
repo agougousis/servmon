@@ -188,6 +188,7 @@ class ServersApiTest extends TestCase
                 'ip'    =>  '62.169.226.30',
                 'os'    =>  'Windows',
                 'supervisor_email'  => '',
+                'watch' => 0,
                 'services'  =>  [],
                 'webapps'   =>  [],
                 'databases' =>  []

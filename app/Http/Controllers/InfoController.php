@@ -80,7 +80,7 @@ class InfoController extends RootController
      */
     public function supportedTypesList()
     {
-        $mode = (Input::has('mode'))? Input::get('mode') : 'all';
+        $mode = Input::get('mode') ?: 'all';
 
         $types = new \stdClass();
         switch ($mode) {

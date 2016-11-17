@@ -1,5 +1,7 @@
 # Server Monitoring - ServMon
 
+Project Page: http://servmon.gougousis.net/
+
 ## Requirements
 
 * Linux
@@ -25,6 +27,7 @@ PHP
 * Laravel driver for Backup Manager (https://github.com/backup-manager/laravel)
 * Constant-Time character encoding (https://github.com/paragonie/constant_time_encoding)
 * PHP Secure Communications Library (https://github.com/terrafrost/phpseclib/tree/send-identifier-first)
+* Fractal (https://github.com/thephpleague/fractal)
 
 Javascript/CSS
 

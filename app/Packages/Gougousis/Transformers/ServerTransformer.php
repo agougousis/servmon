@@ -17,9 +17,14 @@ class ServerTransformer extends Fractal\TransformerAbstract
             'ip'        =>  $server->ip,
             'os'        =>  $server->os,
             'hostname'  =>  $server->hostname,
-            'supervisor_email'   =>  $server->supervisor_email,
             'domain'    =>  $server->domain
         ];
+        if (isset($server->supervisor_email)) {
+            $item['supervisor_email'] = $server->supervisor_email;
+        }
+        if (isset($server->watch)) {
+            $item['watch'] = $server->watch;
+        }
         if (isset($server->full_name)) {
             $item['domain_name'] = $server->full_name;
         }

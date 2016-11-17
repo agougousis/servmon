@@ -63,7 +63,7 @@ function AjaxManagerClass(){
                 alert('User list loading failed!!');                        
             }
         });
-
+        
         $.ajax({
             url: ajaxManager.baseUrl+"api/delegations",
             type: 'GET',
@@ -77,14 +77,14 @@ function AjaxManagerClass(){
                 alert('Delegation information loading failed!!');                        
             }
         });
-
+        
         $.ajax({
             url: ajaxManager.baseUrl+"api/domains?mode=with_servers",
             type: 'GET',
             dataType: 'json',
             async: false,
-            success: function( json ) {    
-                for(j=0;j<json.data.length;j++){
+            success: function( json ) {
+                for(j=0; j<json.data.length; j++){
                     domainItem = json.data[j];
                     domainName = domainItem.full_name;
                     var dashedDomain = domainName.replace(/\./g , "-");
@@ -115,6 +115,7 @@ function AjaxManagerClass(){
                 alert('Domain and server information loading failed!!');                        
             }
         });
+        
     }
        
     // User actions not related to modal windows       

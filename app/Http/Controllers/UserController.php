@@ -53,7 +53,7 @@ class UserController extends RootController
      */
     public function search()
     {
-        $mode = (Input::has('mode'))? Input::get('mode') : 'normal';
+        $mode = Input::get('mode') ?: 'normal';
 
         switch ($mode) {
             case 'normal':
@@ -97,16 +97,7 @@ class UserController extends RootController
                 }
 
                 // Create the user in the database
-                $new_user = new User();
-                $new_user->firstname = $user['firstname'];
-                $new_user->lastname = $user['lastname'];
-                $new_user->email = $user['email'];
-                $new_user->password = Hash::make($user['password']);
-                $new_user->activated = 0;
-                $new_user->save();
-
-                $new_user->password = '';
-                $created[] = $new_user;
+                $created[] = $this->saveUser($user);
             } catch (Exception $ex) {
                 DB::rollBack();
                 $this->logEvent('User creation failed! Error: '.$ex->getMessage(), 'error');
@@ -119,6 +110,26 @@ class UserController extends RootController
         DB::commit();
         $responseArray = $this->transformer->transform($created);
         return response()->json($responseArray)->setStatusCode(200, $users_num.' user(s) added.');
+    }
+
+    /**
+     * Saves a new user in the database
+     *
+     * @param array $user
+     * @return User
+     */
+    private function saveUser($user)
+    {
+        $new_user = new User();
+        $new_user->firstname = $user['firstname'];
+        $new_user->lastname = $user['lastname'];
+        $new_user->email = $user['email'];
+        $new_user->password = Hash::make($user['password']);
+        $new_user->activated = 0;
+        $new_user->save();
+
+        $new_user->password = '';
+        return $new_user;
     }
 
     /**

@@ -148,57 +148,7 @@ class DelegationsApiTest extends TestCase
     }
 
 
-    /**
-     * @test
-     * @group delegationsApi
-     */
-    public function create_server_delegations(){
-
-        // Admin tries to delegate a server to a user who cannot manage server's domain
-        $this->be($this->admin);
-        $server = Server::where('hostname','s2')->first();
-        $post_data = array(
-            'delegations'   =>  array(
-                array(
-                    'dtype' =>  'server',
-                    'ditem' =>  $server->id,
-                    'duser' =>  $this->non_admin2->email
-                )
-            )
-        );
-        $this->call('POST', '/api/delegations',$post_data,[],[],['HTTP_X-CSRF-Token'=>csrf_token(),'contentType'=>'application/json; charset=utf-8'],[]);
-        $this->assertEquals(200,$this->response->getStatusCode(),"An admin should be able to delegate a server to a user who cannot manage server's domaine!");
-
-        // Admin tries to delegate a server to user who manages the server's domain
-        $server = Server::where('hostname','s4')->first();
-        $post_data = array(
-            'delegations'   =>  array(
-                array(
-                    'dtype' =>  'server',
-                    'ditem' =>  $server->id,
-                    'duser' =>  $this->non_admin->email
-                )
-            )
-        );
-        $this->call('POST', '/api/delegations',$post_data,[],[],['HTTP_X-CSRF-Token'=>csrf_token(),'contentType'=>'application/json; charset=utf-8'],[]);
-        $this->assertEquals(400,$this->response->getStatusCode(),"An admin should be able to delegate a server to a user who cannot manage server's domaine!");
-        $delegation = ServerDelegation::where('user_id',$this->non_admin->id)->get()->toArray();
-
-        // Non-admin domain manager tries to delegate server
-        $this->be($this->non_admin);
-        $server = Server::where('hostname','s4')->first();
-        $post_data = array(
-            'delegations'   =>  array(
-                array(
-                    'dtype' =>  'server',
-                    'ditem' =>  $server->id,
-                    'duser' =>  $this->non_admin2->email
-                )
-            )
-        );
-        $this->call('POST', '/api/delegations',$post_data,[],[],['HTTP_X-CSRF-Token'=>csrf_token(),'contentType'=>'application/json; charset=utf-8'],[]);
-        $this->assertEquals(401,$this->response->getStatusCode(),"An non admin should not be able to delegate a server to a user who cannot manage server's domaine!");
-    }
+    
 
     /**
      * @test

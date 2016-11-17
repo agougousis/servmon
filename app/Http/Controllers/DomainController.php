@@ -66,17 +66,9 @@ class DomainController extends RootController
             return response()->json(['errors' => []])->setStatusCode(401, 'Unauthorized Access');
         }
 
-        $servers = Server::where('domain', $domain->id)->get();
-
-        $server_list = array();
-        foreach ($servers as $serverObj) {
-            $pingResult = Monitor::ping($serverObj['ip']);
-            $serverObj->service_types = Service::getServiceTypesOnServer($serverObj['id']);
-            $serverObj->status = ($pingResult['status']) ? 'on' : 'off';
-            $serverObj->response_time = $pingResult['time'];
-            $serverObj->domain_name = $domain->full_name;
-            $server_list[] = $serverObj;
-        }
+        $servers = DB::table('servers')->where('domain', $domain->id)->get();
+        // Add status and domain information to the servers
+        $server_list = $this->enrichServerInfoWithDomain($servers, $domain);
 
         $responseArray = $this->transformer->transform($server_list, 'ServerTransformer');
         return response()->json($responseArray);
@@ -140,6 +132,13 @@ class DomainController extends RootController
         return response()->json($responseArray)->setStatusCode(200, $domain_num.' domain(s) added.');
     }
 
+    /**
+     * Saves a new domain in the database.
+     *
+     * @param array $domainData
+     * @param Domain $parent
+     * @return Domain
+     */
     protected function saveNewDomain($domainData, $parent)
     {
         // Create the new node
@@ -225,13 +224,30 @@ class DomainController extends RootController
         }
 
         $servers = Server::getAllUnderDomain($domain_name);
-        $server_list = array();
-        foreach ($servers as $server) {
-            $server_list[] = $this->enrichServerInfo($server);
-        }
+        // Add status information to the servers
+        $server_list = array_map(array($this, 'enrichServerInfo'), $servers);
 
         $responseArray = $this->transformer->transform($server_list, 'ServerTransformer');
         return response()->json($responseArray)->setStatusCode(200, '');
+    }
+
+    /**
+     * Add information on server items about their status and domain.
+     *
+     * @param array $servers
+     * @param array $domain
+     * @return array
+     */
+    protected function enrichServerInfoWithDomain($servers,$domain)
+    {
+        $tempList = array_map(array($this, 'enrichServerInfo'), $servers);
+
+        $newServerList = array_map(function ($server) use ($domain) {
+            $server->domain_name = $domain['full_name'];
+            return $server;
+        }, $tempList);
+
+        return $newServerList;
     }
 
     /**
@@ -242,11 +258,10 @@ class DomainController extends RootController
      */
     protected function enrichServerInfo($server)
     {
-        $pingResult = Monitor::ping($server['ip']);
-        $server->service_types = Service::getServiceTypesOnServer($server['id']);
+        $pingResult = Monitor::ping($server->ip);
+        $server->service_types = Service::getServiceTypesOnServer($server->id);
         $server->status = ($pingResult['status']) ? 'on' : 'off';
         $server->response_time = $pingResult['time'];
-        $server->domain_name = $server['full_name'];
         return $server;
     }
 
@@ -258,7 +273,7 @@ class DomainController extends RootController
      */
     public function search()
     {
-        $mode = (Input::has('mode'))? Input::get('mode') : 'normal';
+        $mode = Input::get('mode') ?: 'normal';
 
         switch ($mode) {
             case 'normal':

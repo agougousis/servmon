@@ -40,16 +40,8 @@ class MonitorController extends RootController
             $server_list = array();
             $servers = Server::getByDomain($domain->id);
             foreach ($servers as $server) {
-                // Retrieve services
-                $service_list = array();
-                $services = Service::getAllOnServer($server->id);
-                $server->services = $services;
-
-                // Retrieve webapps
-                $webapp_list = array();
-                $webapps = Webapp::getAllOnServer($server->id);
-                $server->webapps = $webapps;
-
+                $server->services = Service::getAllOnServer($server->id);
+                $server->webapps = Webapp::getAllOnServer($server->id);
                 $server_list[] = $server;
             }
             $transformedList = $this->transformer->transform($server_list);
@@ -99,11 +91,11 @@ class MonitorController extends RootController
      */
     public function updateConfiguration(Request $request)
     {
-        $form = $request->input('items');
+        $items = $request->input('items');
         $servers = array();
         $services = array();
         $webapps = array();
-        foreach ($form as $checkboxName) {
+        foreach ($items as $checkboxName) {
             $parts = explode('--', $checkboxName);
             if (count($parts) == 2) {
                 switch ($parts[0]) {
