@@ -56,9 +56,13 @@ class DelegationController extends RootController
                 $responseArray['server_delegations'] = turnToAssoc('server_id', $server_delegations);
                 break;
             case 'my_servers':
+                // Get server delegations for this user
                 $server_delegations = ServerDelegation::getUserDelegatedIds(Auth::user()->id);
+                // Get information about the delegated servers
                 $delegated_servers = Server::getServersInfoByIds(array_flatten($server_delegations));
+                // Add server status information for each server
                 $server_list = array_map(array($this,'enrichServerInfo'), $delegated_servers);
+                // Refine the data output
                 $responseArray = $this->transformer->transform($server_list, 'ServerTransformer');
                 break;
             default:
@@ -132,49 +136,65 @@ class DelegationController extends RootController
     {
         // Retrieve nodes array from JSON
         $delegations = $request->input('delegations');
-        $delegations_num = count($delegations);
 
         // Validate the data for each node
-        $created = array();
-        $errors = array();
+        $createdList = array();
         $index = 0;
         DB::beginTransaction();
         foreach ($delegations as $delegation) {
-            try {
-                // Form validation
-                switch ($delegation['dtype']) {
-                    case 'domain':
-                        $errors = $this->loadValidationErrors('validation.domain_delegation_create', $delegation, $errors, $index);
-                        break;
-                    case 'server':
-                        $errors = $this->loadValidationErrors('validation.server_delegation_create', $delegation, $errors, $index);
-                        break;
-                }
-                if (!empty($errors)) {
-                    DB::rollBack();
-                    return response()->json(['errors' => $errors])->setStatusCode(400, 'Delegation request validation failed');
-                }
+            $result = $this->createDelegationItem($delegation, $index, $createdList);
 
-                switch ($delegation['dtype']) {
-                    case 'domain':
-                        $created[] = $this->saveDomainDelegation($delegation);
-                        break;
-                    case 'server':
-                        $created[] = $this->saveServerDelegation($delegation);
-                        break;
-                }
-            } catch (Exception $ex) {
+            if($result['status'] != 200){
                 DB::rollBack();
-                $this->logEvent('Delegation creation failed! Error: '.$ex->getMessage(), 'error');
-                return response()->json(['errors' => []])->setStatusCode(500, 'Delegation creation failed. Check system logs.');
+                return response()->json(['errors' => $result['errors']])->setStatusCode($result['status'], $result['message']);
             }
 
             $index++;
         }
 
         DB::commit();
-        $responseArray = $this->transformer->transform($created);
-        return response()->json($responseArray)->setStatusCode(200, 'Delegation success!');
+        $responseArray = $this->transformer->transform($createdList);
+        return response()->json($responseArray)->setStatusCode(200, count($delegations).' delegation(s) created!');
+    }
+
+    /**
+     * Creates a single delegation
+     *
+     * @param array $delegation
+     * @param int $index
+     * @param array $createdList
+     * @return array
+     */
+    protected function createDelegationItem($delegation, $index, &$createdList)
+    {
+        try {
+            // Form validation
+            switch ($delegation['dtype']) {
+                case 'domain':
+                    $errors = $this->loadValidationErrors('validation.domain_delegation_create', $delegation, [], $index);
+                    break;
+                case 'server':
+                    $errors = $this->loadValidationErrors('validation.server_delegation_create', $delegation, [[]], $index);
+                    break;
+            }
+            if (!empty($errors)) {
+                return ['status' => 400, 'message' => 'Delegation request validation failed', 'errors' => $errors];
+            }
+
+            switch ($delegation['dtype']) {
+                case 'domain':
+                    $createdList[] = $this->saveDomainDelegation($delegation);
+                    break;
+                case 'server':
+                    $createdList[] = $this->saveServerDelegation($delegation);
+                    break;
+            }
+        } catch (Exception $ex) {
+            $this->logEvent('Delegation creation failed! Error: '.$ex->getMessage(), 'error');
+            return ['status' => 500, 'message' => 'Delegation creation failed. Check system logs.', 'errors' => []];
+        }
+
+        return ['status' => 200, 'message' => '', 'errors' => []];
     }
 
     /**

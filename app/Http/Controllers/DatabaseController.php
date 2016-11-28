@@ -34,54 +34,69 @@ class DatabaseController extends RootController
     public function create(Request $request)
     {
         $databases = $request->input('databases');
-        $databases_num = count($databases);
 
         // Validate the data for each node
-        $errors = array();
         $index = 0;
+        $createdList = array();
+
         DB::beginTransaction();
-        $created = array();
         foreach ($databases as $database) {
-            try {
-                // Form validation
-                $errors = $this->loadValidationErrors('validation.create_database', $database, $errors, $index);
-                if (!empty($errors)) {
-                    DB::rollBack();
-                    return response()->json(['errors' => $errors])->setStatusCode(400, 'Database validation failed');
-                }
+            $result = $this->createDatabaseItem($database, $index, $createdList);
 
-                // Access control
-                if (!$this->hasPermission('database', $database['server'], 'create', null)) {
-                    DB::rollBack();
-                    return response()->json(['errors' => []])->setStatusCode(403, 'You are not allowed to create databases on this server!');
-                }
-
-                // Update the related webapp, if there is one
-                if (!empty($database['related_webapp'])) {
-                    $wp = Webapp::getByUrl($database['related_webapp']);
-                    if (!empty($wp)) {
-                        $database['related_webapp'] = $wp->id;
-                        $database['related_webapp_name'] = $wp->url;
-                    }
-                }
-
-                // Save the database info
-                $db = new Database();
-                $db->owner = Auth::user()->id;
-                $db->fill($database)->save();
-                $created[] = $db;
-            } catch (Exception $ex) {
+            if($result['status'] != 200){
                 DB::rollBack();
-                $this->logEvent('Database creation failed! Error: '.$ex->getMessage(), 'error');
-                return response()->json(['errors' => []])->setStatusCode(500, 'Database creation failed. Check system logs.');
+                return response()->json(['errors' => $result['errors']])->setStatusCode($result['status'], $result['message']);
             }
 
             $index++;
         }
 
         DB::commit();
-        $responseArray = $this->transformer->transform($created);
-        return response()->json($responseArray)->setStatusCode(200, $databases_num.' database(s) added.');
+
+        $responseArray = $this->transformer->transform($createdList);
+        return response()->json($responseArray)->setStatusCode(200, count($databases).' database(s) added.');
+    }
+
+    /**
+     * Creates a single database item
+     *
+     * @param array $database
+     * @param int $index
+     * @param array $createdList
+     * @return array
+     */
+    protected function createDatabaseItem($database, $index, &$createdList)
+    {
+        try {
+            // Form validation
+            $errors = $this->loadValidationErrors('validation.create_database', $database, [], $index);
+            if (!empty($errors)) {
+                return ['status' => 400, 'message' => 'Database validation failed', 'errors' => $errors];
+            }
+
+            // Access control
+            if (!$this->hasPermission('database', $database['server'], 'create', null)) {
+                return ['status' => 403, 'message' => 'You are not allowed to create databases on this server!', 'errors' => []];
+            }
+
+            // Update the related webapp, if there is one
+            if (!empty($database['related_webapp'])) {
+                $wp = Webapp::getByUrl($database['related_webapp']);
+                $database['related_webapp'] = $wp->id;
+                $database['related_webapp_name'] = $wp->url;
+            }
+
+            // Save the database info
+            $db = new Database();
+            $db->owner = Auth::user()->id;
+            $db->fill($database)->save();
+            $createdList[] = $db;
+        } catch (Exception $ex) {
+            $this->logEvent('Database creation failed! Error: '.$ex->getMessage(), 'error');
+            return ['status' => 500, 'message' => 'Database creation failed. Check system logs.', 'errors' => []];
+        }
+
+        return ['status' => 200, 'message' => '', 'errors' => []];
     }
 
     /**
@@ -124,57 +139,70 @@ class DatabaseController extends RootController
     public function update(Request $request)
     {
         $databases = $request->input('databases');
-        $databases_num = count($databases);
 
         // Validate the data for each node
-        $errors = array();
         $index = 0;
-        $updated = array();
+        $updatedList = array();
         DB::beginTransaction();
         foreach ($databases as $database) {
-            try {
-                // Form validation
-                $errors = $this->loadValidationErrors('validation.update_database', $database, $errors, $index);
-                if (!empty($errors)) {
-                    DB::rollBack();
-                    return response()->json(['errors' => $errors])->setStatusCode(400, 'Database validation failed');
-                }
+            $result = $this->updateDatabaseItem($database, $index, $updatedList);
 
-                // Access control
-                if (!$this->hasPermission('database', $database['server'], 'update', null)) {
-                    DB::rollBack();
-                    return response()->json(['errors' => []])->setStatusCode(403, 'You are not allowed to update databases on this server!');
-                }
-
-                //
-                if (empty($database['related_webapp'])) {
-                    $database['related_webapp'] = null;
-                }
-
-                // Update the database item
-                $db = Database::find($database['id']);
-                $db->fill($database)->save();
-
-                // Update the related webapp, if needed
-                if (!empty($db->related_webapp)) {
-                    $wp = Webapp::find($db->related_webapp);
-                    if (!empty($wp)) {
-                        $db['related_webapp_name'] = $wp->url;
-                    }
-                }
-                $updated[] = $db;
-            } catch (Exception $ex) {
+            if($result['status'] != 200){
                 DB::rollBack();
-                $this->logEvent('Database update failed! Error: '.$ex->getMessage(), 'error');
-                return response()->json(['errors' => []])->setStatusCode(500, 'Database update failed. Check system logs.');
+                return response()->json(['errors' => $result['errors']])->setStatusCode($result['status'], $result['message']);
             }
 
             $index++;
         }
 
         DB::commit();
-        $responseArray = $this->transformer->transform($updated);
-        return response()->json($responseArray)->setStatusCode(200, $databases_num.' database(s) updated.');
+        $responseArray = $this->transformer->transform($updatedList);
+        return response()->json($responseArray)->setStatusCode(200, count($databases).' database(s) updated.');
+    }
+
+    /**
+     * Updates a single database item
+     *
+     * @param array $database
+     * @param int $index
+     * @param array $createdList
+     * @return array
+     */
+    protected function updateDatabaseItem($database, $index, &$updatedList)
+    {
+        try {
+            // Form validation
+            $errors = $this->loadValidationErrors('validation.update_database', $database, [], $index);
+            if (!empty($errors)) {
+                return ['status' => 400, 'message' => 'Database validation failed.', 'errors' => $errors];
+            }
+
+            // Access control
+            if (!$this->hasPermission('database', $database['server'], 'update', null)) {
+                return ['status' => 403, 'message' => 'You are not allowed to update databases on this server!', 'errors' => []];
+            }
+
+            //
+            if (empty($database['related_webapp'])) {
+                $database['related_webapp'] = null;
+            }
+
+            // Update the database item
+            $db = Database::find($database['id']);
+            $db->fill($database)->save();
+
+            // Update the related webapp, if needed
+            if (!empty($db->related_webapp)) {
+                $wp = Webapp::find($db->related_webapp);
+                $db['related_webapp_name'] = $wp->url;
+            }
+            $updatedList[] = $db;
+        } catch (Exception $ex) {
+            $this->logEvent('Database update failed! Error: '.$ex->getMessage(), 'error');
+            return ['status' => 500, 'message' => 'Database update failed. Check system logs.', 'errors' => []];
+        }
+
+        return ['status' => 200, 'message' => '', 'errors' => []];
     }
 
     /**

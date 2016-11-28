@@ -48,12 +48,23 @@ class Kernel extends ConsoleKernel
                     }
                 }
             } catch (Exception $ex) {
-                $log = new SystemLog();
-                $log->category = 'error';
-                $log->message = "Scheduled Monitoring failed! ".$ex->getMessage();
-                $log->when = date("Y-m-d H:i:s");
-                $log->save();
+                $this->logMessage('error',"Scheduled Monitoring failed! ".$ex->getMessage());
             }
         }
+    }
+
+    /**
+     * Logs a message
+     *
+     * @param string $category
+     * @param string $message
+     */
+    private function logMessage($category, $message)
+    {
+        $log = new SystemLog();
+        $log->category = $category;
+        $log->message = $message;
+        $log->when = date("Y-m-d H:i:s");
+        $log->save();
     }
 }

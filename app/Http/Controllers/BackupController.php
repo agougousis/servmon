@@ -15,31 +15,66 @@ class BackupController extends RootController
 {
 
     /**
+     * The directory where we store backup files
+     *
+     * @var string
+     */
+    protected $backupDirectory;
+
+    public function __construct()
+    {
+        $this->backupDirectory = storage_path('backup');
+    }
+
+    /**
      * Returns a list of exiting backups
      *
      * @return Response
      */
     public function search()
     {
-        $backup_list = array();
-        $dir = new DirectoryIterator(storage_path('backup'));
+        $backup_list = $this->searchForBackups();
+        return response()->json($backup_list)->setStatusCode(200, '');
+    }
+
+    /**
+     * Searches the backup directory and returns a list with backups found
+     *
+     * @return array
+     */
+    private function searchForBackups()
+    {
+        $backup_list = [];
+        $dir = new DirectoryIterator($this->backupDirectory);
+
         foreach ($dir as $fileinfo) {
             if (!$fileinfo->isDot()) {
                 // Add this backup to the list
                 $backup_list[] = $this->extractBackupInfo($fileinfo);
-
-                // Sort backups from newest to oldest
-                usort($backup_list, function ($a, $b) {
-                    $date_a = strtotime($a['when']);
-                    $date_b = strtotime($b['when']);
-                    if ($date_a == $date_b) {
-                        return 0;
-                    }
-                    return ($date_a < $date_b) ? -1 : 1;
-                });
             }
         }
-        return response()->json($backup_list)->setStatusCode(200, '');
+
+        return $this->sortNewestToOldest($backup_list);
+    }
+
+    /**
+     * Sort backup list from newest to oldest
+     *
+     * @param array $backup_list
+     * @return array
+     */
+    private function sortNewestToOldest($backup_list)
+    {
+        usort($backup_list, function ($a, $b) {
+            $date_a = strtotime($a['when']);
+            $date_b = strtotime($b['when']);
+            if ($date_a == $date_b) {
+                return 0;
+            }
+            return ($date_a < $date_b) ? -1 : 1;
+        });
+
+        return $backup_list;
     }
 
     /**
@@ -57,7 +92,6 @@ class BackupController extends RootController
 
         // Extract the backup date
         $fparts = explode('_', $basename);
-        $date_parts = explode('-', $fparts[1]);
         $time_parts = explode('-', $fparts[2]);
         $dt_string = $fparts[1]." ".implode(':', $time_parts);
 
@@ -85,7 +119,7 @@ class BackupController extends RootController
                 '--destinationPath' =>  $filename
             ]);
         } catch (Exception $ex) {
-            $filepath = storage_path('backup')."/".$filename;
+            $filepath = $this->backupDirectory."/$filename";
             if (file_exists()) {
                 unlink($filepath);
             }
@@ -104,7 +138,7 @@ class BackupController extends RootController
      */
     public function restore($filename)
     {
-        $filepath = storage_path('backup')."/".$filename;
+        $filepath = $this->backupDirectory."/$filename";
         if (!file_exists($filepath)) {
             return response()->json(['errors' => array()])->setStatusCode(404, 'Backup file were not found!');
         }

@@ -97,7 +97,7 @@ return array(
         'dbname'    =>  'required|max:30',
         'server'    =>  'required|integer',
         'type'      =>  'required|max:15|exists:database_types,codename',
-        'related_webapp'   =>  'integer'
+        'related_webapp'   =>  'integer|exists:webapps,id'
     ),
     'config_monitor'    =>  array(
         'monitoring_status'    =>  'max:10',

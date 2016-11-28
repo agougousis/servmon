@@ -96,6 +96,8 @@ class MonitorController extends RootController
         $services = array();
         $webapps = array();
         foreach ($items as $checkboxName) {
+            // The first part of the checkbox name contains the item type
+            // and the second part the ID of the item
             $parts = explode('--', $checkboxName);
             if (count($parts) == 2) {
                 switch ($parts[0]) {

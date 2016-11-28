@@ -6,7 +6,6 @@ use DB;
 use Auth;
 use Input;
 use Monitor;
-use SshHelper;
 use App\Models\Server;
 use App\Models\Service;
 use App\Models\Webapp;
@@ -15,9 +14,8 @@ use App\Models\ServerDelegation;
 use App\Models\Domain;
 use Illuminate\Http\Request;
 use App\Http\Controllers\RootController;
-use phpseclib\Net\SSH2;
-use phpseclib\Crypt\RSA;
 use App\Packages\Gougousis\Transformers\Transformer;
+use App\Packages\Gougousis\SSH\SshManager;
 
 /**
  * Implements functionality related to server items
@@ -43,142 +41,31 @@ class ServerController extends RootController
      */
     public function snapshot(Request $request, $server_id)
     {
-        $form = $request->input();
-
         // Form validation
-        $errors = $this->loadValidationErrors('validation.server_snapshot', $form, [], null);
+        $errors = $this->loadValidationErrors('validation.server_snapshot', $request->input(), [], null);
         if (!empty($errors)) {
             DB::rollBack();
             return response()->json(['errors' => $errors])->setStatusCode(400, 'Invalid credentials!');
         }
 
-        $server = Server::find($server_id);
-
         // Check if server ID exists
+        $server = Server::find($server_id);
         if (empty($server)) {
             return response()->json(['errors'=>[]])->setStatusCode(404, 'The specified server was not found!');
         }
 
+        // Retrieve the fully qualified server name
         $domain = Domain::find($server->domain);
         $full_server_name = $server->hostname.".".$domain->full_name;
 
-        try {
-            $port = $form['sshport'];
-            $username = $form['sshuser'];
-
-            $start = microtime(true);
-
-            /**********
-             * Login  *
-             **********/
-            if ($form['authType'] == 'password') {    // Password authentication
-                $password = $form['sshpass'];
-                $ssh = new SSH2($full_server_name, $port);
-                if (!$ssh->login($username, $password)) {
-                    return response()->json(['errors'=>[]])->setStatusCode(500, 'SSH login failed! Please make sure that the server is reachable from this web server and the provided username and password are correct.');
-                }
-            } else { // RSA authentication
-                if (!file_exists($form['sshkey'])) {
-                    return response()->json(['errors'=>[]])->setStatusCode(400, "The provided file path '".$form['sshkey']."' for the SSH key does not exist or is not accessible!");
-                }
-                $ssh = new SSH2($full_server_name, $port);
-                $key = new RSA();
-                $key->loadKey(file_get_contents($form['sshkey']));
-                if (!$ssh->login('root', $key)) {
-                    return response()->json(['errors'=>[]])->setStatusCode(500, 'SSH login failed! Please make sure that you provided a valid SSH key file path.');
-                }
-            }
-
-            /*******************
-             * Get disk usage  *
-             *******************/
-
-            // Block usage
-            $df_blocks_output = $ssh->exec('df -h');
-            $df_blocks = SshHelper::extractBlockUsageFromDf($df_blocks_output);
-
-            // Inodes usage
-            $df_inodes_output = $ssh->exec('df -h -i');
-            $df_inodes = SshHelper::extractInodesUsageFromDf($df_inodes_output);
-
-            /*********************
-             * Count processors  *
-             *********************/
-            $count_processors = trim($ssh->exec("grep 'model name' /proc/cpuinfo | wc -l"));
-
-            /**********************
-             * Get server uptime and CPU load *
-             **********************/
-            $uptime_output = $ssh->exec('uptime');
-            $uptime_info = SshHelper::extractInfoFromUptime($uptime_output, $count_processors);
-            $uptime = $uptime_info['uptime'];
-            $last5min_load = $uptime_info['last5min_load'];
-            $last10min_load = $uptime_info['last10min_load'];
-
-            /*********************
-             * Get memory usage  *
-             *********************/
-            $free_output = $ssh->exec('free');
-            $mem_info = SshHelper::extractInfoFromFree($free_output);
-            $total_memory = $mem_info['total'];
-            $total_memory_text = SshHelper::addMemoryUnits($total_memory);
-            $free_memory = $mem_info['free'];
-            $free_memory_text = SshHelper::addMemoryUnits($free_memory);
-
-            /*********************************
-             * Get list of network services  *
-             *********************************/
-            if (isset($form['sshpass'])&&($username != 'root')) {
-                $ssh->write("sudo lsof -i -n -P\n");
-                $template = "/password\sfor\s$username:|".$username."@".$server->hostname.":~\$/";
-                // Read until you see the password prompt or the normal prompt
-                $sudo_response = $ssh->read($template, 2);
-                if (preg_match("/password\sfor/", $sudo_response)) {
-                    // In case of password prompt, give the password
-                    $ssh->write("$password\n");
-                    // Take into account the 3 sec default delay of linux
-                    // (it is there to prevent brute-force attacks)
-                    $ssh->setTimeout(3);
-                }
-
-                // Read until you see another prompt. We expect to see a normal prompt
-                // but, if the password is wrong, it can be a password prompt.
-                $lsof_output = $ssh->read($template, 2);
-            } else {
-                $lsof_output = $ssh->exec('lsof -i -n -P');
-            }
-            $services = SshHelper::extractServicesFromLsof($lsof_output);
-
-            $end = microtime(true);
-
-            /************************
-             * Build HTTP response  *
-             ************************/
-            $response = compact(
-                'uptime',
-                'count_processors',
-                'last5min_load',
-                'last10min_load',
-                'total_memory',
-                'total_memory_text',
-                'free_memory',
-                'free_memory_text',
-                'df_blocks',
-                'df_inodes',
-                'services'
-            );
-
-            return response()->json($response)->setStatusCode(200, 'ok');
-        } catch (\RuntimeException $ex) {
-            $reason = SshHelper::identifySshError($ex->getMessage());
-            return response()->json(['errors'=>[]])->setStatusCode(500, "SSH login failed! ".$reason);
-        } catch (\ErrorException $ex) {
-            $reason = SshHelper::identifySshError($ex->getMessage());
-            return response()->json(['errors'=>[]])->setStatusCode(500, "SSH login failed! ".$reason);
-        } catch (Exception $ex) {
-            $reason = SshHelper::identifySshError($ex->getMessage());
-            return response()->json(['errors'=>[]])->setStatusCode(500, "SSH login failed! ".$reason);
+        // Retrieve server health information
+        $sshManager = new SshManager($full_server_name,$request->sshport,$request->sshuser,$request->sshpass,$request->sshkey);
+        if (!$sshManager->connectAndAuthenticate()) {
+            return response()->json(['errors'=>[]])->setStatusCode(500, 'SSH login failed! Please make sure that you provided a valid SSH key file path.');
         }
+        $serverInfo = $sshManager->getServerInfo();
+
+        return response()->json($serverInfo)->setStatusCode(200, 'ok');
     }
 
     /**

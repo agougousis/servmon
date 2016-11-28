@@ -148,7 +148,7 @@ class DelegationsApiTest extends TestCase
     }
 
 
-    
+
 
     /**
      * @test

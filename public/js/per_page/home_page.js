@@ -1361,7 +1361,6 @@ function AjaxManagerClass(){
             contentType:"application/json; charset=utf-8",
             headers:{'X-CSRF-Token': $('#page_token').val()},
             success: function( data,textStatus,jqXHR ) {
-                console.log(data);
                 $('#loading-image').hide();                
                 // In order to draw the Gauge elements we need the modal
                 // to be in a 'shown' state. So, we wil start to put information
@@ -1376,7 +1375,8 @@ function AjaxManagerClass(){
     }
     
     this.fillServerStatusPanel = function(data){
-        
+        console.log('DATA');
+        console.log(data);
         // Uptime
         var uptimeData = data.uptime.split(" ");
         $('#uptime-holder').html("<span style='font-size: 26px; font-weight: bold'>"+uptimeData[0]+"</span>\n\
@@ -1390,7 +1390,7 @@ function AjaxManagerClass(){
         
         // Memory usage
         $('#total-memory-holder').html(data.total_memory_text);        
-        var mem_usage = Math.round(100*(data.total_memory-data.free_memory)/data.total_memory);        
+        var mem_usage = Math.round(100*(data.total_memory - data.free_memory)/data.total_memory);        
         $('#memory-usage-holder').css('width', mem_usage+'%').attr('aria-valuenow', mem_usage).html(mem_usage+'%'); 
         
         // Disk usage

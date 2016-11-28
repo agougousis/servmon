@@ -45,43 +45,58 @@ class WebappController extends RootController
     public function create(Request $request)
     {
         $webapps = $request->input('webapps');
-        $webapps_num = count($webapps);
 
         // Validate the data for each node
-        $errors = array();
         $index = 0;
-        $created = array();
+        $createdList = array();
         DB::beginTransaction();
         foreach ($webapps as $webapp) {
-            try {
-                // Form validation
-                $errors = $this->loadValidationErrors('validation.create_webapp', $webapp, $errors, $index);
-                if (!empty($errors)) {
-                    DB::rollBack();
-                    return response()->json(['errors' => $errors])->setStatusCode(400, 'Webapp validation failed!');
-                }
+            $result = $this->createWebappItem($webapp, $index, $createdList);
 
-                // Access control
-                if (!$this->hasPermission('webapp', $webapp['server'], 'create', null)) {
-                    DB::rollBack();
-                    return response()->json(['errors' => []])->setStatusCode(403, 'You are not allowed to create webapps on this server!');
-                }
-
-                $wp = new Webapp();
-                $wp->fill($webapp)->save();
-                $created[] = $wp;
-            } catch (Exception $ex) {
+            if($result['status'] != 200){
                 DB::rollBack();
-                $this->logEvent('Webapp creation failed! Error: '.$ex->getMessage(), 'error');
-                return response()->json(['errors' => []])->setStatusCode(500, 'Webapp creation failed. Check system logs.');
+                return response()->json(['errors' => $result['errors']])->setStatusCode($result['status'], $result['message']);
             }
 
             $index++;
         }
 
         DB::commit();
-        $responseArray = $this->transformer->transform($created);
-        return response()->json($responseArray)->setStatusCode(200, $webapps_num.' webapps(s) added.');
+        $responseArray = $this->transformer->transform($createdList);
+        return response()->json($responseArray)->setStatusCode(200, count($webapps).' webapps(s) added.');
+    }
+
+    /**
+     * Creates a single webapp
+     *
+     * @param array $webapp
+     * @param int $index
+     * @param array $createdList
+     * @return array
+     */
+    protected function createWebappItem($webapp, $index, &$createdList)
+    {
+        try {
+            // Form validation
+            $errors = $this->loadValidationErrors('validation.create_webapp', $webapp, [], $index);
+            if (!empty($errors)) {
+                return ['status' => 400, 'message' => 'Delegation request validation failed!', 'errors' => $errors];
+            }
+
+            // Access control
+            if (!$this->hasPermission('webapp', $webapp['server'], 'create', null)) {
+                return ['status' => 403, 'message' => 'You are not allowed to create webapps on this server!', 'errors' => $errors];
+            }
+
+            $wp = new Webapp();
+            $wp->fill($webapp)->save();
+            $createdList[] = $wp;
+        } catch (Exception $ex) {
+            $this->logEvent('Webapp creation failed! Error: '.$ex->getMessage(), 'error');
+            return ['status' => 500, 'message' => 'Webapp creation failed. Check system logs.', 'errors' => []];
+        }
+
+        return ['status' => 200, 'message' => '', 'errors' => []];
     }
 
     /**
@@ -118,44 +133,59 @@ class WebappController extends RootController
     public function update(Request $request)
     {
         $webapps = $request->input('webapps');
-        $webapps_num = count($webapps);
 
         // Validate the data for each node
-        $errors = array();
         $index = 0;
-        $updated = array();
+        $updatedList = array();
         DB::beginTransaction();
         foreach ($webapps as $webapp) {
-            try {
-                // Form validation
-                $errors = $this->loadValidationErrors('validation.update_webapp', $webapp, $errors, $index);
-                if (!empty($errors)) {
-                    DB::rollBack();
-                    return response()->json(['errors' => $errors])->setStatusCode(400, 'Webapp validation failed!');
-                }
+            $result = $this->updateWebappItem($webapp, $index, $updatedList);
 
-                $wp = Webapp::find($webapp['id']);
-
-                // Access control
-                if (!$this->hasPermission('webapp', $webapp['server'], 'update', $wp->id)) {
-                    DB::rollBack();
-                    return response()->json(['errors' => []])->setStatusCode(403, 'You are not allowed to update webapps on this server!');
-                }
-
-                $wp->fill($webapp)->save();
-                $updated[] = $wp;
-            } catch (Exception $ex) {
+            if($result['status'] != 200){
                 DB::rollBack();
-                $this->logEvent('Webapp update failed! Error: '.$ex->getMessage(), 'error');
-                return response()->json(['errors' => []])->setStatusCode(500, 'Webapp update failed. Check system logs.');
+                return response()->json(['errors' => $result['errors']])->setStatusCode($result['status'], $result['message']);
             }
 
             $index++;
         }
 
         DB::commit();
-        $responseArray = $this->transformer->transform($updated);
-        return response()->json($responseArray)->setStatusCode(200, $webapps_num.' webapp(s) updated.');
+        $responseArray = $this->transformer->transform($updatedList);
+        return response()->json($responseArray)->setStatusCode(200, count($webapps).' webapp(s) updated.');
+    }
+
+    /**
+     * Updates a single webapp item
+     *
+     * @param array $webapp
+     * @param int $index
+     * @param array $updatedList
+     * @return array
+     */
+    protected function updateWebappItem($webapp, $index, &$updatedList)
+    {
+        try {
+            // Form validation
+            $errors = $this->loadValidationErrors('validation.update_webapp', $webapp, [], $index);
+            if (!empty($errors)) {
+                return ['status' => 400, 'message' => 'Webapp validation failed!', 'errors' => []];
+            }
+
+            $wp = Webapp::find($webapp['id']);
+
+            // Access control
+            if (!$this->hasPermission('webapp', $webapp['server'], 'update', $wp->id)) {
+                return ['status' => 403, 'message' => 'You are not allowed to update webapps on this server!', 'errors' => []];
+            }
+
+            $wp->fill($webapp)->save();
+            $updatedList[] = $wp;
+        } catch (Exception $ex) {
+            $this->logEvent('Webapp update failed! Error: '.$ex->getMessage(), 'error');
+            return ['status' => 500, 'message' => 'Webapp update failed. Check system logs.', 'errors' => []];
+        }
+
+        return ['status' => 200, 'message' => '', 'errors' => []];
     }
 
     /**

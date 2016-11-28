@@ -36,7 +36,7 @@ class LoginController extends RootController
         // If the validation didn't fail, an account with such email exists
         $check_user = User::findByEmail($form['inputEmail']);
 
-        // Don't let diactivated accounts to login
+        // Don't let deactivated accounts to login
         if ($check_user->activated == 0) {
             $this->logEvent("Account is deactivated!", 'login');
             return response()->json(['errors' => []])->setStatusCode(403, 'Your account is not active!');
@@ -79,6 +79,7 @@ class LoginController extends RootController
             Session::flush();
             return response()->json([])->setStatusCode(200, 'Logged out!');
         } catch (Exception $ex) {
+            $this->logEvent('Logout failure. Error: '.$ex->getMessage(),'security');
             return response()->json(['errors' => []])->setStatusCode(400, 'Logout failed!');
         }
     }

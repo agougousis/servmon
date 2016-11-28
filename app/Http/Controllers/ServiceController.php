@@ -32,43 +32,58 @@ class ServiceController extends RootController
     public function create(Request $request)
     {
         $services = $request->input('services');
-        $services_num = count($services);
 
         // Validate the data for each node
-        $errors = array();
         $index = 0;
-        $created = array();
+        $createdList = array();
         DB::beginTransaction();
         foreach ($services as $service) {
-            try {
-                // Form validation
-                $errors = $this->loadValidationErrors('validation.create_service', $service, $errors, $index);
-                if (!empty($errors)) {
-                    DB::rollBack();
-                    return response()->json(['errors' => $errors])->setStatusCode(400, 'Service validation failed');
-                }
+            $result = $this->createServiceItem($service, $index, $createdList);
 
-                // Access control
-                if (!$this->hasPermission('service', $service['server'], 'create', null)) {
-                    DB::rollBack();
-                    return response()->json(['errors' => []])->setStatusCode(403, 'You are not allowed to create services on this server!');
-                }
-
-                $serv = new Service();
-                $serv->fill($service)->save();
-                $created[] = $serv;
-            } catch (Exception $ex) {
+            if($result['status'] != 200){
                 DB::rollBack();
-                $this->logEvent('Service creation failed! Error: '.$ex->getMessage(), 'error');
-                return response()->json(['errors' => []])->setStatusCode(500, 'Service creation failed. Check system logs.');
+                return response()->json(['errors' => $result['errors']])->setStatusCode($result['status'], $result['message']);
             }
 
             $index++;
         }
 
         DB::commit();
-        $responseArray = $this->transformer->transform($created);
-        return response()->json($responseArray)->setStatusCode(200, $services_num.' service(s) added.');
+        $responseArray = $this->transformer->transform($createdList);
+        return response()->json($responseArray)->setStatusCode(200, count($services).' service(s) added.');
+    }
+
+    /**
+     * Creates a single service
+     *
+     * @param array $service
+     * @param int $index
+     * @param array $createdList
+     * @return array
+     */
+    protected function createServiceItem($service, $index, &$createdList)
+    {
+        try {
+            // Form validation
+            $errors = $this->loadValidationErrors('validation.create_service', $service, [], $index);
+            if (!empty($errors)) {
+                return ['status' => 400, 'message' => 'Service validation failed!', 'errors' => []];
+            }
+
+            // Access control
+            if (!$this->hasPermission('service', $service['server'], 'create', null)) {
+                return ['status' => 403, 'message' => 'You are not allowed to create services on this server!', 'errors' => []];
+            }
+
+            $serv = new Service();
+            $serv->fill($service)->save();
+            $createdList[] = $serv;
+        } catch (Exception $ex) {
+            $this->logEvent('Service creation failed! Error: '.$ex->getMessage(), 'error');
+            return ['status' => 500, 'message' => 'Service creation failed. Check system logs.', 'errors' => []];
+        }
+
+        return ['status' => 200, 'message' => '', 'errors' => []];
     }
 
     /**
@@ -106,44 +121,59 @@ class ServiceController extends RootController
     public function update(Request $request)
     {
         $services = $request->input('services');
-        $services_num = count($services);
 
         // Validate the data for each node
-        $errors = array();
         $index = 0;
-        $updated = array();
+        $updatedList = array();
         DB::beginTransaction();
         foreach ($services as $service) {
-            try {
-                // Form validation
-                $errors = $this->loadValidationErrors('validation.update_service', $service, $errors, $index);
-                if (!empty($errors)) {
-                    DB::rollBack();
-                    return response()->json(['errors' => $errors])->setStatusCode(400, 'Service validation failed');
-                }
+            $result = $this->updateServiceItem($service, $index, $updatedList);
 
-                $serv = Service::find($service['id']);
-
-                // Access control
-                if (!$this->hasPermission('service', $serv->server, 'create', $service['id'])) {
-                    DB::rollBack();
-                    return response()->json(['errors' => []])->setStatusCode(403, 'You are not allowed to update services on this server!');
-                }
-
-                $serv->fill($service)->save();
-                $updated[] = $serv;
-            } catch (Exception $ex) {
+            if($result['status'] != 200){
                 DB::rollBack();
-                $this->logEvent('Service creation failed! Error: '.$ex->getMessage(), 'error');
-                return response()->json(['errors' => []])->setStatusCode(500, 'Service creation failed. Check system logs.');
+                return response()->json(['errors' => $result['errors']])->setStatusCode($result['status'], $result['message']);
             }
 
             $index++;
         }
 
         DB::commit();
-        $responseArray = $this->transformer->transform($updated);
-        return response()->json($responseArray)->setStatusCode(200, $services_num.' service(s) updated.');
+        $responseArray = $this->transformer->transform($updatedList);
+        return response()->json($responseArray)->setStatusCode(200, count($services).' service(s) updated.');
+    }
+
+    /**
+     * Update a single service
+     *
+     * @param array $service
+     * @param int $index
+     * @param array $updatedList
+     * @return array
+     */
+    protected function updateServiceItem($service, $index, &$updatedList)
+    {
+        try {
+            // Form validation
+            $errors = $this->loadValidationErrors('validation.update_service', $service, [], $index);
+            if (!empty($errors)) {
+                return ['status' => 400, 'message' => 'Service validation failed!', 'errors' => []];
+            }
+
+            $serv = Service::find($service['id']);
+
+            // Access control
+            if (!$this->hasPermission('service', $serv->server, 'create', $service['id'])) {
+                return ['status' => 403, 'message' => 'You are not allowed to update services on this server!', 'errors' => []];
+            }
+
+            $serv->fill($service)->save();
+            $updatedList[] = $serv;
+        } catch (Exception $ex) {
+            $this->logEvent('Service creation failed! Error: '.$ex->getMessage(), 'error');
+            return ['status' => 500, 'message' => 'Service creation failed. Check system logs.', 'errors' => []];
+        }
+
+        return ['status' => 200, 'message' => '', 'errors' => []];
     }
 
     /**

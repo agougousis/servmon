@@ -26,7 +26,7 @@ class ScheduledMonitoring extends Command
      *
      * @var string
      */
-    protected $description = 'Command description';
+    protected $description = 'Monitor the status of selected items';
 
     /**
      * Create a new command instance.
@@ -46,34 +46,21 @@ class ScheduledMonitoring extends Command
     public function handle()
     {
         try {
-            $notifications = array();
+            $notificationsList = array();
 
             $start = microtime(true);
+
             // Monitor all the items that are being watched
             foreach (Server::toWatch() as $server) {
-                // Check server status with 'ping'
-                $pingResult = Monitor::ping($server['ip']);
-                if (!$pingResult['status']) {   // Server down! Notify the user.
-                    $notifications[$server->supervisor_email][] =   array(
-                        'type'  =>  'server',
-                        'name'  =>  $server->hostname
-                    );
-                } else {    // Server is up! Check the services and webapps.
-                    $this->checkServicesStatus($server, $notifications);
-                    $this->checkWebappsStatus($server, $notifications);
-                }
+                $this->checkServerStatus($server, $notificationsList);
             }
+
             $end = microtime(true);
 
-            // Log the time it took for monitoring
-            $delay = new Delay();
-            $delay->category = 'scheduled';
-            $delay->duration = number_format(($end-$start), 5);
-            $delay->when = date("Y-m-d H:i:s");
-            $delay->save();
+            $this->logMonitoringTime($start,$end);
 
             // Send all the notifications
-            foreach ($notifications as $email => $off_events) {
+            foreach ($notificationsList as $email => $off_events) {
                 $this->sendNotificationsToRecipient($email, $off_events);
             }
         } catch (Exception $ex) {
@@ -83,6 +70,44 @@ class ScheduledMonitoring extends Command
             $log->when = date("Y-m-d H:i:s");
             $log->save();
         }
+    }
+
+    /**
+     * Checks server status
+     *
+     * The status of services and webapps is checked only in the server is up
+     *
+     * @param array $server
+     * @param array $notificationsList
+     */
+    protected function checkServerStatus($server, &$notificationsList)
+    {
+        // Check server status with 'ping'
+        $pingResult = Monitor::ping($server['ip']);
+        if (!$pingResult['status']) {   // Server down! Notify the user.
+            $notificationsList[$server->supervisor_email][] =   array(
+                'type'  =>  'server',
+                'name'  =>  $server->hostname
+            );
+        } else {    // Server is up! Check the services and webapps.
+            $this->checkServicesStatus($server, $notificationsList);
+            $this->checkWebappsStatus($server, $notificationsList);
+        }
+    }
+
+    /**
+     * Log the time monitoring took
+     *
+     * @param int $start
+     * @param int $end
+     */
+    protected function logMonitoringTime($start, $end)
+    {
+        $delay = new Delay();
+        $delay->category = 'scheduled';
+        $delay->duration = number_format(($end-$start), 5);
+        $delay->when = date("Y-m-d H:i:s");
+        $delay->save();
     }
 
     /**
@@ -136,9 +161,32 @@ class ScheduledMonitoring extends Command
      */
     protected function sendNotificationsToRecipient($recipientEmail, $eventsList)
     {
-        // Build the notification message
-        echo "<p>$recipientEmail</p>";
+        // Send the email
+        $data['body'] = $this->buildNotificationsMessage($eventsList);
+
+        try {
+            Mail::send(['html' => 'emails.monitoring'], $data, function ($message) use ($recipientEmail) {
+                $message->to($recipientEmail)->subject('Monitoring report');
+            });
+        } catch (Exception $ex) {
+            $log = new SystemLog();
+            $log->category = 'error';
+            $log->message = "Mail could not be sent! Error message: ".$ex->getMessage();
+            $log->when = date("Y-m-d H:i:s");
+            $log->save();
+        }
+    }
+
+    /**
+     * Builds an HTML message from a list of notification events
+     *
+     * @param array $eventsList
+     * @return string
+     */
+    protected function buildNotificationsMessage($eventsList)
+    {
         $body = '';
+
         foreach ($eventsList as $item) {
             switch ($item['type']) {
                 case 'server':
@@ -153,18 +201,6 @@ class ScheduledMonitoring extends Command
             }
         }
 
-        // Send the email
-        $data['body'] = $body;
-        try {
-            Mail::send(['html' => 'emails.monitoring'], $data, function ($message) use ($recipientEmail) {
-                $message->to($recipientEmail)->subject('Monitoring report');
-            });
-        } catch (Exception $ex) {
-            $log = new SystemLog();
-            $log->category = 'error';
-            $log->message = "Mail could not be sent! Error message: ".$ex->getMessage();
-            $log->when = date("Y-m-d H:i:s");
-            $log->save();
-        }
+        return $body;
     }
 }

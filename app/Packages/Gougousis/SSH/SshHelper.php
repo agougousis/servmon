@@ -15,7 +15,7 @@ class SshHelper
      * @param string $message
      * @return string
      */
-    public function identifyLoginError($message)
+    public static function identifyLoginError($message)
     {
         if (strpos($message, 'getaddrinfo failed') === false) {
             if (strpos($message, 'Connection refused') === false) {
@@ -38,7 +38,7 @@ class SshHelper
      * @param string $uptime_output
      * @return array
      */
-    public function extractInfoFromUptime($uptime_output, $count_processors)
+    public static function extractInfoFromUptime($uptime_output, $count_processors)
     {
         $info = [];
 
@@ -67,7 +67,7 @@ class SshHelper
      * @param string $df_blocks_output
      * @return array
      */
-    public function extractBlockUsageFromDf($df_blocks_output)
+    public static function extractBlockUsageFromDf($df_blocks_output)
     {
         $df_bloks_lines = preg_split('/[\n]/', $df_blocks_output);
         $df_blocks = array();
@@ -95,7 +95,7 @@ class SshHelper
      * @param string $df_inodes_output
      * @return array
      */
-    public function extractInodesUsageFromDf($df_inodes_output)
+    public static function extractInodesUsageFromDf($df_inodes_output)
     {
         $df_inodes_lines = preg_split('/[\n]/', $df_inodes_output);
         $df_inodes = array();
@@ -123,7 +123,7 @@ class SshHelper
      * @param string $free_output
      * @return array
      */
-    public function extractInfoFromFree($free_output)
+    public static function extractInfoFromFree($free_output)
     {
         $mem_info = [];
         $memory_lines = preg_split('/[\n]/', $free_output);
@@ -149,8 +149,9 @@ class SshHelper
      * @param string $lsof_output
      * @return array
      */
-    public function extractServicesFromLsof($lsof_output)
+    public static function extractServicesFromLsof($lsof_output)
     {
+        $services = [];
         $lsof_lines = preg_split('/[\n]/', $lsof_output);
         unset($lsof_lines[count($lsof_lines)-1]); // remove prompt line
         unset($lsof_lines[1]); // remove header line
@@ -194,7 +195,7 @@ class SshHelper
      * @param int $memoryInKilobytes
      * @return string
      */
-    public function addMemoryUnits($memoryInKilobytes)
+    public static function addMemoryUnits($memoryInKilobytes)
     {
         if ($memoryInKilobytes < 1000) {
             return number_format($memoryInKilobytes, 2)." KB";

@@ -205,9 +205,10 @@ class DatabasesApiTest extends TestCase
         );
 
         $this->call('PUT', '/api/databases',$post_data,[],[],['HTTP_X-CSRF-Token'=>csrf_token(),'contentType'=>'application/json; charset=utf-8'],[]);
+        $this->assertEquals(200,$this->response->getStatusCode(),'A user should be able to update a database on a server he can manage');
+
         $responseArray = json_decode($this->response->getContent());
         $databases = $responseArray->data;
-        $this->assertEquals(200,$this->response->getStatusCode(),'A user should be able to update a database on a server he can manage');
         $this->assertEquals(1,count($databases),'Updating one database should return one database as response.');
         $this->assertEquals('gougousis3db',$databases[0]->dbname,'The dbname of the updated database in the response should be gougousis3db');
 

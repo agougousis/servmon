@@ -86,50 +86,65 @@ class DomainController extends RootController
     {
         // Retrieve nodes array from JSON
         $domains = $request->input('domains');
-        $domain_num = count($domains);
 
         // Validate the data for each node
-        $errors = array();
-        $created = array();
+        $createdList = array();
         $index = 0;
         DB::beginTransaction();
         foreach ($domains as $domainData) {
-            try {
-                // Form validation
-                $errors = $this->loadValidationErrors('validation.domain_create', $domainData, $errors, $index);
-                if (!empty($errors)) {
-                    DB::rollBack();
-                    return response()->json(['errors' => $errors])->setStatusCode(400, 'Domain validation failed');
-                }
+            $result = $this->createDomainItem($domainData, $index, $createdList);
 
-                // Locate the parent domain
-                $parent = Domain::findByFullname($domainData['parent_domain']);
-
-                // Access control
-                if (empty($parent)) {
-                    $allowed = $this->hasPermission('domain', null, 'create', null);
-                } else {
-                    $allowed = $this->hasPermission('domain', $parent->id, 'create', null);
-                }
-                if (!$allowed) {
-                    DB::rollBack();
-                    return response()->json(['errors' => []])->setStatusCode(403, 'You are not allowed to create subdomains in this domain!');
-                }
-
-                // Save the new domain
-                $created[] = $this->saveNewDomain($domainData, $parent);
-            } catch (Exception $ex) {
+            if($result['status'] != 200){
                 DB::rollBack();
-                $this->logEvent('Domain creation failed! Error: '.$ex->getMessage(), 'error');
-                return response()->json(['errors' => []])->setStatusCode(500, 'Domain creation failed. Check system logs.');
+                return response()->json(['errors' => $result['errors']])->setStatusCode($result['status'], $result['message']);
             }
 
             $index++;
         }
 
         DB::commit();
-        $responseArray = $this->transformer->transform($created);
-        return response()->json($responseArray)->setStatusCode(200, $domain_num.' domain(s) added.');
+        $responseArray = $this->transformer->transform($createdList);
+        return response()->json($responseArray)->setStatusCode(200, count($domains).' domain(s) added.');
+    }
+
+    /**
+     * Adds a single domain in the domains tree
+     *
+     * @param array $domainData
+     * @param int $index
+     * @param array $createdList
+     * @return array
+     */
+    protected function createDomainItem($domainData, $index, &$createdList)
+    {
+        try {
+            // Form validation
+            $errors = $this->loadValidationErrors('validation.domain_create', $domainData, [], $index);
+            if (!empty($errors)) {
+                return ['status' => 400, 'message' => 'Domain validation failed.', 'errors' => []];
+            }
+
+            // Locate the parent domain
+            $parent = Domain::findByFullname($domainData['parent_domain']);
+
+            // Access control
+            if (empty($parent)) {
+                $allowed = $this->hasPermission('domain', null, 'create', null);
+            } else {
+                $allowed = $this->hasPermission('domain', $parent->id, 'create', null);
+            }
+            if (!$allowed) {
+                return ['status' => 403, 'message' => 'You are not allowed to create subdomains in this domain!', 'errors' => []];
+            }
+
+            // Save the new domain
+            $createdList[] = $this->saveNewDomain($domainData, $parent);
+        } catch (Exception $ex) {
+            $this->logEvent('Domain creation failed! Error: '.$ex->getMessage(), 'error');
+            return ['status' => 500, 'message' => 'Domain creation failed. Check system logs.', 'errors' => []];
+        }
+
+        return ['status' => 200, 'message' => '', 'errors' => []];
     }
 
     /**

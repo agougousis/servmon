@@ -4,12 +4,12 @@ namespace App\Http\Controllers;
 
 use DB;
 use Hash;
-use Mail;
 use Input;
 use DateTime;
 use App\User;
 use App\Models\PasswordResetLink;
 use Illuminate\Http\Request;
+use App\Packages\Gougousis\Helpers\Mailer;
 
 /**
  * Implements functionality related to password reminding
@@ -26,7 +26,7 @@ class PasswordController extends RootController
      * @param Request $request
      * @return Response
      */
-    public function sendResetLink(Request $request)
+    public function sendResetLink(Request $request, Mailer $mailer)
     {
         $form = $request->input();
 
@@ -40,32 +40,11 @@ class PasswordController extends RootController
         DB::beginTransaction();
         try {
             $user = User::where('email', $form['email'])->first();
-            $uid = $user->id;
+            $resetLink = $this->createResetLinkFor($user->id);
 
-            // Create a reset link
-            $reset_link = new PasswordResetLink();
-            $reset_link->uid = $uid;
-            // Add a random string to the reset link
-            $random = str_random(24);
-            $url = secure_url('password_reset/'.$random);
-            $reset_link->code = $random;
-            // Set expiration date to the reset link
-            $date = new DateTime();
-            $date->modify("+1 day");
-            $valid_until = $date->format("Y-m-d H:i:s");
-            $reset_link->valid_until = $valid_until;
-            // Save the reset link
-            $reset_link->save();
-
-            // Notify the user about the reset link
-            $data['link'] = $url;
-            try {
-                Mail::send('emails.password_reset_link', $data, function ($message) use ($user) {
-                    $message->to($user->email)->subject('ServMon: Password reset request');
-                });
-            } catch (Exception $ex) {
+            if ($mailResponse = $mailer->sendResetLink($user, $resetLink) != 'ok') {
                 DB::rollBack();
-                $this->logEvent("Mail could not be sent! Error message: ".$ex->getMessage(), 'error');
+                $this->logEvent("Mail could not be sent! Error message: $mailResponse", 'error');
                 return response()->json(['errors' => []])->setStatusCode(500, 'Something went wrong! Please contact system administrator!');
             }
 
@@ -79,6 +58,35 @@ class PasswordController extends RootController
     }
 
     /**
+     * Creates and returns a password reset link for a user
+     *
+     * @param int $userId
+     * @return string
+     */
+    protected function createResetLinkFor($userId)
+    {
+        // Create a reset link
+        $reset_link = new PasswordResetLink();
+        $reset_link->uid = $userId;
+
+        // Add a random string to the reset link
+        $random = str_random(24);
+        $url = secure_url('password_reset/'.$random);
+        $reset_link->code = $random;
+
+        // Set expiration date to the reset link
+        $date = new DateTime();
+        $date->modify("+1 day");
+        $valid_until = $date->format("Y-m-d H:i:s");
+        $reset_link->valid_until = $valid_until;
+
+        // Save the reset link
+        $reset_link->save();
+
+        return $url;
+    }
+
+    /**
      * Sets the user password to a new value selected by the user
      *
      * @param string $code
@@ -89,17 +97,9 @@ class PasswordController extends RootController
         $linkInfo = PasswordResetLink::where('code', '=', $code)->first();
 
         // Check for invalid link
-        if (empty($linkInfo)) {
-            $this->logEvent("Illegal reset link.", 'authentication');
-            return view('errors.illegal');
-        }
-
-        // Check for expired link
-        $now = new DateTime();
-        $valid_until = new DateTime($linkInfo->valid_until);
-        if ($now > $valid_until) {
-            $this->logEvent("Expired reset link.", 'authnetication');
-            return response()->json(['errors' => []])->setStatusCode(400, 'Your reset link has expired!');
+        if (empty($linkInfo)||(!$linkInfo->isValid())) {
+            $this->logEvent("Invalid reset link.", 'authnetication');
+            return response()->json(['errors' => []])->setStatusCode(400, 'This reset link is not valid! Maybe it has expired.');
         }
 
         // Validate new password
@@ -111,18 +111,17 @@ class PasswordController extends RootController
         }
 
         // Set the new password
-        DB::beginTransaction();
         try {
             $user = User::find($linkInfo->uid);
             $linkInfo->delete();
             $user->password = Hash::make($form['new_password']);
             $user->save();
         } catch (Exception $ex) {
-            DB::rollBack();
             $this->logEvent("Request for reset link raised an error: ".$ex->getMessage(), 'error');
             return response()->json(['errors' => []])->setStatusCode(500, 'An unexpected error occured while trying to reset your password. Please contact system administrator!');
         }
-        DB::commit();
+
         return response()->json([])->setStatusCode(200, 'Your password was reset successfully!');
     }
+
 }

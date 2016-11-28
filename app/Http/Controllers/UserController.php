@@ -72,44 +72,61 @@ class UserController extends RootController
         return response()->json($responseArray)->setStatusCode(200, '');
     }
 
-    /*
+    /**
      * Creates new users
      *
+     * @param Request $request
      * @return Response
      */
     public function addUsers(Request $request)
     {
         $users = $request->input('users');
-        $users_num = count($users);
 
         // Validate the data for each node
-        $errors = array();
-        $created = array();
+        $createdList = array();
         $index = 0;
         DB::beginTransaction();
         foreach ($users as $user) {
-            try {
-                // Form validation
-                $errors = $this->loadValidationErrors('validation.add_user', $user, $errors, $index);
-                if (!empty($errors)) {
-                    DB::rollBack();
-                    return response()->json(['errors' => $errors])->setStatusCode(400, 'User validation failed!');
-                }
+            $result = $this->addSingleUser($user, $index, $createdList);
 
-                // Create the user in the database
-                $created[] = $this->saveUser($user);
-            } catch (Exception $ex) {
+            if($result['status'] != 200){
                 DB::rollBack();
-                $this->logEvent('User creation failed! Error: '.$ex->getMessage(), 'error');
-                return response()->json(['errors' => []])->setStatusCode(500, 'User creation failed. Check system logs.');
+                return response()->json(['errors' => $result['errors']])->setStatusCode($result['status'], $result['message']);
             }
 
             $index++;
         }
 
         DB::commit();
-        $responseArray = $this->transformer->transform($created);
-        return response()->json($responseArray)->setStatusCode(200, $users_num.' user(s) added.');
+        $responseArray = $this->transformer->transform($createdList);
+        return response()->json($responseArray)->setStatusCode(200, count($users).' user(s) added.');
+    }
+
+    /**
+     * Adds a single user
+     *
+     * @param array $user
+     * @param int $index
+     * @param array $createdList
+     * @return array
+     */
+    protected function addSingleUser($user, $index, &$createdList)
+    {
+        try {
+            // Form validation
+            $errors = $this->loadValidationErrors('validation.add_user', $user, [], $index);
+            if (!empty($errors)) {                ;
+                return ['status' => 400, 'message' => 'User validation failed.', 'errors' => []];
+            }
+
+            // Create the user in the database
+            $createdList[] = $this->saveUser($user);
+        } catch (Exception $ex) {
+            $this->logEvent('User creation failed! Error: '.$ex->getMessage(), 'error');
+            return ['status' => 500, 'message' => 'User creation failed. Check system logs.', 'errors' => []];
+        }
+
+        return ['status' => 200, 'message' => '', 'errors' => []];
     }
 
     /**
