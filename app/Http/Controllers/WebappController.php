@@ -33,7 +33,7 @@ class WebappController extends RootController
     public function search()
     {
         $responseArray = $this->transformer->transform(Webapp::all());
-        return response()->json($responseArray)->setStatusCode(200, '');
+        return response()->json($responseArray, 200);
     }
 
     /**
@@ -53,7 +53,7 @@ class WebappController extends RootController
         foreach ($webapps as $webapp) {
             $result = $this->createWebappItem($webapp, $index, $createdList);
 
-            if($result['status'] != 200){
+            if ($result['status'] != 200) {
                 DB::rollBack();
                 return response()->json(['errors' => $result['errors']])->setStatusCode($result['status'], $result['message']);
             }
@@ -121,7 +121,7 @@ class WebappController extends RootController
 
         // Transform the response data
         $responseArray = $this->transformer->transform($webapp);
-        return response()->json($responseArray)->setStatusCode(200, '');
+        return response()->json($responseArray, 200);
     }
 
     /**
@@ -141,7 +141,7 @@ class WebappController extends RootController
         foreach ($webapps as $webapp) {
             $result = $this->updateWebappItem($webapp, $index, $updatedList);
 
-            if($result['status'] != 200){
+            if ($result['status'] != 200) {
                 DB::rollBack();
                 return response()->json(['errors' => $result['errors']])->setStatusCode($result['status'], $result['message']);
             }

@@ -79,7 +79,7 @@ class LoginController extends RootController
             Session::flush();
             return response()->json([])->setStatusCode(200, 'Logged out!');
         } catch (Exception $ex) {
-            $this->logEvent('Logout failure. Error: '.$ex->getMessage(),'security');
+            $this->logEvent('Logout failure. Error: '.$ex->getMessage(), 'security');
             return response()->json(['errors' => []])->setStatusCode(400, 'Logout failed!');
         }
     }

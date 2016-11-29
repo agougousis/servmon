@@ -40,7 +40,7 @@ class ServiceController extends RootController
         foreach ($services as $service) {
             $result = $this->createServiceItem($service, $index, $createdList);
 
-            if($result['status'] != 200){
+            if ($result['status'] != 200) {
                 DB::rollBack();
                 return response()->json(['errors' => $result['errors']])->setStatusCode($result['status'], $result['message']);
             }
@@ -109,7 +109,7 @@ class ServiceController extends RootController
         $responseArray = $this->transformer->transform($service);
 
         // Send back the node info
-        return response()->json($responseArray)->setStatusCode(200, '');
+        return response()->json($responseArray, 200);
     }
 
     /**
@@ -129,7 +129,7 @@ class ServiceController extends RootController
         foreach ($services as $service) {
             $result = $this->updateServiceItem($service, $index, $updatedList);
 
-            if($result['status'] != 200){
+            if ($result['status'] != 200) {
                 DB::rollBack();
                 return response()->json(['errors' => $result['errors']])->setStatusCode($result['status'], $result['message']);
             }

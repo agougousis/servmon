@@ -43,7 +43,7 @@ class DatabaseController extends RootController
         foreach ($databases as $database) {
             $result = $this->createDatabaseItem($database, $index, $createdList);
 
-            if($result['status'] != 200){
+            if ($result['status'] != 200) {
                 DB::rollBack();
                 return response()->json(['errors' => $result['errors']])->setStatusCode($result['status'], $result['message']);
             }
@@ -126,7 +126,7 @@ class DatabaseController extends RootController
         $responseArray = $this->transformer->transform($database);
 
         // Send back the node info
-        return response()->json($responseArray)->setStatusCode(200, '');
+        return response()->json($responseArray, 200);
     }
 
     /**
@@ -147,7 +147,7 @@ class DatabaseController extends RootController
         foreach ($databases as $database) {
             $result = $this->updateDatabaseItem($database, $index, $updatedList);
 
-            if($result['status'] != 200){
+            if ($result['status'] != 200) {
                 DB::rollBack();
                 return response()->json(['errors' => $result['errors']])->setStatusCode($result['status'], $result['message']);
             }

@@ -59,13 +59,13 @@ class ServerController extends RootController
         $full_server_name = $server->hostname.".".$domain->full_name;
 
         // Retrieve server health information
-        $sshManager = new SshManager($full_server_name,$request->sshport,$request->sshuser,$request->sshpass,$request->sshkey);
+        $sshManager = new SshManager($full_server_name, $request->sshport, $request->sshuser, $request->sshpass, $request->sshkey);
         if (!$sshManager->connectAndAuthenticate()) {
             return response()->json(['errors'=>[]])->setStatusCode(500, 'SSH login failed! Please make sure that you provided a valid SSH key file path.');
         }
         $serverInfo = $sshManager->getServerInfo();
 
-        return response()->json($serverInfo)->setStatusCode(200, 'ok');
+        return response()->json($serverInfo, 200);
     }
 
     /**
@@ -88,7 +88,7 @@ class ServerController extends RootController
         }
 
         $responseArray = $this->transformer->transform($servers);
-        return response()->json($responseArray)->setStatusCode(200, '');
+        return response()->json($responseArray, 200);
     }
 
     /**

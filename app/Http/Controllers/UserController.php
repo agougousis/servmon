@@ -42,7 +42,7 @@ class UserController extends RootController
         }
 
         $responseArray = $this->transformer->transform($user);
-        return response()->json($responseArray)->setStatusCode(200, '');
+        return response()->json($responseArray, 200);
     }
 
     /**
@@ -69,7 +69,7 @@ class UserController extends RootController
                 break;
         }
 
-        return response()->json($responseArray)->setStatusCode(200, '');
+        return response()->json($responseArray, 200);
     }
 
     /**
@@ -89,7 +89,7 @@ class UserController extends RootController
         foreach ($users as $user) {
             $result = $this->addSingleUser($user, $index, $createdList);
 
-            if($result['status'] != 200){
+            if ($result['status'] != 200) {
                 DB::rollBack();
                 return response()->json(['errors' => $result['errors']])->setStatusCode($result['status'], $result['message']);
             }
@@ -115,7 +115,7 @@ class UserController extends RootController
         try {
             // Form validation
             $errors = $this->loadValidationErrors('validation.add_user', $user, [], $index);
-            if (!empty($errors)) {                ;
+            if (!empty($errors)) {
                 return ['status' => 400, 'message' => 'User validation failed.', 'errors' => []];
             }
 

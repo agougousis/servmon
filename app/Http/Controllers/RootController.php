@@ -190,13 +190,10 @@ class RootController extends Controller
             case 'webapp':
             case 'database':
                 return $this->hasItemPermission($user, $context);
-                break;
             case 'server':
                 return $this->hasServerPermission($actionType, $user, $context, $itemId);
-                break;
             case 'domain':
                 return $this->hasDomainPermission($actionType, $user, $context, $itemId);
-                break;
         }
     }
 
@@ -243,14 +240,12 @@ class RootController extends Controller
                         return false;
                     }
                 }
-                break;
             case 'create':
                 if ($this->canManageDomain($user->id, $context)) {
                     return true;
                 } else {
                     return false;
                 }
-                break;
             case 'update':
             case 'delete':
                 if ($this->canManageServer($user->id, $itemId)) {
@@ -258,7 +253,6 @@ class RootController extends Controller
                 } else {
                     return false;
                 }
-                break;
             default:
                 throw Exception('Could not resolve domain permission. No valid action type found.');
         }
@@ -282,7 +276,6 @@ class RootController extends Controller
                 } else {
                     return false;
                 }
-                break;
             case 'update':
             case 'delete':
                 if ($this->canManageDomain($user->id, $itemId)) {
@@ -290,7 +283,6 @@ class RootController extends Controller
                 } else {
                     return false;
                 }
-                break;
             default:
                 throw Exception('Could not resolve domain permission. No valid action type found.');
         }

@@ -45,7 +45,7 @@ class DomainController extends RootController
 
         $webapps = Webapp::getAllUnderDomain($full_domain_name);
         $responseArray = $this->transformer->transform($webapps, 'WebappTransformer');
-        return response()->json($responseArray)->setStatusCode(200, 'ok');
+        return response()->json($responseArray, 200);
     }
 
     /**
@@ -94,7 +94,7 @@ class DomainController extends RootController
         foreach ($domains as $domainData) {
             $result = $this->createDomainItem($domainData, $index, $createdList);
 
-            if($result['status'] != 200){
+            if ($result['status'] != 200) {
                 DB::rollBack();
                 return response()->json(['errors' => $result['errors']])->setStatusCode($result['status'], $result['message']);
             }
@@ -243,7 +243,7 @@ class DomainController extends RootController
         $server_list = array_map(array($this, 'enrichServerInfo'), $servers);
 
         $responseArray = $this->transformer->transform($server_list, 'ServerTransformer');
-        return response()->json($responseArray)->setStatusCode(200, '');
+        return response()->json($responseArray, 200);
     }
 
     /**
@@ -253,7 +253,7 @@ class DomainController extends RootController
      * @param array $domain
      * @return array
      */
-    protected function enrichServerInfoWithDomain($servers,$domain)
+    protected function enrichServerInfoWithDomain($servers, $domain)
     {
         $tempList = array_map(array($this, 'enrichServerInfo'), $servers);
 
@@ -298,16 +298,13 @@ class DomainController extends RootController
                 $roots = Domain::roots()->get(); // $roots is a Collection
                 $responseArray = $this->transformer->transform($roots, 'DomainTreeItemTransformer');
 
-                return response()->json($responseArray)->setStatusCode(200, '');
-                break;
+                return response()->json($responseArray, 200);
             case 'with_servers':
                 $domainsPreOrder = Domain::domainsListPreOrder();
                 $responseArray = $this->transformer->transform($domainsPreOrder, 'DomainListTransformer');
-                return response()->json($responseArray)->setStatusCode(200, '');
-                break;
+                return response()->json($responseArray, 200);
             default:
                 return response()->json(['errors' => array()])->setStatusCode(400, 'Invalid search mode!');
-                break;
         }
     }
 }

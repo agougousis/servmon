@@ -70,7 +70,7 @@ class DelegationController extends RootController
                 break;
         }
 
-        return response()->json($responseArray)->setStatusCode(200, '');
+        return response()->json($responseArray, 200);
     }
 
     /**
@@ -144,7 +144,7 @@ class DelegationController extends RootController
         foreach ($delegations as $delegation) {
             $result = $this->createDelegationItem($delegation, $index, $createdList);
 
-            if($result['status'] != 200){
+            if ($result['status'] != 200) {
                 DB::rollBack();
                 return response()->json(['errors' => $result['errors']])->setStatusCode($result['status'], $result['message']);
             }

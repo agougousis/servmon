@@ -34,7 +34,7 @@ class BackupController extends RootController
     public function search()
     {
         $backup_list = $this->searchForBackups();
-        return response()->json($backup_list)->setStatusCode(200, '');
+        return response()->json($backup_list, 200);
     }
 
     /**

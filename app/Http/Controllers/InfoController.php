@@ -39,7 +39,7 @@ class InfoController extends RootController
     public function myprofile()
     {
         $user = User::find(Auth::user()->id);
-        return response()->json($user)->setStatusCode(200, '');
+        return response()->json($user, 200);
     }
 
     /**
@@ -54,7 +54,7 @@ class InfoController extends RootController
         $data['services'] = Service::all()->count();
         $data['webapps'] = Webapp::all()->count();
         $data['databases'] = Database::all()->count();
-        return response()->json($data)->setStatusCode(200, '');
+        return response()->json($data, 200);
     }
 
     /**
@@ -69,7 +69,7 @@ class InfoController extends RootController
         foreach ($settings as $setting) {
             $setting_list[$setting->sname] = $setting->value;
         }
-        return response()->json(['data' => $setting_list])->setStatusCode(200, '');
+        return response()->json(['data' => $setting_list], 200);
     }
 
     /**
@@ -104,6 +104,6 @@ class InfoController extends RootController
         }
 
         $responseArray = $this->transformer->transform($types);
-        return response()->json($responseArray)->setStatusCode(200, '');
+        return response()->json($responseArray, 200);
     }
 }

@@ -33,7 +33,7 @@ class PasswordController extends RootController
         // Form validation
         $errors = $this->loadValidationErrors('validation.password_reset_request', $form, null, null);
         if (!empty($errors)) {
-            return response()->json(['errors' => $errors])->setStatusCode(400, '');
+            return response()->json(['errors' => $errors], 400);
         }
 
         // Create and send a reset link
@@ -107,7 +107,7 @@ class PasswordController extends RootController
 
         $errors = $this->loadValidationErrors('validation.password_reset', $form, null, null);
         if (!empty($errors)) {
-            return response()->json(['errors' => $errors])->setStatusCode(400, '');
+            return response()->json(['errors' => $errors], 400);
         }
 
         // Set the new password
@@ -123,5 +123,4 @@ class PasswordController extends RootController
 
         return response()->json([])->setStatusCode(200, 'Your password was reset successfully!');
     }
-
 }
